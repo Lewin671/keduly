@@ -1,6 +1,6 @@
 // The signed-in app: sidebar, toolbar, and the calendar or the item lists.
 import type { JSX } from 'preact';
-import { useLayoutEffect, useState } from 'preact/hooks';
+import { useState } from 'preact/hooks';
 import { t } from '../i18n';
 import { stepDate, weekTitle, type CalView } from '../lib/calendar';
 import { atMinutes, hhmm, minutesOfDay } from '../lib/dates';
@@ -69,7 +69,9 @@ export function Shell(): JSX.Element {
   const pending = counts.value.pending;
 
   // The mockup's stylesheet switches between the two modes on this attribute.
-  useLayoutEffect(() => { document.body.dataset.mode = cal ? 'cal' : 'tasks'; }, [cal]);
+  // Set during render, not in an effect: children measure and scroll in their own layout effects,
+  // which run before a parent's, and the stylesheet hides the inactive mode by this attribute.
+  document.body.dataset.mode = cal ? 'cal' : 'tasks';
 
   return (
     <>

@@ -178,8 +178,13 @@ export function TimeGrid({ days, events }: { days: string[]; events: readonly Ca
   const dragging = useRef(false);
   const wasDragged = useRef(false);
 
+  // Open a little before the working day. The grid can mount while its mode is still hidden
+  // (a hidden element cannot scroll), so try again once the page has settled.
   useLayoutEffect(() => {
-    scroller.current!.scrollTop = OPEN_AT_HOUR * hour;
+    const open = () => { if (scroller.current) scroller.current.scrollTop = OPEN_AT_HOUR * hour; };
+    open();
+    const retry = setTimeout(() => { if (scroller.current?.scrollTop === 0) open(); }, 0);
+    return () => clearTimeout(retry);
   }, []);
 
   // While a block is being dragged by touch, the page must not scroll under the finger.

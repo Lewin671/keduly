@@ -102,7 +102,15 @@ export async function boot(): Promise<void> {
 /** Loads the signed-in user's data, or shows the sign-in screen. */
 export async function enter(): Promise<void> {
   try {
-    applyBootstrap(await api.getBootstrap());
+    let boot = await api.getBootstrap();
+    // Everything is drawn in the device's time zone, so the account follows the device:
+    // otherwise the server's idea of "today" and the calendar on screen would disagree.
+    const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (zone && boot.user.timezone !== zone) {
+      await api.updateMe({ timezone: zone });
+      boot = await api.getBootstrap();
+    }
+    applyBootstrap(boot);
     version.value++;
     await loadSuggestions();
   } catch (err) {

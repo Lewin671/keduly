@@ -248,7 +248,7 @@ export const zh = {
   'account.title': '账号',
   'account.name': '名字',
   'account.email': '邮箱',
-  'account.timezone': '时区',
+  'account.timezone': '时区（跟随设备）',
   'account.hours': '工作时段',
   'account.workStart': '工作开始时间',
   'account.workEnd': '工作结束时间',

@@ -29,10 +29,6 @@ function CopyButton({ text }: { text: string }): JSX.Element {
   return <button type="button" class="tb" onClick={() => { void copy(); }}>{copied ? t('common.copied') : t('common.copy')}</button>;
 }
 
-function timeZones(current: string): string[] {
-  const supported = (Intl as { supportedValuesOf?: (key: string) => string[] }).supportedValuesOf?.('timeZone') ?? [];
-  return supported.includes(current) ? supported : [current, ...supported];
-}
 
 function Account(): JSX.Element | null {
   const me = user.value;
@@ -65,9 +61,7 @@ function Account(): JSX.Element | null {
         </div></label>
         <div class="g-row"><div class="gb"><div class="gm">{t('account.email')}</div><span class="tr sel">{me.email}</span></div></div>
         <label class="g-row"><div class="gb"><div class="gm">{t('account.timezone')}</div>
-          <select class="fld bare" value={me.timezone} onChange={event => save({ timezone: event.currentTarget.value })}>
-            {timeZones(me.timezone).map(zone => <option value={zone}>{zone}</option>)}
-          </select>
+          <span class="tr">{me.timezone}</span>
         </div></label>
         <div class="g-row"><div class="gb"><div class="gm">{t('account.hours')}</div>
           <input class="fld bare" type="time" aria-label={t('account.workStart')} defaultValue={me.work_start} onBlur={event => { const v = event.currentTarget.value; if (v && v !== me.work_start) save({ work_start: v }); }} />
