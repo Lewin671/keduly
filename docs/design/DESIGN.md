@@ -57,36 +57,60 @@ Orange means "important" and nothing else. Red is reserved for deadlines and the
 
 ## Focus
 
-A focus timer (a pomodoro timer) records the time actually spent, the counterpart of the estimate.
-Estimates and time blocks say what was planned; focus sessions say what happened.
+Focus is a pomodoro timer and the third mode, next to items and calendar. Estimates and time
+blocks say what was planned; tomatoes say what happened.
 
 | Rule | Detail |
 |---|---|
-| Unit | Minutes, never a count of pomodoros: estimates are already durations |
-| Lengths | 25 minutes of work, 5 of rest by default; both are settings |
+| Unit | A tomato (番茄): one work period run to its end, 25 minutes by default. Minutes are kept as well, for totals |
+| Round | Four tomatoes make a round. A short rest (5 minutes) follows each tomato, a long rest (15 minutes) the fourth. The round is counted per day |
+| Estimates | An item's estimate stays a duration; the interface also shows it as tomatoes, "2/4" = two earned of the four it comes to |
 | One timer | One per account, kept on the server as a start time and a length, so the web app, the CLI and every device show the same countdown |
-| No pause | A session is a start and an end. An interruption ends it; the next start is a new session |
-| Ending early | Keeps the minutes actually spent. Under one minute counts as a slip and is dropped |
-| Running out | The session is recorded in full and the timer asks what next: 做完了 (tick the item), 再来 25 分钟, 休息 5 分钟. Unanswered, it simply stays ended; nothing starts by itself |
-| Switching | Starting on another item ends the running session and keeps its minutes |
-| Ticking the item | Ends its session and keeps its minutes |
-| Free focus | A session may belong to no item. It counts towards the day, not towards any estimate |
+| No pause | A tomato is indivisible. Giving up (放弃) keeps the minutes spent but earns no tomato; under one minute counts as a slip and is dropped |
+| Running out | The tomato is earned and the timer asks what next: 做完了 (tick the item), 再来一个, 休息. Unanswered, it stays there; nothing starts by itself |
+| Switching | Starting on another item gives up the running tomato |
+| Ticking the item | Ends its timer and keeps the minutes |
+| Free focus | A tomato may belong to no item. It counts towards the day and the round, not towards any estimate |
 | CalDAV | Sessions are never exported: they would flood the phone's calendar with 25-minute entries |
+
+### The timer page
+
+| State | What it shows |
+|---|---|
+| Idle | The sidebar lists today's open items (important first) with their tomatoes, then free focus; clicking one picks it. The page: "第 N 个番茄", a full dial reading 25:00, the picked item, the round of four tomato marks, 开始专注, and today's total |
+| Working | The page takes the whole window: sidebar and toolbar disappear, the background is tinted with the project's colour, the dial drains. 放弃 and 做完了. 收起 at the top left returns to the app |
+| Tomato earned | The dial closes in tomato red around a large tomato; one more mark in the round fills. 做完了, 再来一个, and the rest (short or long) as the main action |
+| Resting | The same page in green, counting the rest down. 跳过休息 |
+
+The dial follows Apple's Clock timer: one ring, large light figures, nothing else inside it.
+
+### Elsewhere in the app
 
 | Place | How it shows |
 |---|---|
-| Toolbar | Idle: a round timer button beside the bell. Running: a capsule with a ring in the project's colour that drains, the time left and the item's title. Clicking either opens the focus panel |
-| Focus panel | Running: the time left in large light figures, the item, 结束 and 做完了. Idle: today's open items (important first) and free focus, each with 开始. Below, today's sessions and their total |
-| Item row | A play button on hover (always visible on touch). While it is the one being worked on, the countdown in the project's colour instead |
-| Item row, second line | "已用 50 分钟 / 1.5 小时" next to the project; once done, "用了 2 小时 15 分钟（预计 2 小时）" |
-| Item card | The estimate chip adds "已用 …"; a blue 开始专注 / 结束专注 chip |
+| Toolbar | While a timer runs and the timer page is not showing: a capsule with a small draining ring, the time left and the item. Clicking it returns to the timer page. Nothing when idle |
+| Item row | A play button on hover (always visible on touch) starts a tomato and opens the timer page. The item being worked on shows the countdown instead |
+| Item row, second line | The estimate, then the tomatoes: "1.5 小时 · 2/4"; once done, "用了 2 小时 5 分钟 · 5" |
+| Item card | The estimate chip adds "已用 …"; a blue 开始专注 / 回到计时 chip |
 | Today | The work still to schedule is the estimate minus the time already spent |
 | Project page | The summary adds "本周已专注 …" |
-| Calendar, day and week | Clicking an open time block offers 专注 25 分钟. Sessions are drawn as a thin line in the project's colour at the left edge of the day: the plan in blocks, what happened beside it |
-| Settings | 专注: work length, rest length, the reminder when time is up |
-| CLI | `keduly focus start <item>`, `status`, `stop`, and a log an agent can read to correct estimates |
+| Calendar, day and week | Clicking an open time block offers 开始专注. Sessions are drawn as a thin line in the project's colour at the left edge of the day: the plan in blocks, what happened beside it |
+| When time is up elsewhere | A HUD "完成第 N 个番茄" with 开始休息, a browser notification and a sound |
+| Settings | 专注: the length of a tomato, of the rest, of the long rest and how often, the reminder |
+| CLI | `keduly focus start <item>`, `status`, `stop`, and a log and statistics an agent can read to correct estimates |
 
-Going over the estimate is not coloured: red is for deadlines and orange for importance.
+### Statistics
+
+Modelled on Screen Time in System Settings: figures in plain large type, one chart, then lists.
+
+| Part | Contents |
+|---|---|
+| Figures | Today, the last 7 days, the daily average, and the streak of days with at least one tomato |
+| Chart | One bar per day for the last 7 days, stacked by project colour, the count above each bar, a dashed line for the average. Today's label is red |
+| 时间花在哪 | One row per project, most time first: tomatoes, time, and a thin bar relative to the top project |
+| Records | Day by day, newest first: each session with its time, item, and a tomato or "未完成 · N 分钟". Two days up front, then "更早的记录" |
+
+Tomato red is used only for tomato marks. Going over an estimate ("7/1") is not coloured.
 
 ## Principles
 
@@ -101,7 +125,7 @@ Going over the estimate is not coloured: red is for deadlines and orange for imp
 
 ## Structure
 
-Items and calendar are two modes, switched at the top of the sidebar: in effect a task manager and
+Items, calendar and focus are three modes, switched at the top of the sidebar. Items and calendar are in effect a task manager and
 Apple's Calendar in one window. Items come first and are what the app opens on (Today): managing
 things to do is the centre of the product, and the calendar is the second view onto the same data. They are linked through projects and time. An item with a time
 shows on the calendar in its project's colour, and a time block can be checked off right there.
@@ -109,13 +133,13 @@ shows on the calendar in its project's colour, and a time block can be checked o
 | Mode | Sidebar | Main area |
 |---|---|---|
 | Items | Inbox, Today, Upcoming, Matrix, All, Done; then projects grouped by area, each with a progress ring | The selected list, in one centred column |
+| Focus | Timer, Statistics; then today's open items to pick from | The timer page or statistics. See "Focus" |
 | Calendar | A mini month; the project list, where a tick decides which projects the calendar shows | Day, week, month and year views |
 
-The timer, the bell and the gear at the top right are shared by both modes.
+The bell and the gear at the top right are shared by all modes.
 
 | Button | Purpose |
 |---|---|
-| Timer | Focus panel: the running timer, what to focus on next, today's sessions. See "Focus" |
 | Bell | Activity panel: what is waiting (deletes that need consent, the number of tentative entries) and recent changes. The red badge counts what is waiting |
 | Gear | Settings: account, agent tokens, system calendar (CalDAV), command line, appearance |
 
@@ -129,7 +153,7 @@ Creating: the toolbar "+" in calendar mode, the round blue "+" at the bottom rig
 | Month | One cell per day listing that day's entries: a filled dot for an event, a hollow dot for a time block, a dashed dot for a tentative entry. At most 4 rows, then "还有 N 项"; all-day events and tentative entries are kept first |
 | Year | Twelve small months. The depth of orange shows how busy each day is; today is a red dot. Clicking a month opens it |
 
-On a phone there is no sidebar: a floating two-tab bar switches between calendar and items, and
+On a phone there is no sidebar: a floating three-tab bar switches between items, calendar and focus, and
 month cells show one dot per entry.
 
 ### Items mode
@@ -211,12 +235,14 @@ product feature) that swaps the sample data between ordinary, crowded and empty.
 
 | Case | Handling |
 |---|---|
-| Long item title in the toolbar capsule | One line with an ellipsis; on a phone the capsule shows the ring and the time only |
-| Many sessions in a day | The panel lists the latest 3, then "显示其余 N 次" |
-| Far over the estimate, or no estimate | "已用 2 小时 55 分钟 / 15 分钟", or just "已用 40 分钟". No colour |
-| No sessions today | The panel says so and what to do |
-| No items at all | Free focus is still offered |
-| The page was closed when time ran out | The session still ended on the server at its planned end; the panel shows the "what next" state on the next visit |
+| Long item title | Two lines under the dial; one line with an ellipsis in the sidebar and the toolbar capsule; on a phone the capsule shows the ring and the time only |
+| Many items today | The sidebar list scrolls |
+| Far over the estimate, or no estimate | "7/1", or just the count. No colour |
+| A day without tomatoes | An empty column in the chart; the streak ends there |
+| No sessions at all | Statistics say so and what to do; the timer page still works |
+| No items at all | Free focus is the only choice and is picked |
+| Only given-up sessions on an item | The row says "已用 12 分钟" instead of a tomato count |
+| The page was closed when time ran out | The tomato was still earned on the server at its planned end; the page shows the "what next" state on the next visit |
 
 ### Not designed yet
 
@@ -228,7 +254,7 @@ product feature) that swaps the sample data between ordinary, crowded and empty.
 | Overlapping events on a phone | The lanes get very narrow; needs its own design |
 | Time up on a phone | A web page cannot ring once it is closed; a reliable reminder needs push notifications |
 | Correcting a session | Deleting or shortening a wrong record (forgot to stop before leaving) |
-| Focus statistics | Totals per project and per week beyond the one line on the project page |
+| Statistics beyond 7 days | Weeks, months, and a comparison with the previous period |
 
 ## Loading on demand
 

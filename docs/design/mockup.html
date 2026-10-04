@@ -12,7 +12,7 @@
   --group: #f5f5f7; --tile: #ffffff; --seg-on: #ffffff; --sheet: #ffffff;
   --glass: rgba(242, 242, 247, .78); --glass-edge: rgba(0, 0, 0, .07); --glass-hi: rgba(255, 255, 255, .7);
   --pop: rgba(255, 255, 255, .88);
-  --blue: #007aff; --red: #ff3b30; --green: #34c759; --orange: #ff9500; --indigo: #5856d6; --teal: #30b0c7; --pink: #ff2d55; --purple: #af52de; --brown: #a2845e; --gray: #8e8e93; --ink: #48484a;
+  --tomato: #f25c45; --blue: #007aff; --red: #ff3b30; --green: #34c759; --orange: #ff9500; --indigo: #5856d6; --teal: #30b0c7; --pink: #ff2d55; --purple: #af52de; --brown: #a2845e; --gray: #8e8e93; --ink: #48484a;
   --mix: #000000; --shadow: 0 12px 40px rgba(0, 0, 0, .18), 0 0 0 .5px rgba(0, 0, 0, .1);
 }
 @media (prefers-color-scheme: dark) {
@@ -22,7 +22,7 @@
     --group: rgba(255, 255, 255, .055); --tile: rgba(255, 255, 255, .08); --seg-on: #636366; --sheet: #242426;
     --glass: rgba(44, 44, 46, .74); --glass-edge: rgba(0, 0, 0, .4); --glass-hi: rgba(255, 255, 255, .1);
     --pop: rgba(44, 44, 46, .9);
-    --blue: #0a84ff; --red: #ff453a; --green: #30d158; --orange: #ff9f0a; --indigo: #7d7aff; --teal: #40c8e0; --pink: #ff375f; --purple: #bf5af2; --brown: #ac8e68; --ink: #8e8e93;
+    --tomato: #ff6b55; --blue: #0a84ff; --red: #ff453a; --green: #30d158; --orange: #ff9f0a; --indigo: #7d7aff; --teal: #40c8e0; --pink: #ff375f; --purple: #bf5af2; --brown: #ac8e68; --ink: #8e8e93;
     --mix: #ffffff; --shadow: 0 12px 40px rgba(0, 0, 0, .55), 0 0 0 .5px rgba(255, 255, 255, .14);
   }
 }
@@ -32,7 +32,7 @@
   --group: rgba(255, 255, 255, .055); --tile: rgba(255, 255, 255, .08); --seg-on: #636366; --sheet: #242426;
   --glass: rgba(44, 44, 46, .74); --glass-edge: rgba(0, 0, 0, .4); --glass-hi: rgba(255, 255, 255, .1);
   --pop: rgba(44, 44, 46, .9);
-  --blue: #0a84ff; --red: #ff453a; --green: #30d158; --orange: #ff9f0a; --indigo: #7d7aff; --teal: #40c8e0; --pink: #ff375f; --purple: #bf5af2; --brown: #ac8e68; --ink: #8e8e93;
+  --tomato: #ff6b55; --blue: #0a84ff; --red: #ff453a; --green: #30d158; --orange: #ff9f0a; --indigo: #7d7aff; --teal: #40c8e0; --pink: #ff375f; --purple: #bf5af2; --brown: #ac8e68; --ink: #8e8e93;
   --mix: #ffffff; --shadow: 0 12px 40px rgba(0, 0, 0, .55), 0 0 0 .5px rgba(255, 255, 255, .14);
 }
 
@@ -283,9 +283,49 @@ button.ck { cursor: pointer; }
 @keyframes shimmer { to { background-position: -150% 0; } }
 .end { color: var(--label-3); font-size: 12.5px; text-align: center; padding: 26px 0 0; margin: 0; }
 
-/* ---------- focus timer ---------- */
+/* ---------- focus: the pomodoro timer ---------- */
 #focus-slot { display: contents; }
-/* The running timer lives in the toolbar: a ring in the project's colour that drains, the time left, the item. */
+body[data-mode="focus"] :is(#side-tasks, #side-cal, #cal, #list, .only-cal, .fab), body:not([data-mode="focus"]) :is(#side-focus, #focus) { display: none; }
+/* A tomato is the unit: filled when earned, an outline when still to do. */
+.tom { width: 14px; height: 14px; flex: none; color: var(--tomato); vertical-align: -2.5px; }
+.tom.off { color: var(--label-3); }
+.tc { white-space: nowrap; }
+.tc .tom { margin-right: 2px; }
+.nv .tom, .sec .tom { width: 14px; height: 14px; color: var(--tomato); margin-right: 2px; }
+.nv .tom.off { color: var(--label-3); }
+/* While a timer runs the timer page takes the whole window, tinted with the project's colour. */
+body[data-zen] { background: color-mix(in srgb, var(--zc) 7%, var(--bg)); }
+body[data-zen] :is(.sidebar, .bar, .tabbar) { display: none; }
+body[data-zen] .app { grid-template-columns: minmax(0, 1fr); }
+.zen { position: relative; display: grid; justify-items: center; align-content: center; text-align: center; min-height: calc(100vh - 150px); padding: 10px 0 30px; }
+body[data-zen] .zen { min-height: calc(100vh - 64px); }
+.zback { position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 3px; height: 34px; padding: 0 15px 0 9px; border-radius: 17px; background: var(--fill); font-size: 14px; font-weight: 500; }
+.zback svg { width: 15px; height: 15px; stroke-width: 2.2; }
+.zlab { font-size: 15px; font-weight: 600; color: var(--label-2); margin-bottom: 20px; }
+.dial { position: relative; width: 300px; height: 300px; }
+.dial > svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.dial circle { fill: none; stroke-width: 9; }
+.dial .r0 { stroke: var(--fill); }
+.dial .r1 { stroke: var(--c); stroke-linecap: round; transition: stroke-dasharray .5s linear; }
+.dial .dt { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 6px; }
+.dial .dt b { font: 200 78px/1 -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", sans-serif; letter-spacing: -2px; }
+.dial .dt span { color: var(--label-2); font-size: 13px; }
+.dial .tom { width: 96px; height: 96px; animation: pop .45s cubic-bezier(.25, 1.6, .4, 1); }
+.zt { margin-top: 28px; max-width: min(560px, 100%); font-size: 20px; font-weight: 600; line-height: 1.35; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.zt i, .fdot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--c); flex: none; }
+.zt i { margin-right: 9px; vertical-align: 2px; }
+.fdot.o { background: none; border: 1.5px solid var(--c); }
+.zs { color: var(--label-2); font-size: 14px; margin-top: 4px; min-height: 20px; }
+.round { display: flex; align-items: center; gap: 7px; margin-top: 24px; color: var(--label-2); font-size: 13px; }
+.round .tom { width: 22px; height: 22px; }
+.round span { margin-left: 5px; }
+.za { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 28px; }
+.zb { height: 44px; min-width: 128px; padding: 0 22px; border-radius: 22px; background: var(--fill); font-size: 15px; font-weight: 600; }
+.zb.go { background: var(--blue); color: #fff; min-width: 170px; }
+.zf { color: var(--label-2); font-size: 13px; margin-top: 22px; }
+.nv.sel .nl { font-weight: 600; }
+.nv .fdot { margin: 0 4px; }
+/* The running timer elsewhere in the app: a capsule in the toolbar that leads back to the timer page. */
 .fcap { display: flex; align-items: center; gap: 7px; height: 34px; padding: 0 13px 0 9px; border-radius: 17px; background: var(--fill); font-size: 13px; min-width: 0; max-width: 260px; }
 .fcap b { font-weight: 600; font-size: 14px; white-space: nowrap; }
 .fcap span { color: var(--label-2); min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -293,16 +333,6 @@ button.ck { cursor: pointer; }
 .ring circle { fill: none; stroke-width: 2.4; }
 .ring .r0 { stroke: var(--label-3); }
 .ring .r1 { stroke: currentColor; stroke-linecap: round; }
-.fnow { padding: 14px 16px 15px; text-align: center; border-bottom: .5px solid var(--sep); }
-.fnow .ft { font: 200 54px/1.15 -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", sans-serif; letter-spacing: -1px; }
-.fnow .ft.sm { font-size: 30px; font-weight: 300; letter-spacing: -.4px; padding: 14px 0 10px; }
-.fnow .fn { font-size: 14px; font-weight: 600; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
-.fnow .fn i, .fdot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--c); flex: none; }
-.fnow .fn i { margin-right: 7px; }
-.fnow .fm { color: var(--label-2); font-size: 12.5px; margin-top: 2px; }
-.fnow .pa { display: flex; gap: 8px; margin-top: 14px; }
-.frow .gm > div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.frow .mins { color: var(--label-2); font-size: 13px; white-space: nowrap; }
 /* On an item row: a play button on hover, and the countdown while it is the one being worked on. */
 .play { width: 22px; height: 22px; border-radius: 50%; background: var(--fill); color: var(--label-2); display: grid; place-items: center; }
 .play svg { width: 10px; height: 10px; margin-left: 1px; }
@@ -315,6 +345,32 @@ button.ck { cursor: pointer; }
 .fs { position: absolute; left: -5px; width: 3px; border-radius: 2px; background: var(--c); z-index: 1; }
 .wk .fs { left: 0; width: 2px; }
 .blk[data-fpop] { cursor: pointer; }
+/* Statistics, after Screen Time: a few figures, a week of stacked bars, then where the time went. */
+.figs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin: 10px 0 26px 2px; }
+.figs span, .figs em { display: block; font-style: normal; font-size: 12.5px; color: var(--label-2); }
+.figs b { display: block; font-size: 28px; font-weight: 700; letter-spacing: -.6px; line-height: 1.25; white-space: nowrap; }
+.figs b .tom { width: 22px; height: 22px; vertical-align: -3px; margin-right: 4px; }
+.figs b small { font-size: 15px; font-weight: 600; letter-spacing: 0; margin-left: 2px; }
+.chart, .cx { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)) 40px; }
+.chart { position: relative; height: 176px; border-bottom: .5px solid var(--sep); }
+.cc { height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 3px; position: relative; z-index: 1; }
+.cc em { font-style: normal; font-size: 12px; font-weight: 600; color: var(--label-2); }
+.cst { width: min(34px, 60%); flex: none; display: flex; flex-direction: column-reverse; border-radius: 6px 6px 0 0; overflow: hidden; }
+.gl { position: absolute; left: 0; right: 40px; border-top: .5px solid var(--sep); }
+.gl span { position: absolute; left: 100%; top: -8px; padding-left: 8px; font-size: 11px; color: var(--label-2); white-space: nowrap; }
+.gl.avg { border-top: 1px dashed var(--label-3); }
+.cx { margin: 6px 0 4px; font-size: 12px; color: var(--label-2); text-align: center; }
+.cx .tdy { color: var(--red); font-weight: 600; }
+.srow { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 6px 14px; padding: 9px 2px; font-size: 14.5px; }
+.srow .sn { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.srow .sn span { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.srow em { font-style: normal; color: var(--label-2); font-size: 13px; white-space: nowrap; }
+.srow .sbar { grid-column: 1 / -1; height: 4px; border-radius: 2px; background: var(--fill); overflow: hidden; }
+.srow .sbar i { display: block; height: 100%; border-radius: 2px; background: var(--c); }
+.rrow { display: flex; align-items: center; gap: 10px; padding: 7px 2px; font-size: 14.5px; }
+.rrow time { flex: none; width: 92px; color: var(--label-2); font-size: 13px; }
+.rrow span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rrow em { font-style: normal; color: var(--label-2); font-size: 13px; white-space: nowrap; }
 
 /* Mockup-only control for switching the sample data. Not part of the product. */
 .demo { margin-top: auto; padding: 16px 2px 8px; display: grid; gap: 6px; font-size: 11.5px; color: var(--label-2); }
@@ -398,13 +454,17 @@ pre.cli .c { color: var(--label-2); }
   .demo { display: none; }
   .fcap span { display: none; }
   .fcap { padding-right: 11px; }
+  .dial { width: 260px; height: 260px; }
+  .dial .dt b { font-size: 66px; }
+  .zen { min-height: calc(100vh - 330px); }
+  .figs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .matrix { grid-template-columns: minmax(0, 1fr); }
   .quad { max-height: none; min-height: 0; }
   .cal-scroll { max-height: calc(100vh - 250px); }
   .me.ad { width: 6px; height: 6px; padding: 0; margin: 0; font-size: 0; border-radius: 50%; background: var(--c); }
   .fab { right: 18px; bottom: calc(84px + env(safe-area-inset-bottom)); }
   .yg span { width: 21px; height: 21px; font-size: 11px; }
-  .tabbar { display: grid; grid-template-columns: 1fr 1fr; position: fixed; left: 50%; transform: translateX(-50%); width: 210px; bottom: calc(14px + env(safe-area-inset-bottom)); z-index: 10; border-radius: 30px; padding: 5px; }
+  .tabbar { display: grid; grid-template-columns: 1fr 1fr 1fr; position: fixed; left: 50%; transform: translateX(-50%); width: 290px; bottom: calc(14px + env(safe-area-inset-bottom)); z-index: 10; border-radius: 30px; padding: 5px; }
   .tabbar button { display: grid; justify-items: center; gap: 1px; padding: 6px 0 5px; font-size: 10px; font-weight: 500; color: var(--label-2); border-radius: 25px; }
   .tabbar button.on { color: var(--blue); background: var(--fill); }
   .tabbar svg { width: 23px; height: 23px; }
@@ -436,6 +496,9 @@ pre.cli .c { color: var(--label-2); }
   <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 019.5 4a8.5 8.5 0 1010.5 10.5z" fill="currentColor" stroke="none"/></symbol>
   <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></symbol>
   <symbol id="i-person" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20a7.5 7.5 0 0115 0"/></symbol>
+  <symbol id="i-tom" viewBox="0 0 24 24"><circle cx="12" cy="14" r="7.6" fill="currentColor"/><path d="M12 7.8V4.2M12 7.6c-1.3-1.5-2.9-1.8-4.3-1.3M12 7.6c1.3-1.5 2.9-1.8 4.3-1.3" fill="none" stroke="var(--green)" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-tom-o" viewBox="0 0 24 24"><circle cx="12" cy="14" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 7.2V4.2M12 7c-1.3-1.5-2.9-1.8-4.3-1.3M12 7c1.3-1.5 2.9-1.8 4.3-1.3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M6 19.5v-7M12 19.5v-14M18 19.5v-10" stroke-width="2.6"/></symbol>
   <symbol id="i-timer" viewBox="0 0 24 24"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 9.5v4M9.5 3h5M12 3v3"/></symbol>
   <symbol id="i-play" viewBox="0 0 24 24"><path d="M6 3.5v17l14-8.5z" fill="currentColor" stroke="none"/></symbol>
   <symbol id="i-stop" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="3" fill="currentColor" stroke="none"/></symbol>
@@ -444,13 +507,14 @@ pre.cli .c { color: var(--label-2); }
 <div class="app">
   <!-- The sidebar navigates within the current mode: calendar or items. -->
   <aside class="sidebar glass">
-    <div class="seg mode" role="group" aria-label="模式"><button data-mode="tasks">事项</button><button data-mode="cal">日历</button></div>
+    <div class="seg mode" role="group" aria-label="模式"><button data-mode="tasks">事项</button><button data-mode="cal">日历</button><button data-mode="focus">专注</button></div>
     <div id="side-cal">
       <div class="mini" id="mini"></div>
       <div class="s-label">项目</div>
       <div class="projects" id="cal-projects"></div>
     </div>
     <div id="side-tasks"><div class="nav" id="nav"></div></div>
+    <div id="side-focus"></div>
     <div class="demo">设计稿演示数据<div class="seg"><button data-set="normal">日常</button><button data-set="busy">拥挤</button><button data-set="empty">空白</button></div><div class="seg"><button data-fx="ff">专注计时快进 10 分钟</button></div></div>
   </aside>
 
@@ -469,6 +533,7 @@ pre.cli .c { color: var(--label-2); }
     </div>
     <div id="cal"></div>
     <div class="list" id="list"></div>
+    <div id="focus"></div>
   </main>
 
   <button class="fab" aria-label="新事项"><svg class="i"><use href="#i-plus"/></svg></button>
@@ -476,6 +541,7 @@ pre.cli .c { color: var(--label-2); }
   <nav class="tabbar glass" aria-label="切换">
     <button data-mode="tasks"><svg class="i"><use href="#i-checklist"/></svg>事项</button>
     <button data-mode="cal"><svg class="i"><use href="#i-cal"/></svg>日历</button>
+    <button data-mode="focus"><svg class="i"><use href="#i-timer"/></svg>专注</button>
   </nav>
 </div>
 <div id="sheet-slot"></div>
@@ -572,11 +638,11 @@ function normalData() {
   // imp: marked important by the user. Urgency is never stored; it follows from the deadline.
   for (const id of ['prep', 'caldav', 'weekly', 'cli', 'demo', 'notes', 'conflict', 'book']) tasks.find(t => t.id === id).imp = true;
   // Focus sessions: the time actually spent. task: the item it counts towards (none = free focus).
-  const sessions = [
-    { date: 12, s: 10, e: 10 + 50 / 60, task: 'req' }, { date: 12, s: 11, e: 11 + 50 / 60, task: 'req' }, { date: 12, s: 16, e: 16 + 35 / 60, task: 'req' },
-    { date: 12, s: 15 + 5 / 60, e: 15 + 55 / 60, task: 'caldav' },
-    { date: 13, s: 9 + 32 / 60, e: 9 + 57 / 60, task: 'pr' },
-  ];
+  // A session that ran its full length is one tomato; one that was given up keeps its minutes only.
+  const sessions = [{ date: 12, s: 16, e: 16.2, task: 'req' }];
+  const toms = (date, task, at, n) => { for (let k = 0; k < n; k++) sessions.push({ date, s: at + k * 0.5, e: at + k * 0.5 + 25 / 60, task }); };
+  toms(7, 'book', 20, 2); toms(8, 'conflict', 10, 3); toms(8, 'review', 15, 1); toms(9, 'demo', 14, 2); toms(9, 'followup', 15.5, 2);
+  toms(10, 'book', 9, 2); toms(10, 'hotel', 11, 1); toms(11, 'photos', 16, 1); toms(12, 'req', 10, 4); toms(12, 'caldav', 15 + 5 / 60, 2); toms(13, 'pr', 9 + 32 / 60, 1);
   return { projects, areas, props, items, tasks, recent, sessions, done: ['req'], del: true, history: 5 };
 }
 
@@ -653,7 +719,8 @@ const OLDER = [
 const DATA = { normal: normalData, busy: busyData, empty: () => ({ projects: {}, areas: [], props: {}, items: [], tasks: [], recent: [], sessions: [], done: [], del: false }) };
 let PROJECTS, AREAS, props, items, tasks, recent, sessions, done, fresh, del, dataset;
 // The focus timer. null = idle; kind 'work' or 'rest' counts down from start for len seconds; 'over' = a work period just ended.
-const WORK = 25 * 60, REST = 5 * 60;
+const WORK = 25 * 60, REST = 5 * 60, LONG = 15 * 60, ROUND = 4;   // a long rest after every fourth tomato
+let fview = 'timer', pick, lastMode = 'tasks';   // focus mode: timer or stats; the item picked for the next tomato ('' = free focus)
 let timer = null, focusClock = NOW;   // focusClock: where on the sample day the next session is recorded
 let openFocus = null;           // index into items of the time block whose focus popover is open
 const undone = new Set(), collapsed = new Set();
@@ -672,7 +739,8 @@ function load(name) {
   dataset = name;
   ({ projects: PROJECTS, areas: AREAS, props, tasks, recent, sessions } = d);
   timer = d.focus ? { kind: 'work', task: d.focus.task, start: Date.now() - d.focus.ago * 1000, len: WORK } : null;
-  focusClock = NOW - (d.focus ? d.focus.ago / 3600 : 0); openFocus = null;
+  focusClock = NOW - (d.focus ? d.focus.ago / 3600 : 0); openFocus = null; fview = 'timer'; pick = undefined;
+  sessions.forEach(x => { x.full = (x.e - x.s) * 60 > 24.5; });
   items = d.items.sort((a, b) => a.date - b.date || (b.allDay ? 1 : 0) - (a.allDay ? 1 : 0) || (a.s || 0) - (b.s || 0));
   done = new Set(d.done);
   fresh = new Set();            // completed during this session: stay in place instead of moving to the logged group
@@ -690,7 +758,7 @@ const icon = (n, cls = '') => `<svg class="i ${cls}"><use href="#i-${n}"/></svg>
 const stateOf = x => x.prop ? props[x.prop].state : null;
 const mondayIndex = date => (new Date(YEAR, MONTH, date).getDay() + 6) % 7;
 
-/* ---------- focus timer ---------- */
+/* ---------- focus: the pomodoro timer ---------- */
 const pad2 = n => String(Math.floor(n)).padStart(2, '0');
 const span = m => { m = Math.max(1, Math.round(m)); return m < 60 ? m + ' 分钟' : Math.floor(m / 60) + ' 小时' + (m % 60 ? ` ${m % 60} 分钟` : ''); };
 const clockOf = h => { const m = Math.round(h * 60); return pad2(m / 60) + ':' + pad2(m % 60); };
@@ -698,12 +766,19 @@ const brief = s => s.length > 18 ? s.slice(0, 18) + '…' : s;
 const remain = () => Math.max(0, timer.len - (Date.now() - timer.start) / 1000);
 const mmss = s => { s = Math.ceil(s); return pad2(s / 60) + ':' + pad2(s % 60); };
 const usedMin = id => sessions.filter(x => x.task === id).reduce((s, x) => s + (x.e - x.s) * 60, 0);
+const tomsOf = id => sessions.filter(x => x.task === id && x.full).length;
+const tomsNeeded = t => t.est ? Math.ceil(t.est * 3600 / WORK) : 0;   // the estimate, in tomatoes
+const todayToms = () => sessions.filter(x => x.date === TODAY && x.full).length;
 const focusing = id => !!timer && timer.kind === 'work' && timer.task === id;
 const sessionColour = x => colourOf(tasks.find(t => t.id === x.task) || {});
 const sessionTitle = x => (tasks.find(t => t.id === x.task) || { t: '自由专注' }).t;
-const ring = frac => `<svg class="ring" viewBox="0 0 18 18"><circle class="r0" cx="9" cy="9" r="7"/><circle class="r1" data-ring cx="9" cy="9" r="7" stroke-dasharray="${frac * 44} 44"/></svg>`;
-function record(task, sec) {
-  const x = { date: TODAY, s: focusClock, e: focusClock + sec / 3600, task };
+const tom = (on = true) => `<svg class="tom ${on ? '' : 'off'}" aria-hidden="true"><use href="#i-tom${on ? '' : '-o'}"/></svg>`;
+// Tomatoes earned on an item against the number its estimate comes to: "2/4".
+const tomCount = t => { const n = tomsOf(t.id), need = tomsNeeded(t); return n ? `<span class="tc">${tom()}${n}${need ? '/' + need : ''}</span>` : ''; };
+const ring = frac => `<svg class="ring" viewBox="0 0 18 18"><circle class="r0" cx="9" cy="9" r="7"/><circle class="r1" data-ring="44" cx="9" cy="9" r="7" stroke-dasharray="${frac * 44} 44"/></svg>`;
+const zen = () => mode === 'focus' && fview === 'timer' && !!timer;
+function record(task, sec, full = false) {
+  const x = { date: TODAY, s: focusClock, e: focusClock + sec / 3600, task, full };
   sessions.push(x); focusClock = x.e;
   return x;
 }
@@ -713,71 +788,134 @@ function sessionsOn(date) {
   if (date === TODAY && timer && timer.kind === 'work') list.push({ s: focusClock, e: focusClock + (Date.now() - timer.start) / 3600000, task: timer.task });
   return list.filter(x => !hidden.has((tasks.find(t => t.id === x.task) || {}).p));
 }
-// The toolbar entry: a plain round button when idle, a capsule with the countdown while a timer runs.
+// What can be picked for the next tomato: today's open items, important first.
+function todayPicks() {
+  const list = tasks.filter(x => x.g === 'today' && !done.has(x.id)).sort((a, b) => (b.imp ? 1 : 0) - (a.imp ? 1 : 0)), p = tasks.find(x => x.id === pick);
+  if (p && !done.has(p.id) && !list.includes(p)) list.unshift(p);
+  return list;
+}
+function curPick() {
+  if (pick === '') return undefined;
+  const p = tasks.find(x => x.id === pick), list = todayPicks();
+  return p && !done.has(p.id) ? p.id : list.length ? list[0].id : undefined;
+}
+// Outside the timer page a running timer is a capsule in the toolbar; clicking it goes back to the page.
 function focusCapHTML() {
-  if (!timer) return `<button class="rbtn ${panel === 'focus' ? 'on' : ''}" data-panel="focus" aria-label="专注">${icon('timer')}</button>`;
-  const rest = timer.kind === 'rest', name = rest ? '休息' : sessionTitle(timer);
-  return `<button class="fcap" data-panel="focus" style="--c:${rest ? 'var(--gray)' : sessionColour(timer)}" title="${name}">${ring(timer.len ? remain() / timer.len : 0)}
+  if (!timer || zen()) return '';
+  const rest = timer.kind === 'rest', name = rest ? (timer.long ? '长休息' : '休息') : sessionTitle(timer);
+  return `<button class="fcap" data-fx="zen" style="--c:${rest ? 'var(--green)' : sessionColour(timer)}" title="${name}">${ring(timer.len ? remain() / timer.len : 0)}
     <b ${timer.len ? 'data-clock' : ''}>${timer.len ? mmss(remain()) : '到点了'}</b><span>${name}</span></button>`;
 }
-function focusPanelHTML() {
-  const today = sessions.filter(x => x.date === TODAY).sort((a, b) => b.s - a.s), total = today.reduce((s, x) => s + (x.e - x.s) * 60, 0);
-  const t = timer && tasks.find(x => x.id === timer.task);
-  let html = '';
-  if (timer) {
-    const name = `<div class="fn" style="--c:${sessionColour(timer)}"><i></i>${sessionTitle(timer)}</div>`;
-    const used = t ? usedMin(t.id) : 0, meta = t && (t.est || used) ? `<div class="fm">${[t.est ? '预计 ' + dur(t.est) : '', used ? '已用 ' + span(used) : ''].filter(Boolean).join(' · ')}</div>` : '';
-    const finish = t ? '<button class="pbtn" data-fx="done">做完了</button>' : '';
-    html += timer.kind === 'work' ? `<div class="fnow"><div class="ft" data-clock>${mmss(remain())}</div>${name}${meta}<div class="pa"><button class="pbtn" data-fx="stop">结束</button>${finish}</div></div>`
-      : timer.kind === 'over' ? `<div class="fnow"><div class="ft sm">${WORK / 60} 分钟到了</div>${name}${meta}<div class="pa">${finish}<button class="pbtn" data-fx="again">再来 ${WORK / 60} 分钟</button><button class="pbtn go" data-fx="rest">休息 ${REST / 60} 分钟</button></div></div>`
-      : `<div class="fnow"><div class="ft" data-clock>${mmss(remain())}</div><div class="fn">休息</div><div class="pa"><button class="pbtn" data-fx="skip">跳过休息</button>${t && !done.has(t.id) ? `<button class="pbtn go" data-fx="again">继续专注</button>` : ''}</div></div>`;
-  } else {
-    // Idle: offer what today holds, important items first, then focus that is not tied to an item.
-    const next = tasks.filter(x => x.g === 'today' && !done.has(x.id)).sort((a, b) => (b.imp ? 1 : 0) - (a.imp ? 1 : 0)).slice(0, 3);
-    const row = (c, title, sub, fx, last) => `<div class="p-row frow ${last ? 'last' : ''}"><i class="fdot" style="--c:${c}"></i><div class="gb"><div class="gm"><div>${title}</div><div class="sub">${sub}</div></div><button class="sb" data-fx="${fx}">开始</button></div></div>`;
-    html += '<h3>开始专注</h3>' + next.map(x => row(colourOf(x), (x.imp ? '<b class="imp">!</b>' : '') + x.t, [PROJECTS[x.p] ? PROJECTS[x.p].name : '收件箱', x.est ? dur(x.est) : ''].filter(Boolean).join(' · '), 'start:' + x.id)).join('')
-      + row('var(--gray)', '自由专注', '不记到任何事项上', 'start', true);
-  }
-  if (today.length) {
-    const max = 4, list = more.fs || today.length <= max ? today : today.slice(0, max - 1);
-    html += `<h3>今天已专注 ${span(total)}</h3>` + list.map((x, k) => `<div class="p-row frow ${k === list.length - 1 && list.length === today.length ? 'last' : ''}"><i class="fdot" style="--c:${sessionColour(x)}"></i>
-      <div class="gb"><div class="gm"><div>${sessionTitle(x)}</div><div class="sub">${clockOf(x.s)}–${clockOf(x.e)}</div></div><span class="mins">${span((x.e - x.s) * 60)}</span></div></div>`).join('')
-      + (list.length < today.length ? `<button class="morebtn pad" data-fx="allfs">显示其余 ${today.length - list.length} 次</button>` : '');
-  } else if (!timer) html += '<div class="blank" style="padding:26px 20px 30px"><b>今天还没有专注</b><span>从一件事项开始，用掉的时间会记到它上面</span></div>';
-  return html;
+// The timer page: one large dial, the item, the round of four, and what can be done now.
+function timerHTML() {
+  const kind = timer ? timer.kind : 'idle', id = timer ? timer.task : curPick(), t = tasks.find(x => x.id === id), n = todayToms();
+  const c = kind === 'rest' ? 'var(--green)' : kind === 'over' ? 'var(--tomato)' : colourOf(t || {}), C = 879.6;
+  const frac = kind === 'idle' || kind === 'over' ? 1 : remain() / timer.len;   // a finished tomato closes the ring in tomato red
+  const label = { idle: `第 ${n + 1} 个番茄`, work: `第 ${n + 1} 个番茄`, over: `完成第 ${n} 个番茄`, rest: timer && timer.long ? '长休息' : '休息' }[kind];
+  const centre = kind === 'over' ? tom() : `<b ${timer ? 'data-clock' : ''}>${mmss(timer ? remain() : WORK)}</b><span>${kind === 'work' ? `到 ${clockOf(focusClock + WORK / 3600)}` : kind === 'rest' ? '休息一下' : '专注'}</span>`;
+  // Four tomatoes make a round. A finished round stays full until the long rest is over.
+  const got = n % ROUND || (n && (kind === 'over' || kind === 'rest') ? ROUND : 0);
+  const marks = Array.from({ length: ROUND }, (_, k) => tom(k < got)).join('') + `<span>${got === ROUND ? '完成一轮，该长休息了' : `再 ${ROUND - got} 个后长休息`}</span>`;
+  const finish = t ? '<button class="zb" data-fx="done">做完了</button>' : '', restLen = n % ROUND === 0 ? LONG : REST;
+  const acts = { idle: `<button class="zb go" data-fx="start:${id || ''}">开始专注</button>`,
+    work: `<button class="zb" data-fx="stop">放弃</button>${finish}`,
+    over: `${finish}<button class="zb" data-fx="again">再来一个</button><button class="zb go" data-fx="rest">${restLen === LONG ? '长休息' : '休息'} ${restLen / 60} 分钟</button>`,
+    rest: `<button class="zb" data-fx="skip">跳过休息</button>` }[kind];
+  const total = sessions.filter(x => x.date === TODAY).reduce((s, x) => s + (x.e - x.s) * 60, 0);
+  return `<div class="zen" style="--c:${c}">${timer ? `<button class="zback" data-fx="min">${icon('left')}收起</button>` : ''}
+    <div class="zlab">${label}</div>
+    <div class="dial"><svg viewBox="0 0 300 300"><circle class="r0" cx="150" cy="150" r="140"/><circle class="r1" data-ring="${C}" cx="150" cy="150" r="140" stroke-dasharray="${frac * C} ${C}"/></svg><div class="dt">${centre}</div></div>
+    <div class="zt" title="${t ? t.t : ''}"><i style="--c:${colourOf(t || {})}"></i>${t ? t.t : '自由专注'}</div>
+    <div class="zs">${t ? [PROJECTS[t.p] ? PROJECTS[t.p].name : '收件箱', t.est ? dur(t.est) : '', tomCount(t)].filter(Boolean).join(' · ') : '不记到任何事项上'}</div>
+    <div class="round">${marks}</div><div class="za">${acts}</div>
+    ${kind === 'idle' && total ? `<div class="zf">今天 ${tom()}${n} · ${span(total)}</div>` : ''}</div>`;
+}
+// Statistics for the last seven days.
+function statsHTML() {
+  const top = head(icon('chart'), '统计', 'var(--blue)');
+  if (!sessions.length) return `<div class="list">${top}${blank('还没有专注记录', '完成一个番茄后，这里会显示每天的数量和时间花在哪')}</div>`;
+  const projOf = x => (tasks.find(t => t.id === x.task) || {}).p || '', mins = l => l.reduce((s, x) => s + (x.e - x.s) * 60, 0), fulls = l => l.filter(x => x.full).length;
+  const pName = p => PROJECTS[p] ? PROJECTS[p].name : '未归项目', pColour = p => PROJECTS[p] ? PROJECTS[p].c : 'var(--gray)';
+  const days = Array.from({ length: 7 }, (_, k) => TODAY - 6 + k).map(d => ({ d, list: sessions.filter(x => x.date === d) }));
+  const all = days.flatMap(x => x.list), today = days[6].list;
+  let streak = 0;
+  for (let k = 6; k >= 0 && fulls(days[k].list); k--) streak++;
+  const scale = Math.max(4, Math.ceil(Math.max(...days.map(x => fulls(x.list))) / 2) * 2), avg = fulls(all) / 7, H = 84;
+  const fig = (label, big, small) => `<div><span>${label}</span><b>${big}</b><em>${small}</em></div>`;
+  const cols = days.map(({ list }) => {
+    const by = {}, n = fulls(list);
+    list.filter(x => x.full).forEach(x => { by[projOf(x)] = (by[projOf(x)] || 0) + 1; });
+    return `<div class="cc">${n ? `<em>${n}</em>` : ''}<div class="cst" style="height:${n / scale * H}%">${Object.entries(by).map(([p, k]) => `<i title="${pName(p)} · ${k} 个" style="flex:${k};background:${pColour(p)}"></i>`).join('')}</div></div>`;
+  }).join('');
+  const line = (v, label, cls = '') => `<div class="gl ${cls}" style="bottom:${v / scale * H}%"><span>${label}</span></div>`;
+  const groups = {};
+  all.forEach(x => { (groups[projOf(x)] = groups[projOf(x)] || []).push(x); });
+  const rows = Object.entries(groups).sort((a, b) => mins(b[1]) - mins(a[1])), most = rows.length ? mins(rows[0][1]) : 1;
+  const active = days.filter(x => x.list.length).reverse(), shownDays = more.rec ? active : active.slice(0, 2);
+  const dayLabel = d => d === TODAY ? '今天' : d === TODAY - 1 ? '昨天' : `${MONTH + 1}月${d}日 ${DAY_NAMES[mondayIndex(d)]}`;
+  return `<div class="list">${top}
+    <div class="figs">${fig('今天', tom() + fulls(today), today.length ? span(mins(today)) : '还没有开始')}${fig('最近 7 天', tom() + fulls(all), all.length ? span(mins(all)) : '没有记录')}
+      ${fig('日均', avg.toFixed(1) + '<small>个</small>', span(mins(all) / 7))}${fig('连续专注', streak + '<small>天</small>', streak ? '每天至少一个番茄' : '今天还没有番茄')}</div>
+    <div class="chart">${line(scale, scale)}${line(scale / 2, Math.abs(avg - scale / 2) < scale * 0.12 ? '' : scale / 2)}${avg ? line(avg, '日均', 'avg') : ''}${cols}</div>
+    <div class="cx">${days.map(({ d }) => `<span class="${d === TODAY ? 'tdy' : ''}">${d === TODAY ? '今天' : DAY_NAMES[mondayIndex(d)]}</span>`).join('')}</div>
+    <div class="sec"><span>时间花在哪</span></div>
+    ${rows.map(([p, l]) => `<div class="srow" style="--c:${pColour(p)}"><div class="sn"><i class="fdot"></i><span title="${pName(p)}">${pName(p)}</span></div><em>${tom()}${fulls(l)} · ${span(mins(l))}</em><div class="sbar"><i style="width:${mins(l) / most * 100}%"></i></div></div>`).join('')}
+    ${shownDays.map(({ d, list }) => `<div class="sec"><span>${dayLabel(d)}</span><em>${tom()}${fulls(list)} · ${span(mins(list))}</em></div>`
+      + [...list].sort((a, b) => b.s - a.s).map(x => `<div class="rrow" style="--c:${sessionColour(x)}"><time>${clockOf(x.s)}–${clockOf(x.e)}</time><i class="fdot"></i><span>${sessionTitle(x)}</span><em>${x.full ? tom() : '未完成 · ' + span((x.e - x.s) * 60)}</em></div>`).join('')).join('')}
+    ${active.length > shownDays.length ? '<button class="morebtn" style="padding-left:2px;margin-top:10px" data-fx="allrec">更早的记录</button>' : ''}</div>`;
+}
+function renderFocus() {
+  document.body.toggleAttribute('data-zen', zen());
+  document.body.style.setProperty('--zc', !timer ? 'transparent' : timer.kind === 'rest' ? 'var(--green)' : sessionColour(timer));
+  if (mode !== 'focus') return;
+  const cur = timer ? timer.task : curPick();
+  const row = (id, c, title, right) => `<button class="nv ${fview === 'timer' && cur === (id || undefined) ? 'sel' : ''}" data-fx="pick:${id}" title="${title}"><i class="fdot ${fview === 'timer' && cur === (id || undefined) ? '' : 'o'}" style="--c:${c}"></i><span class="nl">${title}</span>${right ? `<span class="n">${right}</span>` : ''}</button>`;
+  $('side-focus').innerHTML = `<div class="nav"><button class="nv ${fview === 'timer' ? 'on' : ''}" data-fx="fview:timer" style="--c:var(--tomato)">${icon('timer')}<span class="nl">计时</span></button>
+    <button class="nv ${fview === 'stats' ? 'on' : ''}" data-fx="fview:stats" style="--c:var(--blue)">${icon('chart')}<span class="nl">统计</span></button>
+    <div class="area">今天</div>${todayPicks().map(t => row(t.id, colourOf(t), t.t, tomCount(t) || (tomsNeeded(t) ? `${tom(false)}${tomsNeeded(t)}` : ''))).join('')}${row('', 'var(--gray)', '自由专注', '')}</div>`;
+  $('focus').innerHTML = fview === 'stats' ? statsHTML() : timerHTML();
 }
 function paintClock() {
   if (!timer || !timer.len) return;
   const l = remain();
   document.querySelectorAll('[data-clock]').forEach(el => { el.textContent = mmss(l); });
-  document.querySelectorAll('[data-ring]').forEach(el => el.setAttribute('stroke-dasharray', `${l / timer.len * 44} 44`));
+  document.querySelectorAll('[data-ring]').forEach(el => el.setAttribute('stroke-dasharray', `${l / timer.len * el.dataset.ring} ${el.dataset.ring}`));
 }
-// A work period that runs out is recorded in full and asks what next; a break just ends.
+// A work period that runs out earns its tomato and asks what next; a rest just ends.
 function tick() {
   if (!timer || !timer.len) return;
   if (remain() > 0) return paintClock();
-  if (timer.kind === 'work') { record(timer.task, timer.len); timer = { kind: 'over', task: timer.task }; panel = 'focus'; return renderAll(); }
-  focusClock += REST / 3600; timer = null; renderAll(); hud('休息结束');
+  if (timer.kind === 'work') {
+    record(timer.task, timer.len, true); timer = { kind: 'over', task: timer.task }; renderAll();
+    return zen() ? undefined : hud(`完成第 ${todayToms()} 个番茄`, () => focusAction('rest'), '开始休息');
+  }
+  focusClock += timer.len / 3600; pick = timer.task || ''; timer = null; renderAll(); hud('休息结束');
 }
 function focusAction(action) {
-  const [name, id] = action.split(':'), title = timer ? brief(sessionTitle(timer)) : '';
+  const cut = action.indexOf(':'), name = cut < 0 ? action : action.slice(0, cut), id = cut < 0 ? '' : action.slice(cut + 1);
+  const title = timer ? brief(sessionTitle(timer)) : '';
   const spent = timer && timer.kind === 'work' ? (Date.now() - timer.start) / 1000 : 0;
-  // Ending early keeps the minutes actually spent; under a minute is a slip and is dropped.
+  // Giving up keeps the minutes spent but earns no tomato; under a minute is a slip and is dropped.
   const keep = () => spent >= 60 && !!record(timer.task, spent);
+  const enter = () => { fview = 'timer'; if (mode === 'focus') { renderAll(); window.scrollTo(0, 0); } else setMode('focus'); };
   openFocus = null;
   if (name === 'ff') { if (!timer || !timer.len) return hud('先开始一次专注'); timer.start -= 600000; return tick(); }
-  if (name === 'allfs') { more.fs = 1; return renderPanels(); }
+  if (name === 'fview') { fview = id; renderAll(); return window.scrollTo(0, 0); }
+  if (name === 'allrec') { more.rec = 1; return renderFocus(); }
+  if (name === 'zen') return enter();
+  if (name === 'min') return setMode(lastMode);
+  if (name === 'pick') { if (!timer) pick = id; return enter(); }
   if (name === 'start' || name === 'again') {
-    // Starting on something else ends what was running.
+    // Starting on something else gives up what was running.
     const next = name === 'again' ? timer.task : id || undefined, kept = keep();
-    timer = { kind: 'work', task: next, start: Date.now(), len: WORK };
-    panel = null; renderAll();
-    return kept ? hud(`「${title}」记了 ${span(spent / 60)}`) : undefined;
+    pick = next || ''; timer = { kind: 'work', task: next, start: Date.now(), len: WORK };
+    panel = null; enter();
+    return kept ? hud(`「${title}」的番茄没有完成，记了 ${span(spent / 60)}`) : undefined;
   }
-  if (name === 'stop') { const kept = keep(); timer = null; renderAll(); return hud(kept ? `「${title}」专注了 ${span(spent / 60)}` : '不足 1 分钟，没有记录'); }
-  if (name === 'done') { keep(); done.add(timer.task); fresh.add(timer.task); timer = null; panel = null; renderAll(); return hud(`已完成「${title}」`); }
-  if (name === 'rest') { timer = { kind: 'rest', task: timer.task, start: Date.now(), len: REST }; panel = null; return renderAll(); }
-  if (name === 'skip') { timer = null; return renderAll(); }
+  if (name === 'stop') { const kept = keep(); pick = timer.task || ''; timer = null; renderAll(); return hud(kept ? `这个番茄没有完成，记了 ${span(spent / 60)}` : '不足 1 分钟，没有记录'); }
+  if (name === 'done') { keep(); done.add(timer.task); fresh.add(timer.task); timer = null; pick = undefined; renderAll(); return hud(`已完成「${title}」`); }
+  if (name === 'rest') { const long = todayToms() % ROUND === 0; timer = { kind: 'rest', task: timer.task, start: Date.now(), len: long ? LONG : REST, long }; return renderAll(); }
+  if (name === 'skip') { pick = timer.task || ''; timer = null; return renderAll(); }
 }
 setInterval(tick, 500);
 
@@ -826,7 +964,7 @@ function focusPopHTML(i, place) {
   const t = tasks.find(x => x.id === i.task) || {}, used = usedMin(i.task), on = focusing(i.task);
   return `<div class="pop" style="--c:${colourOf(i)};${place}"><div class="pt"><i></i>${i.t}</div>
     <div class="pw">${hhmm(i.s)}–${hhmm(i.e)}${t.est || used ? '<br>' + [t.est ? '预计 ' + dur(t.est) : '', used ? '已用 ' + span(used) : ''].filter(Boolean).join(' · ') : ''}</div>
-    <div class="pa"><button class="pbtn ${on ? '' : 'go'}" data-fx="${on ? 'stop' : 'start:' + i.task}">${on ? '结束专注' : `专注 ${WORK / 60} 分钟`}</button></div></div>`;
+    <div class="pa"><button class="pbtn ${on ? '' : 'go'}" data-fx="${on ? 'zen' : 'start:' + i.task}">${on ? '回到计时' : '开始专注'}</button></div></div>`;
 }
 const allDayHTML = (i, place = '') => `<div class="ad" title="${i.t}" style="--c:${colourOf(i)};${place}">${i.t}</div>`;
 function popHTML(place) {
@@ -995,10 +1133,10 @@ const blank = (title, tip) => `<div class="blank"><b>${title}</b><span>${tip}</s
 // o.sub: show the project under the title. o.star: mark items planned for today. o.timeOnly: the day is already in the heading.
 function todoHTML(t, o = {}) {
   const isDone = done.has(t.id), isOpen = expanded === t.id, when = taskWhen(t), pend = tentative(t);
-  // Time spent focusing sits next to the estimate: "used / estimated" while open, "took (estimated)" once done.
+  // Tomatoes earned sit next to the estimate: "1.5 小时 · 2/4"; once done, the time it took.
   const used = usedMin(t.id), on = focusing(t.id);
-  const time = !used ? (t.est ? dur(t.est) : '') : isDone ? `用了 ${span(used)}${t.est ? `（预计 ${dur(t.est)}）` : ''}` : `已用 ${span(used)}${t.est ? ' / ' + dur(t.est) : ''}`;
-  const sub = o.sub ? [PROJECTS[t.p] ? PROJECTS[t.p].name : '', time].filter(Boolean).join(' · ') : '';
+  const time = isDone && used ? `用了 ${span(used)}` : t.est ? dur(t.est) : '';
+  const sub = o.sub ? [PROJECTS[t.p] ? PROJECTS[t.p].name : '', time, tomCount(t) || (used && !isDone ? `已用 ${span(used)}` : '')].filter(Boolean).join(' · ') : '';
   const right = [];
   if (on) right.push(`<span class="fgo" style="--c:${colourOf(t)}">${ring(remain() / timer.len)}<span data-clock>${mmss(remain())}</span></span>`);
   if (t.dueDate && !isDone) right.push(overdue(t) ? `<span class="flag hot">${icon('flag')}逾期 ${TODAY - t.dueDate} 天</span>` : `<span class="flag ${t.dueDate === TODAY ? 'hot' : ''}">${icon('flag')}${t.due}</span>`);
@@ -1011,7 +1149,7 @@ function todoHTML(t, o = {}) {
     card = `<div class="card"><div class="cn ${t.notes ? '' : 'ph'}">${t.notes || '备注'}</div>
       ${pend ? `<div class="sg"><div><b>${p.who}</b> 建议：${p.what}。${p.why}</div><button class="sb" data-sg="rejected">拒绝</button><button class="sb go" data-sg="accepted">接受</button></div>` : ''}
       <div class="cm"><span class="ck">${icon('cal')}${when || (pend ? '待定 ' + t.slot : '未安排')}</span><span class="ck">${icon('clock')}${t.est ? dur(t.est) : '预计用时'}${used ? ' · 已用 ' + span(used) : ''}</span>
-        ${isDone ? '' : `<button class="ck go" data-fx="${on ? 'stop' : 'start:' + t.id}">${icon(on ? 'stop' : 'play')}${on ? '结束专注' : '开始专注'}</button>`}${t.due ? `<span class="ck">${icon('flag')}截止${t.due}</span>` : ''}<button class="ck ${t.imp ? 'hot' : ''}" data-imp="${t.id}"><b>!</b>${t.imp ? '重要' : '标为重要'}</button><span class="ck"><i style="--c:${colourOf(t)}"></i>${PROJECTS[t.p] ? PROJECTS[t.p].name : '收件箱'}</span></div></div>`;
+        ${isDone ? '' : `<button class="ck go" data-fx="${on ? 'zen' : 'start:' + t.id}">${icon(on ? 'timer' : 'play')}${on ? '回到计时' : '开始专注'}</button>`}${t.due ? `<span class="ck">${icon('flag')}截止${t.due}</span>` : ''}<button class="ck ${t.imp ? 'hot' : ''}" data-imp="${t.id}"><b>!</b>${t.imp ? '重要' : '标为重要'}</button><span class="ck"><i style="--c:${colourOf(t)}"></i>${PROJECTS[t.p] ? PROJECTS[t.p].name : '收件箱'}</span></div></div>`;
   }
   return `<div class="todo ${isDone ? 'done' : ''} ${isOpen ? 'open' : ''}" data-id="${t.id}">
     <div class="tr"><button class="chk ${isDone ? 'on' : ''}" data-task="${t.id}" aria-label="完成 ${t.t}"></button>
@@ -1126,7 +1264,7 @@ function renderTasks() {
   $('list').classList.toggle('wide', filter === 'matrix');
   $('list').innerHTML = listHTML();
   fetchHistoryIfNear();
-  if (mode === 'tasks') $('title').innerHTML = '';
+  if (mode !== 'cal') $('title').innerHTML = '';
 }
 
 /* ---------- activity panel and settings sheet ---------- */
@@ -1149,7 +1287,6 @@ function renderPanels() {
     if (!todo.length && !recent.length) html = '<div class="blank" style="padding:36px 20px"><b>暂时没有动态</b><span>AI 和其他设备做的改动会出现在这里</span></div>';
     html = `<div class="panel">${html}</div>`;
   }
-  if (panel === 'focus') html = `<div class="panel">${focusPanelHTML()}</div>`;
   $('focus-slot').innerHTML = focusCapHTML();
   $('panel-slot').innerHTML = html;
 
@@ -1169,8 +1306,9 @@ function renderPanels() {
         <div class="g-row act"><div class="gb">生成专用密码…</div></div></div>
         <div class="g-f">每个项目在系统日历里显示为一个同名日历。</div></div>
       <div><div class="g-h">专注</div><div class="group">
-        <div class="g-row"><div class="gb"><div class="gm">专注时长</div><span class="tr">${WORK / 60} 分钟</span>${icon('right', 'chev')}</div></div>
+        <div class="g-row"><div class="gb"><div class="gm">一个番茄</div><span class="tr">${WORK / 60} 分钟</span>${icon('right', 'chev')}</div></div>
         <div class="g-row"><div class="gb"><div class="gm">休息时长</div><span class="tr">${REST / 60} 分钟</span>${icon('right', 'chev')}</div></div>
+        <div class="g-row"><div class="gb"><div class="gm">长休息</div><span class="tr">每 ${ROUND} 个番茄后 ${LONG / 60} 分钟</span>${icon('right', 'chev')}</div></div>
         <div class="g-row"><div class="gb"><div class="gm"><div>到点提醒</div><div class="sub">浏览器通知和提示音</div></div><span class="tr">已开启</span>${icon('right', 'chev')}</div></div></div>
         <div class="g-f">计时记在服务器上，换一台设备看到的是同一个计时。专注记录不会同步到系统日历。</div></div>
       <div><div class="g-h">命令行</div><div class="group"><pre class="cli"><span class="c"># 登录一次，在浏览器里确认</span>
@@ -1192,11 +1330,11 @@ keduly undo</pre></div></div>
     </div></div></div>`;
 }
 
-function renderAll() { renderCal(); renderSide(); renderTasks(); renderPanels(); }
+function renderAll() { renderCal(); renderSide(); renderTasks(); renderFocus(); renderPanels(); }
 
-function hud(text, undo) {
+function hud(text, undo, label = '撤销') {
   const el = $('hud');
-  el.innerHTML = `<span>${text}</span>${undo ? '<button data-hud-undo>撤销</button>' : ''}`;
+  el.innerHTML = `<span>${text}</span>${undo ? `<button data-hud-undo>${label}</button>` : ''}`;
   el.classList.add('on');
   el.undo = undo;
   clearTimeout(hudTimer);
@@ -1204,6 +1342,7 @@ function hud(text, undo) {
 }
 function setMode(m) {
   mode = m;
+  if (m !== 'focus') lastMode = m;
   document.body.dataset.mode = m;
   document.querySelectorAll('button[data-mode]').forEach(b => b.classList.toggle('on', b.dataset.mode === m));
   renderAll();
