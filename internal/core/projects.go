@@ -58,7 +58,7 @@ func (op *Op) CreateArea(f Fields) (*api.Area, error) {
 	if err := save(op, kindArea, store.Areas, a); err != nil {
 		return nil, err
 	}
-	_, err = op.log("area.create", "新建分组"+quote(a.Name))
+	_, err = op.log("area.create", "新建领域"+quote(a.Name))
 	out := areaJSON(a)
 	return &out, err
 }
@@ -80,7 +80,7 @@ func (op *Op) UpdateArea(id string, f Fields) (*api.Area, error) {
 	if err := save(op, kindArea, store.Areas, a); err != nil {
 		return nil, err
 	}
-	_, err = op.log("area.update", "修改了分组"+quote(a.Name))
+	_, err = op.log("area.update", "修改了领域"+quote(a.Name))
 	out := areaJSON(a)
 	return &out, err
 }
@@ -107,7 +107,7 @@ func (op *Op) DeleteArea(id string) error {
 	if err := remove(op, kindArea, store.Areas, id); err != nil {
 		return err
 	}
-	_, err = op.log("area.delete", "删除分组"+quote(a.Name))
+	_, err = op.log("area.delete", "删除领域"+quote(a.Name))
 	return err
 }
 
@@ -406,7 +406,7 @@ func (op *Op) CreateHeading(projectID string, f Fields) (*api.Heading, error) {
 	if err := save(op, kindHeading, store.Headings, h); err != nil {
 		return nil, err
 	}
-	_, err = op.log("heading.create", "在项目"+quote(p.Name)+"中新建分节"+quote(h.Name))
+	_, err = op.log("heading.create", "在项目"+quote(p.Name)+"中新建分组"+quote(h.Name))
 	out := headingJSON(h)
 	return &out, err
 }
@@ -436,7 +436,7 @@ func (op *Op) UpdateHeading(id string, f Fields) (*api.Heading, error) {
 	if err := save(op, kindHeading, store.Headings, h); err != nil {
 		return nil, err
 	}
-	_, err = op.log("heading.update", "修改了分节"+quote(h.Name))
+	_, err = op.log("heading.update", "修改了分组"+quote(h.Name))
 	out := headingJSON(h)
 	return &out, err
 }
@@ -460,6 +460,6 @@ func (op *Op) DeleteHeading(id string) error {
 	if err := remove(op, kindHeading, store.Headings, id); err != nil {
 		return err
 	}
-	_, err = op.log("heading.delete", "删除分节"+quote(h.Name))
+	_, err = op.log("heading.delete", "删除分组"+quote(h.Name))
 	return err
 }
