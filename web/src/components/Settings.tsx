@@ -203,8 +203,8 @@ function SystemCalendar({ tokens }: { tokens: Token[] }): JSX.Element {
       </div>
       <div class="g-f">{t('caldav.footer')}</div>
       <ul class="g-f howto">
-        <li>{t('caldav.iphone')}</li>
-        <li>{t('caldav.mac')}</li>
+        <li>{t('caldav.iphone', { host: location.host })}</li>
+        <li>{t('caldav.mac', { host: location.host })}</li>
         <li>{t('caldav.android')}</li>
       </ul>
     </div>

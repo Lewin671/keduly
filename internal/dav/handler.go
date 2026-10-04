@@ -26,7 +26,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Clients probe with OPTIONS before they have credentials.
 	if r.Method == http.MethodOptions {
 		w.Header().Set("DAV", "1, 3, calendar-access")
-		w.Header().Set("Allow", "OPTIONS, GET, HEAD, PUT, DELETE, PROPFIND, REPORT")
+		w.Header().Set("Allow", "OPTIONS, GET, HEAD, PUT, DELETE, PROPFIND, PROPPATCH, REPORT")
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
@@ -46,7 +46,10 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	switch r.Method {
-	case "MKCOL", "MKCALENDAR", "PROPPATCH", "COPY", "MOVE":
+	case "PROPPATCH":
+		h.proppatch(w, r)
+		return
+	case "MKCOL", "MKCALENDAR", "COPY", "MOVE":
 		http.Error(w, "calendars are projects; manage them in the web app", http.StatusForbidden)
 		return
 	case http.MethodPut, http.MethodGet, http.MethodHead:

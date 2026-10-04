@@ -645,3 +645,31 @@ func TestRecurringEventKeepsItsWallClockTimeAcrossDST(t *testing.T) {
 		}
 	}
 }
+
+// Apple's Calendar sets the sidebar order of each calendar right after an account is added.
+// Refusing that looks like an account error to it, so client-only properties are accepted,
+// while the name and colour, which belong to the project, are refused.
+func TestPropPatch(t *testing.T) {
+	f := setup(t)
+	path := "/dav/calendars/" + f.userID + "/inbox/"
+	patch := func(props string) (int, string) {
+		body := `<?xml version="1.0" encoding="UTF-8"?><A:propertyupdate xmlns:A="DAV:"><A:set><A:prop>` + props + `</A:prop></A:set></A:propertyupdate>`
+		status, _, out := f.raw("PROPPATCH", path, body, map[string]string{"Content-Type": "text/xml"})
+		return status, out
+	}
+
+	status, out := patch(`<D:calendar-order xmlns:D="http://apple.com/ns/ical/">1</D:calendar-order>`)
+	if status != 207 || !strings.Contains(out, "200 OK") || strings.Contains(out, "403") {
+		t.Fatalf("calendar-order: %d %s", status, out)
+	}
+
+	status, out = patch(`<A:displayname>Renamed</A:displayname><D:calendar-order xmlns:D="http://apple.com/ns/ical/">2</D:calendar-order>`)
+	if status != 207 || !strings.Contains(out, "403 Forbidden") || !strings.Contains(out, "424 Failed Dependency") || strings.Contains(out, "200 OK") {
+		t.Fatalf("displayname with calendar-order: %d %s", status, out)
+	}
+
+	status, _, _ = f.raw("PROPPATCH", path, "not xml", map[string]string{"Content-Type": "text/xml"})
+	if status != 400 {
+		t.Fatalf("malformed body: %d", status)
+	}
+}
