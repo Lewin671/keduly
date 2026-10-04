@@ -1,0 +1,38 @@
+# Agent instructions
+
+Keduly is a calendar and task manager with a first-class interface for AI agents: a Go server
+(JSON API and CalDAV), a web app, and a CLI.
+
+## Layout
+
+| Path | Contents |
+|---|---|
+| `cmd/keduly/` | The single binary: `keduly serve` runs the server, every other subcommand is the CLI |
+| `internal/` | Server, storage, CalDAV and CLI packages |
+| `internal/webui/` | Embeds the built web app (`dist/`) into the binary |
+| `web/` | Web app source (TypeScript, Preact, Vite) |
+| `skills/keduly/` | The skill that teaches an agent to use the CLI |
+| `docs/api.md` | The HTTP API. It is the contract between server and web app: update it first |
+| `docs/design/` | `DESIGN.md` and `mockup.html`, the approved design. UI work follows the mockup |
+| `deploy/` | Example container and reverse proxy files |
+| `scripts/` | `check.sh` runs every check; `build.sh` builds the release binary |
+
+## Rules
+
+- Everything in the repository is in English: code, comments, documentation, commit messages.
+  The user interface is in Chinese; its strings live in `web/src/i18n/`.
+- Never commit anything that identifies a deployment or a person: host names, IP addresses,
+  server paths, account names, email addresses, tokens. Use `example.com` and placeholders.
+  Deployment-specific files belong outside the repository or under the ignored `deploy/local/`.
+- UI changes start in `docs/design/mockup.html`, then in `web/`.
+- Run `scripts/check.sh` before committing. It must pass.
+- The server has no runtime dependencies besides its SQLite file. Keep it that way.
+
+## Commands
+
+| Task | Command |
+|---|---|
+| Run every check | `scripts/check.sh` |
+| Build the release binary (web app embedded) | `scripts/build.sh` |
+| Run the server for development | `go run ./cmd/keduly serve --data ./data --addr 127.0.0.1:8080` |
+| Run the web app with hot reload | `cd web && pnpm dev` (proxies `/api` and `/dav` to `127.0.0.1:8080`) |
