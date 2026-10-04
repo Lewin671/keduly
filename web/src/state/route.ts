@@ -1,10 +1,11 @@
 // Mode, calendar view, current date and selected list live in the URL hash, so reload and
-// back/forward work: #/cal/week/2026-10-13, #/items/today, #/items/p/<project id>.
+// back/forward work: #/cal/week/2026-10-13, #/items/today, #/items/p/<project id>, #/focus/stats.
 import { signal } from '@preact/signals';
 import type { CalView } from '../lib/calendar';
 import { isYmd, ymd, wallNow } from '../lib/dates';
 
-export type Mode = 'cal' | 'items';
+export type Mode = 'cal' | 'items' | 'focus';
+export type FocusView = 'timer' | 'stats';
 
 export interface Route {
   mode: Mode;
@@ -12,6 +13,7 @@ export interface Route {
   date: string;
   /** A built-in list, or `p:<project id>`. */
   list: string;
+  focus: FocusView;
 }
 
 const VIEWS: readonly string[] = ['day', 'week', 'month', 'year'];
@@ -32,29 +34,40 @@ export function parseRoute(hash: string, previous: Route): Route {
       date: b && isYmd(b) ? b : ymd(wallNow()),
     };
   }
+  if (mode === 'focus') return { ...previous, mode: 'focus', focus: a === 'stats' ? 'stats' : 'timer' };
   return previous;
 }
 
 export function formatRoute(route: Route): string {
   if (route.mode === 'cal') return `#/cal/${route.view}/${route.date}`;
+  if (route.mode === 'focus') return `#/focus/${route.focus}`;
   return route.list.startsWith('p:') ? `#/items/p/${encodeURIComponent(route.list.slice(2))}` : `#/items/${route.list}`;
 }
 
 // The app opens on the items of today: managing things to do is the product's centre, the calendar a second view.
-const initial: Route = { mode: 'items', view: 'day', date: ymd(wallNow()), list: 'today' };
+const initial: Route = { mode: 'items', view: 'day', date: ymd(wallNow()), list: 'today', focus: 'timer' };
 
 export const route = signal<Route>(parseRoute(location.hash, initial));
+
+let behind: Exclude<Mode, 'focus'> = 'items';
+/** The mode that was showing before focus, which is where its timer page collapses back to. */
+export const modeBehindFocus = (): Exclude<Mode, 'focus'> => behind;
+
+function show(next: Route): void {
+  if (next.mode !== 'focus') behind = next.mode;
+  route.value = next;
+}
 
 export function navigate(change: Partial<Route>): void {
   const next = { ...route.value, ...change };
   const hash = formatRoute(next);
   if (hash === location.hash) return;
-  route.value = next;
+  show(next);
   history.pushState(null, '', hash);
 }
 
 export function initRoute(): void {
   history.replaceState(null, '', formatRoute(route.value));
-  addEventListener('popstate', () => { route.value = parseRoute(location.hash, route.value); });
-  addEventListener('hashchange', () => { route.value = parseRoute(location.hash, route.value); });
+  addEventListener('popstate', () => show(parseRoute(location.hash, route.value)));
+  addEventListener('hashchange', () => show(parseRoute(location.hash, route.value)));
 }

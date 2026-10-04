@@ -5,7 +5,7 @@
   --group: #f5f5f7; --tile: #ffffff; --seg-on: #ffffff; --sheet: #ffffff;
   --glass: rgba(242, 242, 247, .78); --glass-edge: rgba(0, 0, 0, .07); --glass-hi: rgba(255, 255, 255, .7);
   --pop: rgba(255, 255, 255, .88);
-  --blue: #007aff; --red: #ff3b30; --green: #34c759; --orange: #ff9500; --indigo: #5856d6; --teal: #30b0c7; --pink: #ff2d55; --purple: #af52de; --brown: #a2845e; --gray: #8e8e93; --ink: #48484a;
+  --tomato: #f25c45; --blue: #007aff; --red: #ff3b30; --green: #34c759; --orange: #ff9500; --indigo: #5856d6; --teal: #30b0c7; --pink: #ff2d55; --purple: #af52de; --brown: #a2845e; --gray: #8e8e93; --ink: #48484a;
   --mix: #000000; --shadow: 0 12px 40px rgba(0, 0, 0, .18), 0 0 0 .5px rgba(0, 0, 0, .1);
 }
 @media (prefers-color-scheme: dark) {
@@ -15,7 +15,7 @@
     --group: rgba(255, 255, 255, .055); --tile: rgba(255, 255, 255, .08); --seg-on: #636366; --sheet: #242426;
     --glass: rgba(44, 44, 46, .74); --glass-edge: rgba(0, 0, 0, .4); --glass-hi: rgba(255, 255, 255, .1);
     --pop: rgba(44, 44, 46, .9);
-    --blue: #0a84ff; --red: #ff453a; --green: #30d158; --orange: #ff9f0a; --indigo: #7d7aff; --teal: #40c8e0; --pink: #ff375f; --purple: #bf5af2; --brown: #ac8e68; --ink: #8e8e93;
+    --tomato: #ff6b55; --blue: #0a84ff; --red: #ff453a; --green: #30d158; --orange: #ff9f0a; --indigo: #7d7aff; --teal: #40c8e0; --pink: #ff375f; --purple: #bf5af2; --brown: #ac8e68; --ink: #8e8e93;
     --mix: #ffffff; --shadow: 0 12px 40px rgba(0, 0, 0, .55), 0 0 0 .5px rgba(255, 255, 255, .14);
   }
 }
@@ -25,7 +25,7 @@
   --group: rgba(255, 255, 255, .055); --tile: rgba(255, 255, 255, .08); --seg-on: #636366; --sheet: #242426;
   --glass: rgba(44, 44, 46, .74); --glass-edge: rgba(0, 0, 0, .4); --glass-hi: rgba(255, 255, 255, .1);
   --pop: rgba(44, 44, 46, .9);
-  --blue: #0a84ff; --red: #ff453a; --green: #30d158; --orange: #ff9f0a; --indigo: #7d7aff; --teal: #40c8e0; --pink: #ff375f; --purple: #bf5af2; --brown: #ac8e68; --ink: #8e8e93;
+  --tomato: #ff6b55; --blue: #0a84ff; --red: #ff453a; --green: #30d158; --orange: #ff9f0a; --indigo: #7d7aff; --teal: #40c8e0; --pink: #ff375f; --purple: #bf5af2; --brown: #ac8e68; --ink: #8e8e93;
   --mix: #ffffff; --shadow: 0 12px 40px rgba(0, 0, 0, .55), 0 0 0 .5px rgba(255, 255, 255, .14);
 }
 

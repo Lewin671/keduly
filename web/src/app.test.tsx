@@ -3,7 +3,7 @@
 // throws while rendering, or that asks the API for the wrong thing.
 import { render } from 'preact';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Activity, Actor, Bootstrap, CalEvent, Item, Suggestion } from './api/types';
+import type { Activity, Actor, Bootstrap, CalEvent, Focus, FocusSession, FocusStats, Item, Suggestion } from './api/types';
 
 const me: Actor = { kind: 'user', name: 'Me' };
 const agent: Actor = { kind: 'agent', name: 'Claude Code' };
@@ -13,7 +13,7 @@ const at = (time: string, day = DAY) => new Date(`${day}T${time}:00`).toISOStrin
 const item = (id: string, title: string, fields: Partial<Item> = {}): Item => ({
   id, project_id: null, heading_id: null, title, notes: '', estimate_minutes: null, planned_date: null, evening: false,
   due_date: null, due_time: null, important: false, status: 'open', completed_at: null, position: 0, block: null,
-  suggestion: null, created_by: me, created_at: at('08:00'), updated_at: at('08:00'), ...fields,
+  suggestion: null, focus: { tomatoes: 0, minutes: 0 }, created_by: me, created_at: at('08:00'), updated_at: at('08:00'), ...fields,
 });
 const event = (id: string, title: string, fields: Partial<CalEvent> = {}): CalEvent => ({
   id, project_id: 'p1', item_id: null, title, notes: '', location: '', all_day: false, start: at('10:00'), end: at('11:30'),
@@ -22,7 +22,7 @@ const event = (id: string, title: string, fields: Partial<CalEvent> = {}): CalEv
 });
 
 const bootstrap: Bootstrap = {
-  user: { id: 'u1', email: 'me@example.com', name: 'Me', timezone: 'America/New_York', timezone_auto: false, work_start: '09:00', work_end: '18:00', created_at: at('08:00') },
+  user: { id: 'u1', email: 'me@example.com', name: 'Me', timezone: 'America/New_York', timezone_auto: false, work_start: '09:00', work_end: '18:00', focus_minutes: 25, rest_minutes: 5, long_rest_minutes: 15, round_size: 4, created_at: at('08:00') },
   areas: [{ id: 'a1', name: '工作', position: 0 }],
   projects: [
     { id: 'p1', area_id: 'a1', name: 'Keduly 开发', color: 'blue', notes: '给 AI 用的日历', position: 0, archived: false, open_count: 3, done_count: 2, created_at: at('08:00'), updated_at: at('08:00') },
@@ -39,7 +39,7 @@ const suggestion: Suggestion = {
 };
 const deletion: Suggestion = { ...suggestion, id: 's2', kind: 'delete_event', title: '1:1 与王敏', reason: '王敏本周请假', item_id: null, event_id: 'e9', start: null, end: null };
 
-const caldav = item('i1', '实现 CalDAV 同步', { project_id: 'p1', heading_id: 'h1', estimate_minutes: 90, planned_date: DAY, important: true, block: { event_id: 'b1', start: at('15:30'), end: at('17:00') } });
+const caldav = item('i1', '实现 CalDAV 同步', { project_id: 'p1', heading_id: 'h1', estimate_minutes: 90, planned_date: DAY, important: true, focus: { tomatoes: 2, minutes: 50 }, block: { event_id: 'b1', start: at('15:30'), end: at('17:00') } });
 const reply = item('i2', '回复 PR 评论', { project_id: 'p1', estimate_minutes: 30, planned_date: DAY, due_date: DAY });
 const weekly = item('i3', '写周报', { planned_date: DAY, estimate_minutes: 60, suggestion: { id: 's1', start: at('14:00'), end: at('15:00'), reason: suggestion.reason, actor: agent } });
 const checkup = item('i4', '预约体检', { planned_date: DAY, evening: true });
@@ -57,6 +57,28 @@ const events: CalEvent[] = [
 
 const activity: Activity = { id: 'act1', actor: agent, action: 'item.create', summary: '新建事项「调研 FullCalendar 授权」', reason: null, undoable: true, undone: false, created_at: at('07:58') };
 
+const session = (id: string, start: string, fields: Partial<FocusSession> = {}): FocusSession => ({
+  id, kind: 'work', item_id: 'i2', project_id: 'p1', title: '回复 PR 评论', start,
+  end: new Date(Date.parse(start) + 25 * 60_000).toISOString().replace('.000Z', 'Z'), planned_minutes: 25, completed: true, created_by: me, ...fields,
+});
+/** The timer with one tomato earned today and nothing running. */
+const idle: Focus = { state: 'idle', session: null, tomatoes_today: 1, minutes_today: 25, round_size: 4, round_done: 1, rest_minutes: 5, now: at('10:40') };
+/** A tomato started on "回复 PR 评论" at 10:40. */
+const working: Focus = { ...idle, state: 'work', session: session('f2', at('10:40'), { completed: false }) };
+const stats: FocusStats = {
+  days: ['07', '08', '09', '10', '11', '12', '13'].map((d, k) => ({
+    date: `2026-10-${d}`, tomatoes: [2, 4, 4, 3, 0, 6, 1][k]!, minutes: [50, 100, 100, 75, 0, 162, 25][k]!,
+    projects: k === 4 ? [] : [{ project_id: k % 2 ? 'p1' : null, tomatoes: [2, 4, 4, 3, 0, 6, 1][k]!, minutes: [50, 100, 100, 75, 0, 162, 25][k]! }],
+  })),
+  projects: [{ project_id: 'p1', tomatoes: 11, minutes: 287 }, { project_id: null, tomatoes: 9, minutes: 225 }],
+  tomatoes: 20, minutes: 512, streak: 2,
+};
+const log: FocusSession[] = [
+  session('f0', at('10:00', '2026-10-12'), { item_id: 'i6', title: '整理需求文档' }),
+  session('f9', at('16:00', '2026-10-12'), { item_id: null, project_id: null, title: '', end: at('16:12', '2026-10-12'), completed: false }),
+  session('f1', at('09:32')),
+];
+
 const quadrant = (items: Item[]) => ({ total: items.length, unplanned: items.filter(i => !i.block && !i.suggestion).length, items });
 
 /** What the fake server answers, by method and path. */
@@ -73,7 +95,10 @@ function routes(): Record<string, unknown> {
     'GET /overview': { projects: [{ project_id: 'p1', total: 6, items: [caldav, reply, item('o1', '甲'), item('o2', '乙'), item('o3', '丙')] }] },
     'GET /matrix': { quadrants: { do: quadrant([tax]), plan: quadrant([caldav]), quick: quadrant([reply]), later: quadrant([]) } },
     'GET /items': { items: [caldav, reply], next_cursor: null, total: 2 },
-    'GET /projects/p1': { project: bootstrap.projects[0], headings: bootstrap.headings, upcoming_events: [events[0]], unplanned_count: 1 },
+    'GET /projects/p1': { project: bootstrap.projects[0], headings: bootstrap.headings, upcoming_events: [events[0]], unplanned_count: 1, focus_week_minutes: 187 },
+    'GET /focus': { focus: idle },
+    'GET /focus/stats': stats,
+    'GET /focus/sessions': { sessions: log },
     'GET /activity': { activities: [activity], next_cursor: 'older' },
     'GET /tokens': { tokens: [{ id: 'k1', name: 'Claude Code · MacBook', kind: 'agent', scope: 'write', confirm_delete: true, last_used_at: at('08:00'), created_at: at('08:00') }] },
     'GET /free': { slots: [{ start: at('13:00'), end: at('14:00') }] },
@@ -121,6 +146,7 @@ type Modules = {
   App: typeof import('./App').App;
   store: typeof import('./state/store');
   route: typeof import('./state/route');
+  focus: typeof import('./state/focus');
 };
 let mod: Modules;
 
@@ -136,8 +162,8 @@ beforeAll(async () => {
   // The DOM shim scrolls nothing and has no element scrolling.
   Element.prototype.scrollIntoView = () => {};
   window.scrollTo = () => {};
-  const [{ App }, store, route] = await Promise.all([import('./App'), import('./state/store'), import('./state/route')]);
-  mod = { App, store, route };
+  const [{ App }, store, route, focus] = await Promise.all([import('./App'), import('./state/store'), import('./state/route'), import('./state/focus')]);
+  mod = { App, store, route, focus };
 });
 
 beforeEach(() => {
@@ -402,7 +428,7 @@ describe('items', () => {
     const card = document.querySelector('.todo.open')!;
     expect(card.querySelector<HTMLTextAreaElement>('textarea.tt')!.value).toBe('写周报');
     expect(card.querySelector('.sg')!.textContent).toContain('Claude Code 建议：排到今天 14:00。今天 18:00 截止');
-    expect([...card.querySelectorAll('.cm .ck')].map(c => c.textContent)).toEqual(['待定 今天 14:00', '1 小时', '截止日期', '!标为重要', '收件箱', '']);
+    expect([...card.querySelectorAll('.cm .ck')].map(c => c.textContent)).toEqual(['待定 今天 14:00', '1 小时', '开始专注', '截止日期', '!标为重要', '收件箱', '']);
   });
 
   it('schedules an item from its card', async () => {
@@ -519,7 +545,7 @@ describe('items', () => {
   it('shows a project page with headings, upcoming events and the logged count', async () => {
     await open('#/items/p/p1');
     expect(document.querySelector<HTMLTextAreaElement>('.lh textarea')!.value).toBe('Keduly 开发');
-    expect(document.querySelector('.summary')!.textContent).toBe('3 件未完成，其中 1 件还没排进日历');
+    expect(document.querySelector('.summary')!.textContent).toBe('3 件未完成，其中 1 件还没排进日历；本周已专注 3 小时 7 分钟');
     expect(document.querySelector('.ev')!.textContent).toBe('今天 10:00设计评审');
     expect(document.querySelector('.sec.fold')!.textContent).toBe('同步1');
     expect(document.querySelector('.logged')!.textContent).toBe('显示 2 件已完成');
@@ -620,6 +646,241 @@ describe('bell and settings', () => {
     expect(callsTo('POST', '/tokens')[0]!.body).toEqual({ name: 'Codex', kind: 'agent', scope: 'write', confirm_delete: true });
     expect(document.querySelector('.secret')!.textContent).toBe('kdl_secret');
     expect(text()).toContain('只显示这一次');
+  });
+});
+
+describe('focus', () => {
+  const NOW = new Date(`${DAY}T10:40:00`);
+  const later = (minutes: number, seconds = 0) => new Date(NOW.getTime() + minutes * 60_000 + seconds * 1000);
+  const stamp = (date: Date) => date.toISOString().replace('.000Z', 'Z');
+  /** What the server answers once the tomato started at 10:40 has run out. */
+  const over = (): Focus => ({ ...working, state: 'over', session: { ...working.session!, completed: true }, tomatoes_today: 2, minutes_today: 50, round_done: 2, now: stamp(later(25, 1)) });
+  afterEach(() => { vi.setSystemTime(NOW); });
+
+  it('opens on the timer with the first important item of today picked', async () => {
+    await open('#/focus/timer');
+    expect(document.body.dataset.mode).toBe('focus');
+    expect(document.body.hasAttribute('data-zen')).toBe(false);
+    expect(document.querySelector('.zlab')!.textContent).toBe('第 2 个番茄');
+    expect(document.querySelector('.dial b')!.textContent).toBe('25:00');
+    expect(document.querySelector('.zt')!.textContent).toBe('实现 CalDAV 同步');
+    expect(document.querySelector('.zs')!.textContent).toBe('Keduly 开发 · 1.5 小时 · 2/4');
+    expect(document.querySelectorAll('.round .tom')).toHaveLength(4);
+    expect(document.querySelectorAll('.round .tom:not(.off)')).toHaveLength(1);
+    expect(document.querySelector('.round span')!.textContent).toBe('再 3 个后长休息');
+    expect(document.querySelector('.zf')!.textContent).toBe('今天 1 · 25 分钟');
+    // The sidebar offers today's open items, important first, then free focus.
+    const choices = [...document.querySelectorAll('#side-focus .nv')].map(b => b.textContent);
+    expect(choices).toEqual(['计时', '统计', '实现 CalDAV 同步2/4', '回复 PR 评论2', '写周报3', '预约体检', '自由专注']);
+    expect(document.querySelector('#side-focus .nv.sel')!.textContent).toContain('实现 CalDAV 同步');
+  });
+
+  it('picks another item or free focus for the next tomato', async () => {
+    await open('#/focus/timer');
+    const free: Focus = { ...working, session: session('f3', at('10:40'), { item_id: null, project_id: null, title: '', completed: false }) };
+    table['POST /focus/start'] = { focus: free };
+    find('#side-focus .nv', '自由专注').click();
+    await settle();
+    expect(document.querySelector('.zt')!.textContent).toBe('自由专注');
+    expect(document.querySelector('.zs')!.textContent).toBe('不记到任何事项上');
+    table['GET /focus'] = { focus: free };
+    find('.zb', '开始专注').click();
+    await settle();
+    expect(callsTo('POST', '/focus/start')[0]!.body).toEqual({});
+    // Free focus has no item to tick off.
+    expect([...document.querySelectorAll('.za .zb')].map(b => b.textContent)).toEqual(['放弃']);
+  });
+
+  it('starts a tomato from an item row, takes the whole window, and collapses to a capsule', async () => {
+    await open('#/items/today');
+    expect(find('.todo', '实现 CalDAV 同步').querySelector('.ts')!.textContent).toBe('Keduly 开发 · 1.5 小时 · 2/4');
+    table['POST /focus/start'] = { focus: working };
+    table['GET /focus'] = { focus: working };
+    find('.todo', '回复 PR 评论').querySelector<HTMLElement>('.play')!.click();
+    await settle();
+    expect(callsTo('POST', '/focus/start')[0]!.body).toEqual({ item_id: 'i2' });
+    expect(mod.route.route.value.mode).toBe('focus');
+    expect(document.body.hasAttribute('data-zen')).toBe(true);
+    expect(document.querySelector('.dial b')!.textContent).toBe('25:00');
+    expect(document.querySelector('.dial .dt span')!.textContent).toBe('到 11:05');
+    expect(document.querySelector('.zt')!.textContent).toBe('回复 PR 评论');
+    expect([...document.querySelectorAll('.za .zb')].map(b => b.textContent)).toEqual(['放弃', '做完了']);
+
+    // The countdown follows the clock without asking the server.
+    const asked = callsTo('GET', '/focus').length;
+    vi.setSystemTime(later(10));
+    await mod.focus.tickFocus();
+    await settle();
+    expect(document.querySelector('.dial b')!.textContent).toBe('15:00');
+    expect(callsTo('GET', '/focus')).toHaveLength(asked);
+
+    find('.zback', '收起').click();
+    await settle();
+    expect(document.body.dataset.mode).toBe('tasks');
+    expect(document.body.hasAttribute('data-zen')).toBe(false);
+    expect(document.querySelector('.fcap')!.textContent).toBe('15:00回复 PR 评论');
+    expect(find('.todo', '回复 PR 评论').querySelector('.fgo')!.textContent).toBe('15:00');
+    expect(find('.todo', '回复 PR 评论').querySelector('.play')).toBeNull();
+    document.querySelector<HTMLElement>('.fcap')!.click();
+    await settle();
+    expect(document.body.hasAttribute('data-zen')).toBe(true);
+  });
+
+  it('asks the server when the time runs out, and only then shows the tomato as earned', async () => {
+    table['GET /focus'] = { focus: working };
+    await open('#/focus/timer');
+    expect(document.querySelector('.zlab')!.textContent).toBe('第 2 个番茄');
+
+    // The device says the time is up, the server does not yet: nothing is invented.
+    vi.setSystemTime(later(25, 1));
+    table['GET /focus'] = { focus: { ...working, now: stamp(later(25, 1)) } };
+    await mod.focus.tickFocus();
+    await settle();
+    expect(document.querySelector('.zlab')!.textContent).toBe('第 2 个番茄');
+    expect(document.querySelector('.dial .tom')).toBeNull();
+
+    table['GET /focus'] = { focus: over() };
+    await mod.focus.tickFocus();
+    await settle();
+    expect(document.querySelector('.zlab')!.textContent).toBe('完成第 2 个番茄');
+    expect(document.querySelector('.dial .tom')).not.toBeNull();
+    expect(document.querySelectorAll('.round .tom:not(.off)')).toHaveLength(2);
+    expect([...document.querySelectorAll('.za .zb')].map(b => b.textContent)).toEqual(['做完了', '再来一个', '休息 5 分钟']);
+
+    const resting: Focus = { ...over(), state: 'rest', session: session('r1', stamp(later(25, 1)), { kind: 'rest', item_id: null, project_id: null, title: '', planned_minutes: 5, end: stamp(later(30, 1)), completed: false }) };
+    table['POST /focus/rest'] = { focus: resting };
+    table['GET /focus'] = { focus: resting };
+    find('.zb', '休息 5 分钟').click();
+    await settle();
+    expect(callsTo('POST', '/focus/rest')).toHaveLength(1);
+    expect(document.querySelector('.zlab')!.textContent).toBe('休息');
+    expect(document.querySelector('.dial b')!.textContent).toBe('05:00');
+    expect([...document.querySelectorAll('.za .zb')].map(b => b.textContent)).toEqual(['跳过休息']);
+  });
+
+  it('offers the long rest when a round is complete', async () => {
+    table['GET /focus'] = { focus: { ...over(), tomatoes_today: 4, round_done: 4, rest_minutes: 15 } };
+    await open('#/focus/timer');
+    expect(document.querySelectorAll('.round .tom:not(.off)')).toHaveLength(4);
+    expect(document.querySelector('.round span')!.textContent).toBe('完成一轮，该长休息了');
+    expect(find('.zb.go', '长休息 15 分钟')).not.toBeNull();
+  });
+
+  it('tells the user elsewhere in the app that a tomato was earned', async () => {
+    table['GET /focus'] = { focus: working };
+    await open('#/items/today');
+    vi.setSystemTime(later(25, 1));
+    table['GET /focus'] = { focus: over() };
+    await mod.focus.tickFocus();
+    await settle();
+    expect(document.querySelector('.fcap')!.textContent).toBe('到点了回复 PR 评论');
+    expect(document.querySelector('.hud')!.textContent).toBe('完成第 2 个番茄开始休息');
+    table['POST /focus/rest'] = { focus: idle };
+    find('.hud button', '开始休息').click();
+    await settle();
+    expect(callsTo('POST', '/focus/rest')).toHaveLength(1);
+  });
+
+  it('gives up a tomato and says what was kept', async () => {
+    table['GET /focus'] = { focus: working };
+    await open('#/focus/timer');
+    vi.setSystemTime(later(12));
+    table['POST /focus/stop'] = { focus: { ...idle, minutes_today: 37, now: stamp(later(12)) } };
+    table['GET /focus'] = { focus: { ...idle, minutes_today: 37, now: stamp(later(12)) } };
+    find('.zb', '放弃').click();
+    await settle();
+    expect(callsTo('POST', '/focus/stop')).toHaveLength(1);
+    expect(document.querySelector('.hud')!.textContent).toBe('这个番茄没有完成，记了 12 分钟');
+    expect(document.body.hasAttribute('data-zen')).toBe(false);
+    // The item given up on stays picked.
+    expect(document.querySelector('.zt')!.textContent).toBe('回复 PR 评论');
+  });
+
+  it('finishes the item from the timer by ticking it', async () => {
+    table['GET /focus'] = { focus: working };
+    await open('#/focus/timer');
+    table['PATCH /items/i2'] = { item: { ...reply, status: 'done', completed_at: at('10:41') } };
+    table['GET /focus'] = { focus: idle };
+    find('.zb', '做完了').click();
+    await settle();
+    expect(callsTo('PATCH', '/items/i2')[0]!.body).toEqual({ status: 'done' });
+    expect(callsTo('POST', '/focus/stop')).toEqual([]);
+    expect(document.querySelector('.hud')!.textContent).toBe('已完成「回复 PR 评论」');
+  });
+
+  it('shows the statistics of the last seven days', async () => {
+    await open('#/focus/stats');
+    expect([...document.querySelectorAll('.figs > div')].map(f => f.textContent)).toEqual(['今天125 分钟', '最近 7 天208 小时 32 分钟', '日均2.9个1 小时 13 分钟', '连续专注2天每天至少一个番茄']);
+    const bars = [...document.querySelectorAll<HTMLElement>('.chart .cc')];
+    expect(bars.map(b => b.querySelector('em')?.textContent ?? '')).toEqual(['2', '4', '4', '3', '', '6', '1']);
+    // The busiest day fills the bar's share of the chart; a day without tomatoes is an empty column.
+    expect(bars[5]!.querySelector<HTMLElement>('.cst')!.style.height).toBe('84%');
+    expect(bars[4]!.querySelector<HTMLElement>('.cst')!.style.height).toBe('0%');
+    expect([...document.querySelectorAll('.cx span')].map(s => s.textContent)).toEqual(['周三', '周四', '周五', '周六', '周日', '周一', '今天']);
+    expect([...document.querySelectorAll('.srow')].map(r => r.textContent)).toEqual(['Keduly 开发11 · 4 小时 47 分钟', '未归项目9 · 3 小时 45 分钟']);
+    expect([...document.querySelectorAll('.rrow')].map(r => r.textContent)).toEqual(['09:32–09:57回复 PR 评论', '16:00–16:12自由专注未完成 · 12 分钟', '10:00–10:25整理需求文档']);
+    const q = callsTo('GET', '/focus/sessions')[0]!.query;
+    expect([q.get('from'), q.get('to')]).toEqual(['2026-10-07', DAY]);
+  });
+
+  it('says so when there is nothing to count yet', async () => {
+    table['GET /focus/stats'] = { days: stats.days.map(d => ({ ...d, tomatoes: 0, minutes: 0, projects: [] })), projects: [], tomatoes: 0, minutes: 0, streak: 0 };
+    table['GET /focus/sessions'] = { sessions: [] };
+    table['GET /today'] = { date: DAY, items: [], overdue: [], events: [], free_minutes: 540, unplanned_minutes: 0 };
+    table['GET /focus'] = { focus: { ...idle, tomatoes_today: 0, minutes_today: 0, round_done: 0 } };
+    await open('#/focus/stats');
+    expect(text()).toContain('还没有专注记录');
+    // Without any item, free focus is what the timer offers.
+    find('#side-focus .nv', '计时').click();
+    await settle();
+    expect(document.querySelector('.zlab')!.textContent).toBe('第 1 个番茄');
+    expect(document.querySelector('.zt')!.textContent).toBe('自由专注');
+    expect(document.querySelector('.zf')).toBeNull();
+  });
+
+  it('draws the sessions of a day beside the plan, and starts a tomato from a time block', async () => {
+    await open(`#/cal/day/${DAY}`);
+    const strips = [...document.querySelectorAll<HTMLElement>('.col .fs')];
+    expect(strips).toHaveLength(1);
+    expect(parseFloat(strips[0]!.style.top)).toBeCloseTo((9 + 32 / 60) * 58, 3);
+    expect(strips[0]!.title).toBe('专注 09:32–09:57 · 回复 PR 评论');
+    const q = callsTo('GET', '/focus/sessions')[0]!.query;
+    expect([q.get('from'), q.get('to')]).toEqual([DAY, DAY]);
+
+    find('.blk', '实现 CalDAV 同步').click();
+    await settle();
+    const onBlock: Focus = { ...working, session: session('f4', at('10:40'), { item_id: 'i1', title: '实现 CalDAV 同步', completed: false }) };
+    table['POST /focus/start'] = { focus: onBlock };
+    table['GET /focus'] = { focus: onBlock };
+    find('.pop .pbtn', '开始专注').click();
+    await settle();
+    expect(callsTo('POST', '/focus/start')[0]!.body).toEqual({ item_id: 'i1' });
+    expect(document.body.hasAttribute('data-zen')).toBe(true);
+  });
+
+  it('shows the time spent in the item card', async () => {
+    await open('#/items/today');
+    find('.todo', '实现 CalDAV 同步').querySelector<HTMLElement>('.tm')!.click();
+    await settle();
+    expect(find('.ck', '1.5 小时').textContent).toBe('1.5 小时 · 已用 50 分钟');
+    expect(find('.ck.go', '开始专注')).not.toBeNull();
+  });
+
+  it('saves the length of a tomato from settings', async () => {
+    await open('#/items/today');
+    find('.rbtn', '设置').click();
+    await settle();
+    table['PATCH /me'] = { user: { ...bootstrap.user, focus_minutes: 50 } };
+    const input = find('.g-row', '一个番茄').querySelector('input')!;
+    input.value = '50';
+    input.dispatchEvent(new Event('blur'));
+    await settle();
+    expect(callsTo('PATCH', '/me').map(c => c.body)).toEqual([{ focus_minutes: 50 }]);
+    // Out of range: put back, not sent.
+    input.value = '0';
+    input.dispatchEvent(new Event('blur'));
+    await settle();
+    expect(callsTo('PATCH', '/me')).toHaveLength(1);
   });
 });
 

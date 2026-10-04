@@ -15,6 +15,11 @@ export interface User {
   timezone_auto: boolean;
   work_start: string;
   work_end: string;
+  /** The length of one tomato, of the rest after it, and of the rest after every `round_size`-th tomato of the day. */
+  focus_minutes: number;
+  rest_minutes: number;
+  long_rest_minutes: number;
+  round_size: number;
   created_at: string;
 }
 
@@ -59,6 +64,12 @@ export interface ItemSuggestion {
   actor: Actor;
 }
 
+/** Time spent on an item with the focus timer. A session still running is not counted. */
+export interface ItemFocus {
+  tomatoes: number;
+  minutes: number;
+}
+
 export interface Item {
   id: string;
   project_id: string | null;
@@ -76,6 +87,7 @@ export interface Item {
   position: number;
   block: ItemBlock | null;
   suggestion: ItemSuggestion | null;
+  focus: ItemFocus;
   created_by: Actor;
   created_at: string;
   updated_at: string;
@@ -182,6 +194,8 @@ export interface ProjectDetail {
   headings: Heading[];
   upcoming_events: CalEvent[];
   unplanned_count: number;
+  /** Focus time on the project's items since Monday. */
+  focus_week_minutes: number;
 }
 
 export interface TodayView {
@@ -231,3 +245,55 @@ export type ItemWrite = Partial<
 >;
 
 export type EventWrite = Partial<Pick<CalEvent, 'title' | 'project_id' | 'notes' | 'location' | 'all_day' | 'start' | 'end' | 'start_date' | 'end_date'>>;
+
+/** One stretch of the focus timer: a tomato being worked on, or a rest. */
+export interface FocusSession {
+  id: string;
+  kind: 'work' | 'rest';
+  item_id: string | null;
+  project_id: string | null;
+  title: string;
+  start: string;
+  /** The planned end while running; the moment it was given up otherwise. */
+  end: string;
+  planned_minutes: number;
+  /** Ran its full length and its end has passed. A completed work session is one tomato. */
+  completed: boolean;
+  created_by: Actor;
+}
+
+/** The state of the user's one timer. */
+export interface Focus {
+  state: 'idle' | 'work' | 'over' | 'rest';
+  session: FocusSession | null;
+  tomatoes_today: number;
+  minutes_today: number;
+  round_size: number;
+  round_done: number;
+  /** The length of the rest that would start now. */
+  rest_minutes: number;
+  /** The server's clock. */
+  now: string;
+}
+
+export interface FocusAmount {
+  project_id: string | null;
+  tomatoes: number;
+  minutes: number;
+}
+
+export interface FocusDay {
+  date: string;
+  tomatoes: number;
+  minutes: number;
+  projects: FocusAmount[];
+}
+
+/** The last 7 days, today included. */
+export interface FocusStats {
+  days: FocusDay[];
+  projects: FocusAmount[];
+  tomatoes: number;
+  minutes: number;
+  streak: number;
+}

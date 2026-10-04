@@ -8,6 +8,7 @@ import { t } from '../../i18n';
 import { addDays, atLocal, hhmm, toUtc, ymd, wall } from '../../lib/dates';
 import { dayLabel } from '../../lib/format';
 import { calPop, closeCalPop, type EventDraft } from '../../state/calendar';
+import { openTimer, startFocus, workingOn } from '../../state/focus';
 import { openItem } from '../../state/items';
 import { navigate } from '../../state/route';
 import { activeProjects, colorOf, projectOf, suggestions, today, write } from '../../state/store';
@@ -151,7 +152,7 @@ function DetailsPop({ event }: { event: CalEvent }): JSX.Element {
   );
 }
 
-/** A time block: change when the item is done, take it off the calendar, or go to the item. */
+/** A time block: start a tomato on its item, change when the item is done, take it off the calendar, or go to the item. */
 function BlockPop({ event }: { event: CalEvent }): JSX.Element {
   const [d, setD] = useState(() => draftFor(event));
   const itemId = event.item_id!;
@@ -169,9 +170,15 @@ function BlockPop({ event }: { event: CalEvent }): JSX.Element {
     navigate({ mode: 'items', list: event.project_id ? `p:${event.project_id}` : 'inbox' });
     openItem(itemId);
   };
+  const focusOn = () => {
+    closeCalPop();
+    if (workingOn(itemId)) openTimer();
+    else void startFocus(itemId);
+  };
   return (
     <form class="form" onSubmit={e => { e.preventDefault(); save(); }}>
       <div class="pt"><i />{event.title}</div>
+      {!event.item_done && <button type="button" class="pbtn go" onClick={focusOn}>{t(workingOn(itemId) ? 'focus.back' : 'focus.start')}</button>}
       <input class="fld" type="date" required value={d.date} aria-label={t('field.date')} onInput={e => setD({ ...d, date: e.currentTarget.value })} />
       <div class="frow">
         <input class="fld grow" type="time" required step={300} value={d.start} aria-label={t('field.start')} onInput={e => setD({ ...d, start: e.currentTarget.value })} />
