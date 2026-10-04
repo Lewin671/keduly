@@ -283,6 +283,39 @@ button.ck { cursor: pointer; }
 @keyframes shimmer { to { background-position: -150% 0; } }
 .end { color: var(--label-3); font-size: 12.5px; text-align: center; padding: 26px 0 0; margin: 0; }
 
+/* ---------- focus timer ---------- */
+#focus-slot { display: contents; }
+/* The running timer lives in the toolbar: a ring in the project's colour that drains, the time left, the item. */
+.fcap { display: flex; align-items: center; gap: 7px; height: 34px; padding: 0 13px 0 9px; border-radius: 17px; background: var(--fill); font-size: 13px; min-width: 0; max-width: 260px; }
+.fcap b { font-weight: 600; font-size: 14px; white-space: nowrap; }
+.fcap span { color: var(--label-2); min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ring { width: 18px; height: 18px; flex: none; color: var(--c); transform: rotate(-90deg); }
+.ring circle { fill: none; stroke-width: 2.4; }
+.ring .r0 { stroke: var(--label-3); }
+.ring .r1 { stroke: currentColor; stroke-linecap: round; }
+.fnow { padding: 14px 16px 15px; text-align: center; border-bottom: .5px solid var(--sep); }
+.fnow .ft { font: 200 54px/1.15 -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", sans-serif; letter-spacing: -1px; }
+.fnow .ft.sm { font-size: 30px; font-weight: 300; letter-spacing: -.4px; padding: 14px 0 10px; }
+.fnow .fn { font-size: 14px; font-weight: 600; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.fnow .fn i, .fdot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--c); flex: none; }
+.fnow .fn i { margin-right: 7px; }
+.fnow .fm { color: var(--label-2); font-size: 12.5px; margin-top: 2px; }
+.fnow .pa { display: flex; gap: 8px; margin-top: 14px; }
+.frow .gm > div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.frow .mins { color: var(--label-2); font-size: 13px; white-space: nowrap; }
+/* On an item row: a play button on hover, and the countdown while it is the one being worked on. */
+.play { width: 22px; height: 22px; border-radius: 50%; background: var(--fill); color: var(--label-2); display: grid; place-items: center; }
+.play svg { width: 10px; height: 10px; margin-left: 1px; }
+@media (hover: hover) { .todo .play { opacity: 0; } .todo:hover .play, .todo.open .play, .play:focus-visible { opacity: 1; } }
+.fgo { display: inline-flex; align-items: center; gap: 5px; font-weight: 600; color: color-mix(in srgb, var(--c) 70%, var(--mix)); }
+.fgo .ring { width: 14px; height: 14px; }
+.ck.go { background: color-mix(in srgb, var(--blue) 14%, transparent); color: var(--blue); font-weight: 500; }
+.ck.go svg { width: 10px; height: 10px; }
+/* What was actually done: a thin line in the project's colour beside the plan. */
+.fs { position: absolute; left: -5px; width: 3px; border-radius: 2px; background: var(--c); z-index: 1; }
+.wk .fs { left: 0; width: 2px; }
+.blk[data-fpop] { cursor: pointer; }
+
 /* Mockup-only control for switching the sample data. Not part of the product. */
 .demo { margin-top: auto; padding: 16px 2px 8px; display: grid; gap: 6px; font-size: 11.5px; color: var(--label-2); }
 .demo .seg button { flex: 1; height: 26px; padding: 0; font-size: 12px; }
@@ -363,6 +396,8 @@ pre.cli .c { color: var(--label-2); }
   .yr { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 18px; }
   .list { margin-top: 0; }
   .demo { display: none; }
+  .fcap span { display: none; }
+  .fcap { padding-right: 11px; }
   .matrix { grid-template-columns: minmax(0, 1fr); }
   .quad { max-height: none; min-height: 0; }
   .cal-scroll { max-height: calc(100vh - 250px); }
@@ -401,6 +436,9 @@ pre.cli .c { color: var(--label-2); }
   <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 019.5 4a8.5 8.5 0 1010.5 10.5z" fill="currentColor" stroke="none"/></symbol>
   <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></symbol>
   <symbol id="i-person" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20a7.5 7.5 0 0115 0"/></symbol>
+  <symbol id="i-timer" viewBox="0 0 24 24"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 9.5v4M9.5 3h5M12 3v3"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M6 3.5v17l14-8.5z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="3" fill="currentColor" stroke="none"/></symbol>
 </svg>
 
 <div class="app">
@@ -413,7 +451,7 @@ pre.cli .c { color: var(--label-2); }
       <div class="projects" id="cal-projects"></div>
     </div>
     <div id="side-tasks"><div class="nav" id="nav"></div></div>
-    <div class="demo">设计稿演示数据<div class="seg"><button data-set="normal">日常</button><button data-set="busy">拥挤</button><button data-set="empty">空白</button></div></div>
+    <div class="demo">设计稿演示数据<div class="seg"><button data-set="normal">日常</button><button data-set="busy">拥挤</button><button data-set="empty">空白</button></div><div class="seg"><button data-fx="ff">专注计时快进 10 分钟</button></div></div>
   </aside>
 
   <main class="main">
@@ -423,6 +461,7 @@ pre.cli .c { color: var(--label-2); }
         <div class="seg only-cal" role="group" aria-label="视图"><button data-view="day">日</button><button data-view="week">周</button><button data-view="month">月</button><button data-view="year">年</button></div>
         <div class="cap nav-cap only-cal"><button aria-label="向前"><svg class="i"><use href="#i-left"/></svg></button><button class="red">今天</button><button aria-label="向后"><svg class="i"><use href="#i-right"/></svg></button></div>
         <button class="rbtn only-cal" aria-label="新建日程"><svg class="i"><use href="#i-plus"/></svg></button>
+        <div id="focus-slot"></div>
         <button class="rbtn" id="act-btn" data-panel="activity" aria-label="动态"><svg class="i"><use href="#i-bell"/></svg></button>
         <button class="rbtn" data-panel="settings" aria-label="设置"><svg class="i"><use href="#i-gear"/></svg></button>
         <div id="panel-slot"></div>
@@ -532,7 +571,13 @@ function normalData() {
   ];
   // imp: marked important by the user. Urgency is never stored; it follows from the deadline.
   for (const id of ['prep', 'caldav', 'weekly', 'cli', 'demo', 'notes', 'conflict', 'book']) tasks.find(t => t.id === id).imp = true;
-  return { projects, areas, props, items, tasks, recent, done: ['req'], del: true, history: 5 };
+  // Focus sessions: the time actually spent. task: the item it counts towards (none = free focus).
+  const sessions = [
+    { date: 12, s: 10, e: 10 + 50 / 60, task: 'req' }, { date: 12, s: 11, e: 11 + 50 / 60, task: 'req' }, { date: 12, s: 16, e: 16 + 35 / 60, task: 'req' },
+    { date: 12, s: 15 + 5 / 60, e: 15 + 55 / 60, task: 'caldav' },
+    { date: 13, s: 9 + 32 / 60, e: 9 + 57 / 60, task: 'pr' },
+  ];
+  return { projects, areas, props, items, tasks, recent, sessions, done: ['req'], del: true, history: 5 };
 }
 
 // Everything the ordinary week has, plus the cases that break layouts: long text, big counts,
@@ -590,7 +635,12 @@ function busyData() {
   d.tasks.push({ id: 'tax', g: 'week', p: 'money', t: '提交个税专项附加扣除', est: 0.5, due: '10月9日', dueDate: 9 },
     { id: 'contract', g: 'week', p: 'client', t: '把合同修订稿发给法务', est: 0.25, due: '10月11日', dueDate: 11 });
   for (const id of ['tax', 'minutes', 'td0', 'k6', 'k11', 's2']) d.tasks.find(t => t.id === id).imp = true;
-  return { ...d, done, history: 14 };
+  // Focus: many sessions in one day, a very short one, an item far over its estimate, one with no estimate,
+  // free focus, and a timer already running on the item with the longest title.
+  d.sessions.push({ date: 13, s: 5.5, e: 5.92, task: 'td4' }, { date: 13, s: 7.3, e: 7.45, task: 'td2' }, { date: 13, s: 7.5, e: 7.92, task: 'td1' },
+    { date: 13, s: 8, e: 8.42, task: 'td1' }, { date: 13, s: 8.5, e: 8.92, task: 'td0' }, { date: 11, s: 20, e: 20.67, task: 'in8' }, { date: 12, s: 21, e: 21.42 });
+  for (let k = 0; k < 7; k++) d.sessions.push({ date: 12, s: 13 + k * 0.5, e: 13 + k * 0.5 + 25 / 60, task: 'td3' });
+  return { ...d, done, history: 14, focus: { task: 'minutes', ago: 380 } };
 }
 
 const NAV = [['inbox', '收件箱', 'tray', 'var(--blue)'], ['today', '今天', 'star', '#f5b400'], ['upcoming', '计划', 'cal', 'var(--red)'], ['matrix', '四象限', 'grid', 'var(--orange)'], ['all', '全部', 'layers', 'var(--teal)'], ['done', '已完成', 'book', 'var(--green)']];
@@ -600,8 +650,12 @@ const OLDER = [
   { id: 'o3', ico: 'person', c: 'var(--blue)', t: '完成了「节后计划会纪要」', sub: '你 · 10月9日 18:02' },
   { id: 'o4', ico: 'term', c: 'var(--indigo)', t: '新建事项「写发布说明」', sub: 'Codex · 10月9日 10:15' },
 ];
-const DATA = { normal: normalData, busy: busyData, empty: () => ({ projects: {}, areas: [], props: {}, items: [], tasks: [], recent: [], done: [], del: false }) };
-let PROJECTS, AREAS, props, items, tasks, recent, done, fresh, del, dataset;
+const DATA = { normal: normalData, busy: busyData, empty: () => ({ projects: {}, areas: [], props: {}, items: [], tasks: [], recent: [], sessions: [], done: [], del: false }) };
+let PROJECTS, AREAS, props, items, tasks, recent, sessions, done, fresh, del, dataset;
+// The focus timer. null = idle; kind 'work' or 'rest' counts down from start for len seconds; 'over' = a work period just ended.
+const WORK = 25 * 60, REST = 5 * 60;
+let timer = null, focusClock = NOW;   // focusClock: where on the sample day the next session is recorded
+let openFocus = null;           // index into items of the time block whose focus popover is open
 const undone = new Set(), collapsed = new Set();
 const hidden = new Set();      // projects switched off in the calendar sidebar
 let mode = 'cal', view = 'day', filter = 'today', panel = null, showDone = false, lastView = null;
@@ -616,7 +670,9 @@ const colourOf = x => x.p && PROJECTS[x.p] ? PROJECTS[x.p].c : 'var(--gray)';
 function load(name) {
   const d = DATA[name]();
   dataset = name;
-  ({ projects: PROJECTS, areas: AREAS, props, tasks, recent } = d);
+  ({ projects: PROJECTS, areas: AREAS, props, tasks, recent, sessions } = d);
+  timer = d.focus ? { kind: 'work', task: d.focus.task, start: Date.now() - d.focus.ago * 1000, len: WORK } : null;
+  focusClock = NOW - (d.focus ? d.focus.ago / 3600 : 0); openFocus = null;
   items = d.items.sort((a, b) => a.date - b.date || (b.allDay ? 1 : 0) - (a.allDay ? 1 : 0) || (a.s || 0) - (b.s || 0));
   done = new Set(d.done);
   fresh = new Set();            // completed during this session: stay in place instead of moving to the logged group
@@ -633,6 +689,97 @@ const dur = h => h < 1 ? Math.round(h * 60) + ' 分钟' : (Number.isInteger(h) ?
 const icon = (n, cls = '') => `<svg class="i ${cls}"><use href="#i-${n}"/></svg>`;
 const stateOf = x => x.prop ? props[x.prop].state : null;
 const mondayIndex = date => (new Date(YEAR, MONTH, date).getDay() + 6) % 7;
+
+/* ---------- focus timer ---------- */
+const pad2 = n => String(Math.floor(n)).padStart(2, '0');
+const span = m => { m = Math.max(1, Math.round(m)); return m < 60 ? m + ' 分钟' : Math.floor(m / 60) + ' 小时' + (m % 60 ? ` ${m % 60} 分钟` : ''); };
+const clockOf = h => { const m = Math.round(h * 60); return pad2(m / 60) + ':' + pad2(m % 60); };
+const brief = s => s.length > 18 ? s.slice(0, 18) + '…' : s;
+const remain = () => Math.max(0, timer.len - (Date.now() - timer.start) / 1000);
+const mmss = s => { s = Math.ceil(s); return pad2(s / 60) + ':' + pad2(s % 60); };
+const usedMin = id => sessions.filter(x => x.task === id).reduce((s, x) => s + (x.e - x.s) * 60, 0);
+const focusing = id => !!timer && timer.kind === 'work' && timer.task === id;
+const sessionColour = x => colourOf(tasks.find(t => t.id === x.task) || {});
+const sessionTitle = x => (tasks.find(t => t.id === x.task) || { t: '自由专注' }).t;
+const ring = frac => `<svg class="ring" viewBox="0 0 18 18"><circle class="r0" cx="9" cy="9" r="7"/><circle class="r1" data-ring cx="9" cy="9" r="7" stroke-dasharray="${frac * 44} 44"/></svg>`;
+function record(task, sec) {
+  const x = { date: TODAY, s: focusClock, e: focusClock + sec / 3600, task };
+  sessions.push(x); focusClock = x.e;
+  return x;
+}
+// Sessions on a day, including the one in progress, for the line beside the calendar column.
+function sessionsOn(date) {
+  const list = sessions.filter(x => x.date === date);
+  if (date === TODAY && timer && timer.kind === 'work') list.push({ s: focusClock, e: focusClock + (Date.now() - timer.start) / 3600000, task: timer.task });
+  return list.filter(x => !hidden.has((tasks.find(t => t.id === x.task) || {}).p));
+}
+// The toolbar entry: a plain round button when idle, a capsule with the countdown while a timer runs.
+function focusCapHTML() {
+  if (!timer) return `<button class="rbtn ${panel === 'focus' ? 'on' : ''}" data-panel="focus" aria-label="专注">${icon('timer')}</button>`;
+  const rest = timer.kind === 'rest', name = rest ? '休息' : sessionTitle(timer);
+  return `<button class="fcap" data-panel="focus" style="--c:${rest ? 'var(--gray)' : sessionColour(timer)}" title="${name}">${ring(timer.len ? remain() / timer.len : 0)}
+    <b ${timer.len ? 'data-clock' : ''}>${timer.len ? mmss(remain()) : '到点了'}</b><span>${name}</span></button>`;
+}
+function focusPanelHTML() {
+  const today = sessions.filter(x => x.date === TODAY).sort((a, b) => b.s - a.s), total = today.reduce((s, x) => s + (x.e - x.s) * 60, 0);
+  const t = timer && tasks.find(x => x.id === timer.task);
+  let html = '';
+  if (timer) {
+    const name = `<div class="fn" style="--c:${sessionColour(timer)}"><i></i>${sessionTitle(timer)}</div>`;
+    const used = t ? usedMin(t.id) : 0, meta = t && (t.est || used) ? `<div class="fm">${[t.est ? '预计 ' + dur(t.est) : '', used ? '已用 ' + span(used) : ''].filter(Boolean).join(' · ')}</div>` : '';
+    const finish = t ? '<button class="pbtn" data-fx="done">做完了</button>' : '';
+    html += timer.kind === 'work' ? `<div class="fnow"><div class="ft" data-clock>${mmss(remain())}</div>${name}${meta}<div class="pa"><button class="pbtn" data-fx="stop">结束</button>${finish}</div></div>`
+      : timer.kind === 'over' ? `<div class="fnow"><div class="ft sm">${WORK / 60} 分钟到了</div>${name}${meta}<div class="pa">${finish}<button class="pbtn" data-fx="again">再来 ${WORK / 60} 分钟</button><button class="pbtn go" data-fx="rest">休息 ${REST / 60} 分钟</button></div></div>`
+      : `<div class="fnow"><div class="ft" data-clock>${mmss(remain())}</div><div class="fn">休息</div><div class="pa"><button class="pbtn" data-fx="skip">跳过休息</button>${t && !done.has(t.id) ? `<button class="pbtn go" data-fx="again">继续专注</button>` : ''}</div></div>`;
+  } else {
+    // Idle: offer what today holds, important items first, then focus that is not tied to an item.
+    const next = tasks.filter(x => x.g === 'today' && !done.has(x.id)).sort((a, b) => (b.imp ? 1 : 0) - (a.imp ? 1 : 0)).slice(0, 3);
+    const row = (c, title, sub, fx, last) => `<div class="p-row frow ${last ? 'last' : ''}"><i class="fdot" style="--c:${c}"></i><div class="gb"><div class="gm"><div>${title}</div><div class="sub">${sub}</div></div><button class="sb" data-fx="${fx}">开始</button></div></div>`;
+    html += '<h3>开始专注</h3>' + next.map(x => row(colourOf(x), (x.imp ? '<b class="imp">!</b>' : '') + x.t, [PROJECTS[x.p] ? PROJECTS[x.p].name : '收件箱', x.est ? dur(x.est) : ''].filter(Boolean).join(' · '), 'start:' + x.id)).join('')
+      + row('var(--gray)', '自由专注', '不记到任何事项上', 'start', true);
+  }
+  if (today.length) {
+    const max = 4, list = more.fs || today.length <= max ? today : today.slice(0, max - 1);
+    html += `<h3>今天已专注 ${span(total)}</h3>` + list.map((x, k) => `<div class="p-row frow ${k === list.length - 1 && list.length === today.length ? 'last' : ''}"><i class="fdot" style="--c:${sessionColour(x)}"></i>
+      <div class="gb"><div class="gm"><div>${sessionTitle(x)}</div><div class="sub">${clockOf(x.s)}–${clockOf(x.e)}</div></div><span class="mins">${span((x.e - x.s) * 60)}</span></div></div>`).join('')
+      + (list.length < today.length ? `<button class="morebtn pad" data-fx="allfs">显示其余 ${today.length - list.length} 次</button>` : '');
+  } else if (!timer) html += '<div class="blank" style="padding:26px 20px 30px"><b>今天还没有专注</b><span>从一件事项开始，用掉的时间会记到它上面</span></div>';
+  return html;
+}
+function paintClock() {
+  if (!timer || !timer.len) return;
+  const l = remain();
+  document.querySelectorAll('[data-clock]').forEach(el => { el.textContent = mmss(l); });
+  document.querySelectorAll('[data-ring]').forEach(el => el.setAttribute('stroke-dasharray', `${l / timer.len * 44} 44`));
+}
+// A work period that runs out is recorded in full and asks what next; a break just ends.
+function tick() {
+  if (!timer || !timer.len) return;
+  if (remain() > 0) return paintClock();
+  if (timer.kind === 'work') { record(timer.task, timer.len); timer = { kind: 'over', task: timer.task }; panel = 'focus'; return renderAll(); }
+  focusClock += REST / 3600; timer = null; renderAll(); hud('休息结束');
+}
+function focusAction(action) {
+  const [name, id] = action.split(':'), title = timer ? brief(sessionTitle(timer)) : '';
+  const spent = timer && timer.kind === 'work' ? (Date.now() - timer.start) / 1000 : 0;
+  // Ending early keeps the minutes actually spent; under a minute is a slip and is dropped.
+  const keep = () => spent >= 60 && !!record(timer.task, spent);
+  openFocus = null;
+  if (name === 'ff') { if (!timer || !timer.len) return hud('先开始一次专注'); timer.start -= 600000; return tick(); }
+  if (name === 'allfs') { more.fs = 1; return renderPanels(); }
+  if (name === 'start' || name === 'again') {
+    // Starting on something else ends what was running.
+    const next = name === 'again' ? timer.task : id || undefined, kept = keep();
+    timer = { kind: 'work', task: next, start: Date.now(), len: WORK };
+    panel = null; renderAll();
+    return kept ? hud(`「${title}」记了 ${span(spent / 60)}`) : undefined;
+  }
+  if (name === 'stop') { const kept = keep(); timer = null; renderAll(); return hud(kept ? `「${title}」专注了 ${span(spent / 60)}` : '不足 1 分钟，没有记录'); }
+  if (name === 'done') { keep(); done.add(timer.task); fresh.add(timer.task); timer = null; panel = null; renderAll(); return hud(`已完成「${title}」`); }
+  if (name === 'rest') { timer = { kind: 'rest', task: timer.task, start: Date.now(), len: REST }; panel = null; return renderAll(); }
+  if (name === 'skip') { timer = null; return renderAll(); }
+}
+setInterval(tick, 500);
 
 function shown(i) {
   const s = stateOf(i);
@@ -671,7 +818,15 @@ function blockHTML(i, H, { lane, of }) {
   // Very short events keep a readable minimum height.
   const style = `style="--c:${colourOf(i)};top:${(i.s - H0) * H + 1}px;height:${Math.max(len * H - 2, 17)}px;left:calc(${lane / of * 100}% + 2px);width:calc(${100 / of}% - 4px)"`;
   const body = `${chk}<span class="bx"><span class="bt">${i.t}</span><span class="bm">${hhmm(i.s)}–${hhmm(i.e)}${pending ? ' · 待定' : ''}</span></span>`;
-  return pending ? `<button class="${cls.join(' ')}" title="${i.t}" data-open="${items.indexOf(i)}" ${style}>${body}</button>` : `<div class="${cls.join(' ')}" title="${i.t}" ${style}>${body}</div>`;
+  // A time block that is still open can be clicked to start focusing on its item.
+  const fpop = i.task && !isDone ? `data-fpop="${items.indexOf(i)}"` : '';
+  return pending ? `<button class="${cls.join(' ')}" title="${i.t}" data-open="${items.indexOf(i)}" ${style}>${body}</button>` : `<div class="${cls.join(' ')}" title="${i.t}" ${fpop} ${style}>${body}</div>`;
+}
+function focusPopHTML(i, place) {
+  const t = tasks.find(x => x.id === i.task) || {}, used = usedMin(i.task), on = focusing(i.task);
+  return `<div class="pop" style="--c:${colourOf(i)};${place}"><div class="pt"><i></i>${i.t}</div>
+    <div class="pw">${hhmm(i.s)}–${hhmm(i.e)}${t.est || used ? '<br>' + [t.est ? '预计 ' + dur(t.est) : '', used ? '已用 ' + span(used) : ''].filter(Boolean).join(' · ') : ''}</div>
+    <div class="pa"><button class="pbtn ${on ? '' : 'go'}" data-fx="${on ? 'stop' : 'start:' + i.task}">${on ? '结束专注' : `专注 ${WORK / 60} 分钟`}</button></div></div>`;
 }
 const allDayHTML = (i, place = '') => `<div class="ad" title="${i.t}" style="--c:${colourOf(i)};${place}">${i.t}</div>`;
 function popHTML(place) {
@@ -687,8 +842,11 @@ function colHTML(date, H) {
   const blocks = timed.map(i => blockHTML(i, H, at.get(i))).join('');
   const now = date === TODAY ? `<div class="now" style="top:${(NOW - H0) * H}px"></div>` : '';
   const o = open !== null && items[open].date === date ? items[open] : null;
-  const pop = o ? popHTML(`top:${(o.e - H0) * H + 6}px;${popSide(view === 'week' && mondayIndex(date) >= 4)}`) : '';
-  return blocks + now + pop;
+  const side = popSide(view === 'week' && mondayIndex(date) >= 4);
+  const pop = o ? popHTML(`top:${(o.e - H0) * H + 6}px;${side}`) : '';
+  const f = openFocus !== null && items[openFocus].date === date ? items[openFocus] : null;
+  const strips = sessionsOn(date).map(x => `<i class="fs" title="专注 ${clockOf(x.s)}–${clockOf(x.e)} · ${sessionTitle(x)}" style="--c:${sessionColour(x)};top:${(x.s - H0) * H}px;height:${Math.max((x.e - x.s) * H, 3)}px"></i>`).join('');
+  return strips + blocks + now + pop + (f ? focusPopHTML(f, `top:${(f.e - H0) * H + 6}px;${side}`) : '');
 }
 function hoursHTML(H) {
   let h = '';
@@ -837,18 +995,23 @@ const blank = (title, tip) => `<div class="blank"><b>${title}</b><span>${tip}</s
 // o.sub: show the project under the title. o.star: mark items planned for today. o.timeOnly: the day is already in the heading.
 function todoHTML(t, o = {}) {
   const isDone = done.has(t.id), isOpen = expanded === t.id, when = taskWhen(t), pend = tentative(t);
-  const sub = o.sub ? [PROJECTS[t.p] ? PROJECTS[t.p].name : '', t.est ? dur(t.est) : ''].filter(Boolean).join(' · ') : '';
+  // Time spent focusing sits next to the estimate: "used / estimated" while open, "took (estimated)" once done.
+  const used = usedMin(t.id), on = focusing(t.id);
+  const time = !used ? (t.est ? dur(t.est) : '') : isDone ? `用了 ${span(used)}${t.est ? `（预计 ${dur(t.est)}）` : ''}` : `已用 ${span(used)}${t.est ? ' / ' + dur(t.est) : ''}`;
+  const sub = o.sub ? [PROJECTS[t.p] ? PROJECTS[t.p].name : '', time].filter(Boolean).join(' · ') : '';
   const right = [];
+  if (on) right.push(`<span class="fgo" style="--c:${colourOf(t)}">${ring(remain() / timer.len)}<span data-clock>${mmss(remain())}</span></span>`);
   if (t.dueDate && !isDone) right.push(overdue(t) ? `<span class="flag hot">${icon('flag')}逾期 ${TODAY - t.dueDate} 天</span>` : `<span class="flag ${t.dueDate === TODAY ? 'hot' : ''}">${icon('flag')}${t.due}</span>`);
   if (pend) right.push(`<span class="chip-t">待定 ${o.timeOnly ? t.slot.split(' ').pop() : t.slot}</span>`);
   else if (when && !(o.timeOnly && !/\d:\d/.test(when))) right.push(`<span>${o.timeOnly ? when.split(' ').pop() : when}</span>`);
+  if (!isDone && !on) right.push(`<button class="play" data-fx="start:${t.id}" aria-label="专注 ${t.t}" title="开始专注">${icon('play')}</button>`);
   let card = '';
   if (isOpen) {
     const p = t.prop && props[t.prop];
     card = `<div class="card"><div class="cn ${t.notes ? '' : 'ph'}">${t.notes || '备注'}</div>
       ${pend ? `<div class="sg"><div><b>${p.who}</b> 建议：${p.what}。${p.why}</div><button class="sb" data-sg="rejected">拒绝</button><button class="sb go" data-sg="accepted">接受</button></div>` : ''}
-      <div class="cm"><span class="ck">${icon('cal')}${when || (pend ? '待定 ' + t.slot : '未安排')}</span><span class="ck">${icon('clock')}${t.est ? dur(t.est) : '预计用时'}</span>
-        ${t.due ? `<span class="ck">${icon('flag')}截止${t.due}</span>` : ''}<button class="ck ${t.imp ? 'hot' : ''}" data-imp="${t.id}"><b>!</b>${t.imp ? '重要' : '标为重要'}</button><span class="ck"><i style="--c:${colourOf(t)}"></i>${PROJECTS[t.p] ? PROJECTS[t.p].name : '收件箱'}</span></div></div>`;
+      <div class="cm"><span class="ck">${icon('cal')}${when || (pend ? '待定 ' + t.slot : '未安排')}</span><span class="ck">${icon('clock')}${t.est ? dur(t.est) : '预计用时'}${used ? ' · 已用 ' + span(used) : ''}</span>
+        ${isDone ? '' : `<button class="ck go" data-fx="${on ? 'stop' : 'start:' + t.id}">${icon(on ? 'stop' : 'play')}${on ? '结束专注' : '开始专注'}</button>`}${t.due ? `<span class="ck">${icon('flag')}截止${t.due}</span>` : ''}<button class="ck ${t.imp ? 'hot' : ''}" data-imp="${t.id}"><b>!</b>${t.imp ? '重要' : '标为重要'}</button><span class="ck"><i style="--c:${colourOf(t)}"></i>${PROJECTS[t.p] ? PROJECTS[t.p].name : '收件箱'}</span></div></div>`;
   }
   return `<div class="todo ${isDone ? 'done' : ''} ${isOpen ? 'open' : ''}" data-id="${t.id}">
     <div class="tr"><button class="chk ${isDone ? 'on' : ''}" data-task="${t.id}" aria-label="完成 ${t.t}"></button>
@@ -868,7 +1031,8 @@ function listHTML() {
     const next = items.filter(i => i.p === id && i.k === 'event' && i.date >= TODAY && shown(i) && stateOf(i) !== 'pending').slice(0, 3);
     const gaps = mine.filter(unplanned).length, row = t => todoHTML(t, { star: true });
     const headings = [...new Set(live.filter(t => t.h).map(t => t.h))];
-    return top + `<p class="summary">${left.length} 件未完成${left.length ? (gaps ? `，其中 ${gaps} 件还没排进日历` : '，都已排进日历') : ''}</p>`
+    const first = TODAY - mondayIndex(TODAY), week = sessions.filter(x => x.date >= first && x.date <= first + 6 && mine.some(t => t.id === x.task)).reduce((s, x) => s + (x.e - x.s) * 60, 0);
+    return top + `<p class="summary">${left.length} 件未完成${left.length ? (gaps ? `，其中 ${gaps} 件还没排进日历` : '，都已排进日历') : ''}${week ? `；本周已专注 ${span(week)}` : ''}</p>`
       + eventsHTML(next, i => `${dayName(i.date)} ${i.allDay ? '全天' : hhmm(i.s)}`)
       + live.filter(t => !t.h).map(row).join('')
       + headings.map(h => {
@@ -883,7 +1047,7 @@ function listHTML() {
     const day = list.filter(t => !t.evening).sort((a, b) => (b.imp ? 1 : 0) - (a.imp ? 1 : 0)), night = list.filter(t => t.evening), events = eventsOn(TODAY);
     const top = head(icon('star'), '今天', '#f5b400');
     if (!list.length && !late.length && !events.length) return top + blank('今天没有安排', '点右下角的加号添加事项，或者让 AI 帮你排：keduly plan --today');
-    const free = freeHours(TODAY), gaps = day.filter(unplanned), need = gaps.reduce((s, t) => s + (t.est || 0), 0);
+    const free = freeHours(TODAY), gaps = day.filter(unplanned), need = gaps.reduce((s, t) => s + Math.max((t.est || 0) - usedMin(t.id) / 60, 0), 0);   // work left = estimate minus time already spent
     const keep = gaps.filter(t => t.imp).length, rest = gaps.length - keep;
     const verdict = need <= free ? '' : keep && rest ? `，排不下：先保住 ${keep} 件重要的，其余 ${rest} 件可以往后放` : '，排不下，需要取舍';
     const row = t => todoHTML(t, { sub: true });
@@ -985,6 +1149,8 @@ function renderPanels() {
     if (!todo.length && !recent.length) html = '<div class="blank" style="padding:36px 20px"><b>暂时没有动态</b><span>AI 和其他设备做的改动会出现在这里</span></div>';
     html = `<div class="panel">${html}</div>`;
   }
+  if (panel === 'focus') html = `<div class="panel">${focusPanelHTML()}</div>`;
+  $('focus-slot').innerHTML = focusCapHTML();
   $('panel-slot').innerHTML = html;
 
   const cred = (name, sub, last) => `<div class="g-row"><span class="ico" style="--c:var(--indigo)">${icon('term')}</span><div class="gb"><div class="gm"><div>${name}</div><div class="sub">${sub}</div></div><span class="tr">${last}</span>${icon('right', 'chev')}</div></div>`;
@@ -1002,6 +1168,11 @@ function renderPanels() {
         <div class="g-row"><span class="ico">${icon('cal')}</span><div class="gb"><div class="gm"><div>Mac 日历</div><div class="sub">11 分钟前同步</div></div>${icon('right', 'chev')}</div></div>
         <div class="g-row act"><div class="gb">生成专用密码…</div></div></div>
         <div class="g-f">每个项目在系统日历里显示为一个同名日历。</div></div>
+      <div><div class="g-h">专注</div><div class="group">
+        <div class="g-row"><div class="gb"><div class="gm">专注时长</div><span class="tr">${WORK / 60} 分钟</span>${icon('right', 'chev')}</div></div>
+        <div class="g-row"><div class="gb"><div class="gm">休息时长</div><span class="tr">${REST / 60} 分钟</span>${icon('right', 'chev')}</div></div>
+        <div class="g-row"><div class="gb"><div class="gm"><div>到点提醒</div><div class="sub">浏览器通知和提示音</div></div><span class="tr">已开启</span>${icon('right', 'chev')}</div></div></div>
+        <div class="g-f">计时记在服务器上，换一台设备看到的是同一个计时。专注记录不会同步到系统日历。</div></div>
       <div><div class="g-h">命令行</div><div class="group"><pre class="cli"><span class="c"># 登录一次，在浏览器里确认</span>
 keduly login
 <span class="c"># 查看、找空档</span>
@@ -1011,6 +1182,10 @@ keduly free --date 2026-10-14 --duration 60m
 keduly task add "准备演示环境" --project 客户交付 --estimate 1h --due wednesday --important
 <span class="c"># 排期建议：以待定日程出现在日历上，确认后才生效</span>
 keduly plan --today
+<span class="c"># 专注计时：开始、查看还剩多久、结束</span>
+keduly focus start "实现 CalDAV 同步"
+keduly focus status
+keduly focus stop
 keduly undo</pre></div></div>
       <div><div class="g-h">外观</div><div class="group"><div class="g-row"><div class="gb"><div class="gm">深色模式</div>
         <div class="seg"><button class="${dark ? '' : 'on'}" data-theme-set="light">浅色</button><button class="${dark ? 'on' : ''}" data-theme-set="dark">深色</button></div></div></div></div></div>
@@ -1021,7 +1196,7 @@ function renderAll() { renderCal(); renderSide(); renderTasks(); renderPanels();
 
 function hud(text, undo) {
   const el = $('hud');
-  el.innerHTML = `<span>${text}</span><button data-hud-undo>撤销</button>`;
+  el.innerHTML = `<span>${text}</span>${undo ? '<button data-hud-undo>撤销</button>' : ''}`;
   el.classList.add('on');
   el.undo = undo;
   clearTimeout(hudTimer);
@@ -1038,6 +1213,9 @@ function setMode(m) {
 document.addEventListener('click', ev => {
   const on = sel => ev.target.closest(sel);
 
+  const fx = on('[data-fx]');
+  if (fx) return focusAction(fx.dataset.fx);
+
   const decide = on('[data-decide]');
   if (decide) {
     const p = props[items[open].prop], title = items[open].t, state = decide.dataset.decide;
@@ -1045,6 +1223,11 @@ document.addEventListener('click', ev => {
     return hud(`${state === 'accepted' ? '已接受' : '已拒绝'}「${title}」`, () => { p.state = 'pending'; renderAll(); });
   }
   if (on('.pop')) return;
+
+  // A time block opens its focus popover; a click on its checkbox still just ticks it.
+  const fp = on('[data-fpop]');
+  if (fp && !on('.chk')) { const n = Number(fp.dataset.fpop); openFocus = openFocus === n ? null : n; open = panel = null; return renderAll(); }
+  if (openFocus !== null) { openFocus = null; renderCal(); }
 
   // Anything else closes an open suggestion popover; clicking another pending entry opens that one.
   const opener = on('[data-open]');
@@ -1106,6 +1289,8 @@ document.addEventListener('click', ev => {
   if (chk) {
     const id = chk.dataset.task, checked = !done.has(id);
     checked ? (done.add(id), fresh.add(id)) : (done.delete(id), fresh.delete(id));
+    // Ticking off the item being worked on ends its timer and keeps the time spent.
+    if (checked && timer && timer.task === id) { const sec = (Date.now() - timer.start) / 1000; if (timer.kind === 'work' && sec >= 60) record(id, sec); timer = null; }
     chk.classList.toggle('on', checked);               // let the fill animate before re-rendering
     return void setTimeout(renderAll, 220);
   }

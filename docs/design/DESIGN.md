@@ -16,6 +16,7 @@ and know within a minute what today holds and whether it fits.
 | Event | Something with a fixed time (a meeting, the dentist) | start, end, project |
 | Item | Something to do that has no fixed time yet | project (none = inbox), estimate, deadline, important, status |
 | Time block | The stretch of calendar an item was scheduled into | item, start, end |
+| Focus session | A stretch of time actually spent working, usually on one item | item (none = free focus), start, end |
 | Suggestion | A change an agent wants to make. It has no effect until accepted, one by one | change, reason, source |
 | Activity | Every change that happened | who, when, what, why |
 
@@ -54,6 +55,39 @@ Keduly uses the two axes of the Eisenhower matrix instead of a multi-level prior
 
 Orange means "important" and nothing else. Red is reserved for deadlines and the current time.
 
+## Focus
+
+A focus timer (a pomodoro timer) records the time actually spent, the counterpart of the estimate.
+Estimates and time blocks say what was planned; focus sessions say what happened.
+
+| Rule | Detail |
+|---|---|
+| Unit | Minutes, never a count of pomodoros: estimates are already durations |
+| Lengths | 25 minutes of work, 5 of rest by default; both are settings |
+| One timer | One per account, kept on the server as a start time and a length, so the web app, the CLI and every device show the same countdown |
+| No pause | A session is a start and an end. An interruption ends it; the next start is a new session |
+| Ending early | Keeps the minutes actually spent. Under one minute counts as a slip and is dropped |
+| Running out | The session is recorded in full and the timer asks what next: 做完了 (tick the item), 再来 25 分钟, 休息 5 分钟. Unanswered, it simply stays ended; nothing starts by itself |
+| Switching | Starting on another item ends the running session and keeps its minutes |
+| Ticking the item | Ends its session and keeps its minutes |
+| Free focus | A session may belong to no item. It counts towards the day, not towards any estimate |
+| CalDAV | Sessions are never exported: they would flood the phone's calendar with 25-minute entries |
+
+| Place | How it shows |
+|---|---|
+| Toolbar | Idle: a round timer button beside the bell. Running: a capsule with a ring in the project's colour that drains, the time left and the item's title. Clicking either opens the focus panel |
+| Focus panel | Running: the time left in large light figures, the item, 结束 and 做完了. Idle: today's open items (important first) and free focus, each with 开始. Below, today's sessions and their total |
+| Item row | A play button on hover (always visible on touch). While it is the one being worked on, the countdown in the project's colour instead |
+| Item row, second line | "已用 50 分钟 / 1.5 小时" next to the project; once done, "用了 2 小时 15 分钟（预计 2 小时）" |
+| Item card | The estimate chip adds "已用 …"; a blue 开始专注 / 结束专注 chip |
+| Today | The work still to schedule is the estimate minus the time already spent |
+| Project page | The summary adds "本周已专注 …" |
+| Calendar, day and week | Clicking an open time block offers 专注 25 分钟. Sessions are drawn as a thin line in the project's colour at the left edge of the day: the plan in blocks, what happened beside it |
+| Settings | 专注: work length, rest length, the reminder when time is up |
+| CLI | `keduly focus start <item>`, `status`, `stop`, and a log an agent can read to correct estimates |
+
+Going over the estimate is not coloured: red is for deadlines and orange for importance.
+
 ## Principles
 
 | Principle | In the interface |
@@ -77,10 +111,11 @@ shows on the calendar in its project's colour, and a time block can be checked o
 | Items | Inbox, Today, Upcoming, Matrix, All, Done; then projects grouped by area, each with a progress ring | The selected list, in one centred column |
 | Calendar | A mini month; the project list, where a tick decides which projects the calendar shows | Day, week, month and year views |
 
-The bell and the gear at the top right are shared by both modes.
+The timer, the bell and the gear at the top right are shared by both modes.
 
 | Button | Purpose |
 |---|---|
+| Timer | Focus panel: the running timer, what to focus on next, today's sessions. See "Focus" |
 | Bell | Activity panel: what is waiting (deletes that need consent, the number of tentative entries) and recent changes. The red badge counts what is waiting |
 | Gear | Settings: account, agent tokens, system calendar (CalDAV), command line, appearance |
 
@@ -172,6 +207,17 @@ product feature) that swaps the sample data between ordinary, crowded and empty.
 | Overdue item | A red "逾期 N 天" on the right; Today lists overdue items first, under their own heading |
 | Item without an estimate or a project | Both allowed. Without a project it is in the inbox |
 
+### Focus
+
+| Case | Handling |
+|---|---|
+| Long item title in the toolbar capsule | One line with an ellipsis; on a phone the capsule shows the ring and the time only |
+| Many sessions in a day | The panel lists the latest 3, then "显示其余 N 次" |
+| Far over the estimate, or no estimate | "已用 2 小时 55 分钟 / 15 分钟", or just "已用 40 分钟". No colour |
+| No sessions today | The panel says so and what to do |
+| No items at all | Free focus is still offered |
+| The page was closed when time ran out | The session still ended on the server at its planned end; the panel shows the "what next" state on the next visit |
+
 ### Not designed yet
 
 | Case | Intended handling |
@@ -180,6 +226,9 @@ product feature) that swaps the sample data between ordinary, crowded and empty.
 | A stale suggestion (its time has passed or the slot was taken) | Marked invalid and no longer directly acceptable |
 | Multi-day events in month view | Drawn as one segment per day today; ideally one continuous bar |
 | Overlapping events on a phone | The lanes get very narrow; needs its own design |
+| Time up on a phone | A web page cannot ring once it is closed; a reliable reminder needs push notifications |
+| Correcting a session | Deleting or shortening a wrong record (forgot to stop before leaving) |
+| Focus statistics | Totals per project and per week beyond the one line on the project page |
 
 ## Loading on demand
 
