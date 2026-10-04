@@ -130,7 +130,7 @@ button.g-row, label.g-row { width: 100%; text-align: left; }
 .warn { color: color-mix(in srgb, var(--orange) 72%, var(--mix)); font-size: 12.5px; }
 .sel { -webkit-user-select: all; user-select: all; overflow-wrap: anywhere; }
 .g-row .tr.sel { white-space: normal; text-align: right; }
-.howto { margin: 0; padding-left: 30px; display: grid; gap: 3px; }
+.howto { margin: 0; padding-left: 30px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 3px; overflow-wrap: anywhere; }
 .sheet > .end { padding-top: 18px; }
 
 /* ---------- sign-in ---------- */

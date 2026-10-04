@@ -35,7 +35,8 @@
 .sheet-h { position: sticky; top: 0; background: var(--sheet); display: flex; align-items: center; justify-content: space-between; padding: 16px 0 12px; z-index: 1; }
 .sheet-h b { font-size: 17px; font-weight: 600; }
 .sheet-h button { color: var(--blue); font-weight: 600; }
-.groups { display: grid; gap: 20px; }
+/* The column must be allowed to shrink: a long unbroken line (the CLI snippet) would otherwise widen the whole sheet. */
+.groups { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; }
 .g-h { font-size: 13px; font-weight: 600; color: var(--label-2); padding: 0 14px 6px; }
 .g-f { font-size: 12px; color: var(--label-2); padding: 6px 14px 0; }
 .group { background: var(--group); border-radius: 12px; overflow: hidden; }
