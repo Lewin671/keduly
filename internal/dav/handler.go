@@ -2,7 +2,10 @@ package dav
 
 import (
 	"bytes"
+	"io"
+	"log/slog"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/emersion/go-webdav/caldav"
@@ -13,11 +16,46 @@ import (
 // Handler serves /dav/ and /.well-known/caldav.
 type Handler struct {
 	Service *core.Service
+	trace   bool
 }
 
-func New(svc *core.Service) *Handler { return &Handler{Service: svc} }
+func New(svc *core.Service) *Handler {
+	return &Handler{Service: svc, trace: os.Getenv("KEDULY_DAV_TRACE") == "1"}
+}
 
+// ServeHTTP optionally traces the exchange. Calendar clients differ in what they send, and their
+// own error messages say nothing; KEDULY_DAV_TRACE=1 logs each request and response body
+// (truncated) so a failing client can be diagnosed. It logs calendar content: leave it off normally.
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if !h.trace {
+		h.serve(w, r)
+		return
+	}
+	in, _ := io.ReadAll(io.LimitReader(r.Body, 64<<10))
+	r.Body = io.NopCloser(bytes.NewReader(in))
+	rec := &recorder{header: http.Header{}}
+	h.serve(rec, r)
+	slog.Info("dav trace", "method", r.Method, "path", r.URL.Path, "depth", r.Header.Get("Depth"), "agent", r.UserAgent(),
+		"request", clip(in), "status", rec.status, "response", clip(rec.body.Bytes()))
+	for k, v := range rec.header {
+		w.Header()[k] = v
+	}
+	if rec.status == 0 {
+		rec.status = http.StatusOK
+	}
+	w.WriteHeader(rec.status)
+	w.Write(rec.body.Bytes())
+}
+
+func clip(b []byte) string {
+	const max = 6000
+	if len(b) > max {
+		return string(b[:max]) + "…"
+	}
+	return string(b)
+}
+
+func (h *Handler) serve(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/.well-known/caldav" {
 		// 307 keeps the method: clients arrive here with PROPFIND.
 		http.Redirect(w, r, root, http.StatusTemporaryRedirect)
