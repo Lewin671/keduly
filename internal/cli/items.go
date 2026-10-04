@@ -442,7 +442,7 @@ func (a *app) itemShow(args []string) error {
 	a.printf("%s\nID %s · 创建者 %s", a.itemLine(it, projects), it.ID, it.CreatedBy.Name)
 	for _, h := range b.Headings {
 		if it.HeadingID != nil && h.ID == *it.HeadingID {
-			a.printf(" · 分节 %s", h.Name)
+			a.printf(" · 分组 %s", h.Name)
 		}
 	}
 	if it.Evening {

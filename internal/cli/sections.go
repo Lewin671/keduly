@@ -36,7 +36,7 @@ func (a *app) areaList(args []string) error {
 		a.printf("%s  %s  (%d 个项目)\n", short(area.ID), area.Name, projects[area.ID])
 	}
 	if len(b.Areas) == 0 {
-		a.printf("（还没有分组）\n")
+		a.printf("（还没有领域）\n")
 	}
 	return nil
 }
@@ -51,7 +51,7 @@ func (a *app) areaAdd(args []string) error {
 	if printed, _, err := a.send(http.MethodPost, "/areas", nil, map[string]any{"name": pos[0]}, &resp); err != nil || printed {
 		return err
 	}
-	a.printf("已新建分组「%s」 %s%s\n", resp.Area.Name, short(resp.Area.ID), a.dryNote())
+	a.printf("已新建领域「%s」 %s%s\n", resp.Area.Name, short(resp.Area.ID), a.dryNote())
 	return nil
 }
 
@@ -69,7 +69,7 @@ func (a *app) areaRename(args []string) error {
 	if printed, _, err := a.send(http.MethodPatch, "/areas/"+area.ID, nil, map[string]any{"name": pos[1]}, &resp); err != nil || printed {
 		return err
 	}
-	a.printf("分组「%s」已改名为「%s」%s\n", area.Name, resp.Area.Name, a.dryNote())
+	a.printf("领域「%s」已改名为「%s」%s\n", area.Name, resp.Area.Name, a.dryNote())
 	return nil
 }
 
@@ -86,7 +86,7 @@ func (a *app) areaRemove(args []string) error {
 	if printed, _, err := a.send(http.MethodDelete, "/areas/"+area.ID, nil, nil, nil); err != nil || printed {
 		return err
 	}
-	a.printf("已删除分组「%s」，其中的项目保留%s\n", area.Name, a.dryNote())
+	a.printf("已删除领域「%s」，其中的项目保留%s\n", area.Name, a.dryNote())
 	return nil
 }
 
@@ -111,7 +111,7 @@ func (a *app) headingList(args []string) error {
 		a.printf("%s  %s\n", short(h.ID), h.Name)
 	}
 	if len(d.Headings) == 0 {
-		a.printf("（项目「%s」还没有分节）\n", d.Project.Name)
+		a.printf("（项目「%s」还没有分组）\n", d.Project.Name)
 	}
 	return nil
 }
@@ -131,7 +131,7 @@ func (a *app) headingAdd(args []string) error {
 	if printed, _, err := a.send(http.MethodPost, "/projects/"+p.ID+"/headings", nil, body, &resp); err != nil || printed {
 		return err
 	}
-	a.printf("已在项目「%s」中新建分节「%s」 %s%s\n", p.Name, resp.Heading.Name, short(resp.Heading.ID), a.dryNote())
+	a.printf("已在项目「%s」中新建分组「%s」 %s%s\n", p.Name, resp.Heading.Name, short(resp.Heading.ID), a.dryNote())
 	return nil
 }
 
@@ -149,7 +149,7 @@ func (a *app) headingRename(args []string) error {
 	if printed, _, err := a.send(http.MethodPatch, "/headings/"+h.ID, nil, map[string]any{"name": pos[1]}, &resp); err != nil || printed {
 		return err
 	}
-	a.printf("分节「%s」已改名为「%s」%s\n", h.Name, resp.Heading.Name, a.dryNote())
+	a.printf("分组「%s」已改名为「%s」%s\n", h.Name, resp.Heading.Name, a.dryNote())
 	return nil
 }
 
@@ -166,6 +166,6 @@ func (a *app) headingRemove(args []string) error {
 	if printed, _, err := a.send(http.MethodDelete, "/headings/"+h.ID, nil, nil, nil); err != nil || printed {
 		return err
 	}
-	a.printf("已删除分节「%s」，其中的事项留在项目里%s\n", h.Name, a.dryNote())
+	a.printf("已删除分组「%s」，其中的事项留在项目里%s\n", h.Name, a.dryNote())
 	return nil
 }

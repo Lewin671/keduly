@@ -91,8 +91,8 @@ func TestHelpCoversEveryCommand(t *testing.T) {
 
 func TestProjectsAreasAndHeadings(t *testing.T) {
 	h := newHarness(t, true)
-	wantIn(t, h.ok("area", "list"), "（还没有分组）")
-	wantIn(t, h.ok("area", "add", "工作", "--reason", "asked"), "已新建分组「工作」")
+	wantIn(t, h.ok("area", "list"), "（还没有领域）")
+	wantIn(t, h.ok("area", "add", "工作", "--reason", "asked"), "已新建领域「工作」")
 	wantIn(t, h.ok("area", "add", "不写入", "--dry-run"), "试运行")
 	var areas struct {
 		Areas []api.Area `json:"areas"`
@@ -103,7 +103,7 @@ func TestProjectsAreasAndHeadings(t *testing.T) {
 	}
 	wantIn(t, h.ok("project", "add", "Keduly", "--area", "工作", "--color", "teal"), "已新建项目")
 	wantIn(t, h.ok("area", "list"), "工作", "1 个项目")
-	wantIn(t, h.ok("area", "rename", areas.Areas[0].ID[:5], "Work"), "分组「工作」已改名为「Work」")
+	wantIn(t, h.ok("area", "rename", areas.Areas[0].ID[:5], "Work"), "领域「工作」已改名为「Work」")
 	h.fails(1, []string{"area", "rename", "工作", "x"}, "no area is named")
 
 	out := h.ok("project", "edit", "keduly", "--name", "Keduly 开发", "--color", "pink", "--notes", "第一行\n第二行", "--reason", "asked")
@@ -118,9 +118,9 @@ func TestProjectsAreasAndHeadings(t *testing.T) {
 		Heading api.Heading `json:"heading"`
 	}
 	h.json(&heading, "heading", "add", "Keduly 开发", "同步")
-	wantIn(t, h.ok("heading", "add", "Keduly 开发", "界面"), "已在项目「Keduly 开发」中新建分节「界面」")
+	wantIn(t, h.ok("heading", "add", "Keduly 开发", "界面"), "已在项目「Keduly 开发」中新建分组「界面」")
 	wantIn(t, h.ok("heading", "list", "Keduly 开发"), heading.Heading.ID[:8]+"  同步", "界面")
-	wantIn(t, h.ok("heading", "rename", "keduly 开发/界面", "UI"), "分节「界面」已改名为「UI」")
+	wantIn(t, h.ok("heading", "rename", "keduly 开发/界面", "UI"), "分组「界面」已改名为「UI」")
 	wantIn(t, h.ok("heading", "rename", heading.Heading.ID[:6], "Sync"), "已改名为「Sync」")
 	h.fails(1, []string{"heading", "rm", "UI"}, "the project is not known")
 	h.fails(1, []string{"heading", "rm", "Keduly 开发/nope"}, "no heading matches")
@@ -138,14 +138,14 @@ func TestProjectsAreasAndHeadings(t *testing.T) {
 	h.ok("event", "add", "设计评审", "--start", "tomorrow 10:00", "--duration", "1h", "--project", "Keduly 开发")
 	out = h.ok("project", "show", "Keduly 开发")
 	wantIn(t, out, "Keduly 开发", "pink", "未完成 1", "已完成 1", "未安排 1", "Work", "第一行\n第二行",
-		"分节：", "Sync", "UI", "近期日程：", "2026-10-14 周三", "10:00-11:00", "设计评审")
+		"分组：", "Sync", "UI", "近期日程：", "2026-10-14 周三", "10:00-11:00", "设计评审")
 	var detail api.ProjectDetail
 	h.json(&detail, "project", "show", "Keduly 开发")
 	if detail.UnplannedCount != 1 || len(detail.Headings) != 2 || len(detail.UpcomingEvents) != 1 || detail.Project.OpenCount != 1 {
 		t.Fatalf("detail %+v", detail)
 	}
 
-	wantIn(t, h.ok("heading", "rm", "Keduly 开发/UI"), "已删除分节「UI」")
+	wantIn(t, h.ok("heading", "rm", "Keduly 开发/UI"), "已删除分组「UI」")
 	wantOut(t, h.ok("heading", "list", "Keduly 开发"), "UI")
 
 	// Archived projects leave the list but stay reachable.
@@ -160,9 +160,9 @@ func TestProjectsAreasAndHeadings(t *testing.T) {
 	wantIn(t, h.ok("project", "edit", "Keduly 开发", "--area", "none", "--notes", ""), "已修改项目")
 	wantOut(t, h.ok("project", "show", "Keduly 开发"), "Work", "第一行")
 	wantIn(t, h.ok("project", "edit", "Keduly 开发", "--area", "work"), "Work")
-	wantIn(t, h.ok("area", "rm", "Work"), "已删除分组「Work」")
+	wantIn(t, h.ok("area", "rm", "Work"), "已删除领域「Work」")
 	wantIn(t, h.ok("project", "list"), "Keduly 开发")
-	wantIn(t, h.ok("activity", "--limit", "50"), "新建分组「工作」", "原因：asked", "归档了项目")
+	wantIn(t, h.ok("activity", "--limit", "50"), "新建领域「工作」", "原因：asked", "归档了项目")
 }
 
 // itemID finds an open or done item by its exact title.
@@ -213,7 +213,7 @@ func TestItemHeadingsAndFilters(t *testing.T) {
 	if it.HeadingID == nil || !it.Evening || *it.DueDate != "2026-10-20" || it.DueTime == nil || *it.DueTime != "09:30" {
 		t.Fatalf("created %+v", it)
 	}
-	wantIn(t, h.ok("item", "show", it.ID), "写周报", "分节 本周", "今晚", "截止 2026-10-20 09:30", "含 CalDAV 进度")
+	wantIn(t, h.ok("item", "show", it.ID), "写周报", "分组 本周", "今晚", "截止 2026-10-20 09:30", "含 CalDAV 进度")
 
 	// A bare name needs a project; PROJECT/NAME carries its own.
 	h.fails(1, []string{"item", "add", "x", "--heading", "本周"}, "the project is not known")
@@ -224,18 +224,18 @@ func TestItemHeadingsAndFilters(t *testing.T) {
 	if home.ProjectID == nil || home.HeadingID == nil {
 		t.Fatalf("an item added under PROJECT/NAME: %+v", home)
 	}
-	wantIn(t, h.ok("item", "show", home.ID), "Home", "分节 本周")
+	wantIn(t, h.ok("item", "show", home.ID), "Home", "分组 本周")
 
 	// Editing resolves a name in the project the item is in.
 	wantOut(t, h.ok("item", "edit", it.ID, "--heading", "none", "--no-evening", "--due", "fri 18:00"), "今晚")
 	out := h.ok("item", "show", it.ID)
 	wantIn(t, out, "截止 2026-10-16 18:00")
-	wantOut(t, out, "分节", "今晚")
+	wantOut(t, out, "分组", "今晚")
 	h.ok("item", "edit", it.ID[:6], "--heading", "本周")
-	wantIn(t, h.ok("item", "show", it.ID), "分节 本周", "Work")
+	wantIn(t, h.ok("item", "show", it.ID), "分组 本周", "Work")
 	h.fails(1, []string{"item", "edit", it.ID, "--heading", "home/本周", "--project", "Work"}, "different project")
 	h.ok("item", "edit", it.ID, "--project", "Home", "--heading", "本周")
-	wantIn(t, h.ok("item", "show", it.ID), "Home", "分节 本周")
+	wantIn(t, h.ok("item", "show", it.ID), "Home", "分组 本周")
 	h.ok("item", "edit", it.ID, "--project", "Work", "--heading", "本周")
 
 	h.json(&created, "item", "add", "收件箱里的", "--important", "--due", "today")
@@ -251,7 +251,7 @@ func TestItemHeadingsAndFilters(t *testing.T) {
 	h.fails(1, []string{"heading", "rm", "Work/本周"}, "2 headings are named")
 	h.ok("item", "edit", it.ID, "--heading", second.Heading.ID[:8])
 	h.ok("heading", "rm", second.Heading.ID)
-	wantOut(t, h.ok("item", "show", it.ID), "分节")
+	wantOut(t, h.ok("item", "show", it.ID), "分组")
 	h.ok("item", "edit", it.ID, "--heading", "本周")
 
 	// Filters.

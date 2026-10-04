@@ -86,7 +86,7 @@ func (a *app) projectShow(args []string) error {
 		a.printf("\n%s\n", d.Project.Notes)
 	}
 	if len(d.Headings) > 0 {
-		a.printf("\n分节：\n")
+		a.printf("\n分组：\n")
 	}
 	for _, h := range d.Headings {
 		a.printf("  %s  %s\n", short(h.ID), h.Name)
@@ -235,6 +235,6 @@ func (a *app) projectRemove(args []string) error {
 	if printed, _, err := a.send(http.MethodDelete, "/projects/"+p.ID, nil, nil, nil); err != nil || printed {
 		return err
 	}
-	a.printf("已删除项目「%s」及其全部分节、事项和日程%s\n", p.Name, a.dryNote())
+	a.printf("已删除项目「%s」及其全部分组、事项和日程%s\n", p.Name, a.dryNote())
 	return nil
 }
