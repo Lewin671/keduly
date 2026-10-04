@@ -288,7 +288,7 @@ web app polls `GET /counts` every 20 seconds and reloads what it shows when `rev
 | `POST /projects` | `name`, optional `color`, `area_id`, `notes` | `color` defaults to the least used one |
 | `GET /projects/{id}` | | `{ project, headings, upcoming_events, unplanned_count }`. `upcoming_events` is the project's next 3 events from now, time blocks excluded |
 | `PATCH /projects/{id}` | any of `name`, `color`, `area_id`, `notes`, `position`, `archived` | |
-| `DELETE /projects/{id}` | | Also deletes its headings, items and events |
+| `DELETE /projects/{id}` | | Also deletes its headings, items and events. `403 forbidden` for a token with `confirm_delete`: no suggestion kind stands in for this delete, so the user does it in the web app |
 | `POST /projects/{id}/headings` | `name` | |
 | `PATCH /headings/{id}` | `name`, `position` | |
 | `DELETE /headings/{id}` | | Its items stay in the project without a heading |
@@ -386,10 +386,16 @@ on that day.
 | `POST /suggestions/{id}/accept` | | `{ suggestion, activity }` |
 | `POST /suggestions/{id}/reject` | | `{ suggestion }` |
 | `POST /suggestions/accept-all` | | `{ accepted, activity_ids }` |
+| `DELETE /suggestions/{id}` | | `204`. Withdraws a pending suggestion |
 
 Deciding a suggestion requires a session cookie: an agent cannot accept its own proposals.
 A suggestion that can no longer be applied (its item or event is gone) is rejected with
 `409 conflict` on accept and is then marked `rejected`.
+
+Withdrawing is the proposer taking a suggestion back. A session may withdraw any pending
+suggestion; a `write` token only the ones that token itself created, and gets `404 not_found` for
+every other one. A suggestion that is no longer pending answers `409 conflict`. A withdrawn
+suggestion is removed: it has no status of its own and is not in the activity log.
 
 ### Activity
 

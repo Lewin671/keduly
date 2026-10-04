@@ -282,10 +282,16 @@ func (op *Op) UpdateProject(id string, f Fields) (*api.Project, error) {
 }
 
 // DeleteProject removes a project together with its headings, items and events.
+// No suggestion kind stands in for it, so a token whose deletions need the
+// user's confirmation is refused outright.
 func (op *Op) DeleteProject(id string) error {
 	p, err := op.project(id)
 	if err != nil {
 		return err
+	}
+	if op.needsConfirmation() {
+		return Forbidden("this token's deletions need the user's confirmation, and deleting a project " +
+			"(with all its items and events) cannot be proposed: the user must delete it in the web app")
 	}
 	items, err := store.Items.List(op.ctx, op.q, op.User.ID, "project_id = ?", id)
 	if err != nil {
