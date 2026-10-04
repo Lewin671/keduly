@@ -30,6 +30,10 @@ Keduly is a calendar and task manager with a first-class interface for AI agents
   describe it. The order is: `docs/api.md`, server, web app, CLI, skill. The only exceptions are
   the actions reserved for the person, listed under "Only the user can" in the skill (deciding
   suggestions, tokens, account settings); adding to that list is a product decision, not a shortcut.
+- No compatibility code. The project is iterating fast and the server, the web app and the CLI are
+  always released together, so do not keep old fields, old endpoints, fallbacks or version checks
+  for clients that are behind. Change the contract and every caller in the same commit. Database
+  migrations are the one exception: they carry existing data forward.
 - Run `scripts/check.sh` before committing. It must pass.
 - The server has no runtime dependencies besides its SQLite file. Keep it that way.
 
