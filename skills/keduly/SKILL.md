@@ -102,7 +102,8 @@ that item.
 ## Only the user can
 
 Accept or reject suggestions; create or revoke tokens and app passwords; change the account (name,
-password, time zone, working hours, the lengths of a tomato and of the rests); register; delete a project when the token needs delete
+password, time zone, working hours, the lengths of a tomato and of the rests); register; sign a device in or approve
+one that asks to be (the QR codes); delete a project when the token needs delete
 confirmation. Do not look for a way around these: tell the user to do it in the web app.
 
 ## Conventions

@@ -205,6 +205,14 @@ type Token struct {
 	Token         string  `json:"token,omitempty"`
 }
 
+// LoginRequest is a device asking to be signed in, as shown to the user who may approve it.
+type LoginRequest struct {
+	ID string `json:"id"`
+	// Device names the browser and system, e.g. "Chrome · Mac"; empty when unrecognised.
+	Device    string `json:"device"`
+	ExpiresAt string `json:"expires_at"`
+}
+
 type Counts struct {
 	Inbox   int `json:"inbox"`
 	Today   int `json:"today"`

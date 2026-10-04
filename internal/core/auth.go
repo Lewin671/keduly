@@ -279,7 +279,8 @@ func (op *Op) UpdateMe(f Fields) (*api.User, error) {
 	return &out, nil
 }
 
-// ChangePassword sets a new password and ends every other session.
+// ChangePassword sets a new password, ends every other session and withdraws every sign-in
+// request and code the account approved or issued.
 func (op *Op) ChangePassword(f Fields) error {
 	var current, next string
 	r := newReader(f)
@@ -297,6 +298,9 @@ func (op *Op) ChangePassword(f Fields) error {
 	u := *op.User
 	u.PasswordHash = op.svc.hashPassword(next)
 	if err := store.UpdateUser(op.ctx, op.q, &u); err != nil {
+		return err
+	}
+	if err := store.DeleteLoginLinksOf(op.ctx, op.q, u.ID, ""); err != nil {
 		return err
 	}
 	return store.DeleteOtherSessions(op.ctx, op.q, u.ID, op.ID.SessionHash)

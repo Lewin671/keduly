@@ -141,7 +141,7 @@ The bell and the gear at the top right are shared by all modes.
 | Button | Purpose |
 |---|---|
 | Bell | Activity panel: what is waiting (deletes that need consent, the number of tentative entries) and recent changes. The red badge counts what is waiting |
-| Gear | Settings: account, agent tokens, system calendar (CalDAV), command line, appearance |
+| Gear | Settings: account (with signing in on another device), agent tokens, system calendar (CalDAV), command line, appearance |
 
 Creating: the toolbar "+" in calendar mode, the round blue "+" at the bottom right in items mode.
 
@@ -179,6 +179,39 @@ An item row:
 | Star | In a project page and in All, items planned for today carry a yellow star |
 | Right side | The deadline with a small flag, red when due today; the scheduled time in grey; an agent's proposed time in a dashed box, "待定 14:00" |
 | Opening it | The row expands in place into a card: notes, the agent's suggestion with its reason (accept or reject), time, estimate, deadline, project |
+
+## Signing in on another device
+
+Typing a password on every new device is tedious, so a device that is signed in can vouch for one
+that is not. There are two directions, because only one of the two devices needs a camera, and
+both use the system camera: the QR code is a link to the server.
+
+| Direction | Where it starts | What the other device does |
+|---|---|---|
+| The new device shows the code | "扫码登录" on the sign-in screen: a QR code with a 4-digit number under it | The signed-in phone scans it, sees which browser and system is asking, types the number and taps "允许登录" |
+| The signed-in device shows the code | "在其他设备登录…" in Settings, under the account | The new device scans it, sees whose account it is, and taps "登录" |
+
+Rules that the design must keep:
+
+- Nothing happens on a scan alone. Both screens ask first, and say which account is involved.
+- The number is typed, not compared: it proves the person approving can see the other screen. A
+  code or link forwarded by someone else arrives without it. The approval screen says so in plain
+  words and offers "拒绝" as prominently as it can without being the default.
+- A code lives 2 minutes and works once. An expired one is replaced by a button, never refreshed
+  silently, so a screen left open does not keep a live code on show.
+- The code in Settings is a temporary password and is described as one. Closing the row withdraws it.
+- The QR code is always dark on white, in both themes.
+
+| Case | Handling |
+|---|---|
+| The scanning phone is not signed in | It asks for the password first, then continues to the approval screen |
+| A wrong number | "数字不对"; the field clears. The third wrong number ends the request |
+| Expired, used, refused or withdrawn | "二维码已失效" and what to do on the other device |
+| The scanning device already has that account | It says so and leaves the code unused |
+| The scanning device has another account | It warns that the account will be replaced |
+| The browser and system are not recognised | "一台设备想登录…", with no name: the asking device cannot put its own words there |
+
+The mockup's demo switch has a "换设备登录" row that shows each of these screens.
 
 ## Edge cases
 

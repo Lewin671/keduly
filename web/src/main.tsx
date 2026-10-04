@@ -1,5 +1,6 @@
 import { render } from 'preact';
 import { App } from './App';
+import { initLink } from './state/link';
 import { initRoute } from './state/route';
 import { startFocusClock } from './state/focus';
 import { boot, startClock } from './state/store';
@@ -15,6 +16,7 @@ import './styles/focus.css';
 import './styles/app.css';
 
 initTheme();
+initLink();
 initRoute();
 render(<App />, document.getElementById('root')!);
 void boot();

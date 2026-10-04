@@ -14,6 +14,15 @@ func (s *Server) routes() {
 	s.handle("POST /auth/register", public, s.register)
 	s.handle("POST /auth/login", public, s.login)
 	s.handle("POST /auth/logout", public, s.logout)
+	s.handle("POST /auth/requests", public, s.startLoginRequest)
+	s.handle("POST /auth/requests/{id}/claim", public, s.claimLoginRequest)
+	s.handle("GET /auth/requests/{id}", sessionOnly, s.getLoginRequest)
+	s.handle("POST /auth/requests/{id}/approve", sessionOnly, s.approveLoginRequest)
+	s.handle("DELETE /auth/requests/{id}", sessionOnly, s.refuseLoginRequest)
+	s.handle("POST /auth/codes", sessionOnly, s.createLoginCode)
+	s.handle("DELETE /auth/codes", sessionOnly, s.revokeLoginCode)
+	s.handle("POST /auth/codes/check", public, s.checkLoginCode)
+	s.handle("POST /auth/codes/redeem", public, s.redeemLoginCode)
 	s.handle("GET /me", member, s.me)
 	s.handle("PATCH /me", sessionOnly, s.updateMe)
 	s.handle("POST /me/password", sessionOnly, s.changePassword)
@@ -109,6 +118,91 @@ func (s *Server) logout(c *call) error {
 	s.setCookie(c.w, c.r, "")
 	c.w.WriteHeader(http.StatusNoContent)
 	return nil
+}
+
+func (s *Server) startLoginRequest(c *call) error {
+	req, pin, secret, err := s.svc.StartLoginRequest(c.r.Context(), c.fields, c.r.UserAgent())
+	if err != nil {
+		return err
+	}
+	writeJSON(c.w, http.StatusCreated, obj{"request": req, "pin": pin, "secret": secret})
+	return nil
+}
+
+func (s *Server) claimLoginRequest(c *call) error {
+	user, secret, err := s.svc.ClaimLoginRequest(c.r.Context(), c.pathID(), c.fields)
+	if err != nil {
+		return err
+	}
+	if user == nil {
+		return c.ok(obj{"status": "pending"})
+	}
+	s.setCookie(c.w, c.r, secret)
+	return c.ok(obj{"status": "approved", "user": user})
+}
+
+func (s *Server) getLoginRequest(c *call) error {
+	req, err := s.svc.LoginRequest(c.r.Context(), c.pathID())
+	if err != nil {
+		return err
+	}
+	return c.ok(obj{"request": req})
+}
+
+func (s *Server) approveLoginRequest(c *call) error {
+	if err := s.svc.ApproveLoginRequest(c.r.Context(), c.id, c.pathID(), c.fields); err != nil {
+		return err
+	}
+	c.w.WriteHeader(http.StatusNoContent)
+	return nil
+}
+
+func (s *Server) refuseLoginRequest(c *call) error {
+	if err := s.svc.RefuseLoginRequest(c.r.Context(), c.pathID()); err != nil {
+		return err
+	}
+	c.w.WriteHeader(http.StatusNoContent)
+	return nil
+}
+
+func (s *Server) createLoginCode(c *call) error {
+	code, expiresAt, err := s.svc.CreateLoginCode(c.r.Context(), c.id, c.fields)
+	if err != nil {
+		return err
+	}
+	writeJSON(c.w, http.StatusCreated, obj{"code": code, "expires_at": expiresAt})
+	return nil
+}
+
+func (s *Server) revokeLoginCode(c *call) error {
+	if err := s.svc.RevokeLoginCode(c.r.Context(), c.id); err != nil {
+		return err
+	}
+	c.w.WriteHeader(http.StatusNoContent)
+	return nil
+}
+
+func (s *Server) checkLoginCode(c *call) error {
+	name, email, err := s.svc.CheckLoginCode(c.r.Context(), c.fields)
+	if err != nil {
+		return err
+	}
+	return c.ok(obj{"name": name, "email": email})
+}
+
+// redeemLoginCode signs this device in, ending the session it had so none is left behind.
+func (s *Server) redeemLoginCode(c *call) error {
+	user, secret, err := s.svc.RedeemLoginCode(c.r.Context(), c.fields)
+	if err != nil {
+		return err
+	}
+	if cookie, err := c.r.Cookie(cookieName); err == nil && cookie.Value != "" {
+		if err := s.svc.Logout(c.r.Context(), cookie.Value); err != nil {
+			return err
+		}
+	}
+	s.setCookie(c.w, c.r, secret)
+	return c.ok(obj{"user": user})
 }
 
 func (s *Server) me(c *call) error {

@@ -1,7 +1,7 @@
 // Every request the web app makes goes through this module, one function per endpoint of docs/api.md.
 import type {
   Activity, Area, Bootstrap, CalEvent, Config, Counts, EventWrite, Focus, FocusSession, FocusStats, FreeSlot, Heading, Item, ItemFilters, ItemPage, ItemWrite,
-  NewToken, OverviewProject, Project, ProjectColor, ProjectDetail, Quadrant, QuadrantKey, Suggestion, TodayView, Token,
+  LoginRequest, NewToken, OverviewProject, Project, ProjectColor, ProjectDetail, Quadrant, QuadrantKey, Suggestion, TodayView, Token,
   UpcomingDay, User,
 } from './types';
 
@@ -86,6 +86,20 @@ export const logout = () => post<void>('/auth/logout');
 export const updateMe = (body: Partial<Pick<User, 'name' | 'timezone' | 'timezone_auto' | 'work_start' | 'work_end' | 'focus_minutes' | 'rest_minutes' | 'long_rest_minutes' | 'round_size'>>) =>
   patch<{ user: User }>('/me', body).then(r => r.user);
 export const changePassword = (current: string, next: string) => post<void>('/me/password', { current, new: next });
+
+/* ---------- signing in on another device ---------- */
+
+/** Asks to be signed in: what the QR code and the screen show, and the secret that claims the session. */
+export const startLoginRequest = () => post<{ request: LoginRequest; pin: string; secret: string }>('/auth/requests');
+export const claimLoginRequest = (requestId: string, secret: string) =>
+  post<{ status: 'pending' } | { status: 'approved'; user: User }>(`/auth/requests/${id(requestId)}/claim`, { secret });
+export const getLoginRequest = (requestId: string) => get<{ request: LoginRequest }>(`/auth/requests/${id(requestId)}`).then(r => r.request);
+export const approveLoginRequest = (requestId: string, pin: string) => post<void>(`/auth/requests/${id(requestId)}/approve`, { pin });
+export const refuseLoginRequest = (requestId: string) => del(`/auth/requests/${id(requestId)}`);
+export const createLoginCode = () => post<{ code: string; expires_at: string }>('/auth/codes');
+export const revokeLoginCode = () => del('/auth/codes');
+export const checkLoginCode = (code: string) => post<{ name: string; email: string }>('/auth/codes/check', { code });
+export const redeemLoginCode = (code: string) => post<{ user: User }>('/auth/codes/redeem', { code }).then(r => r.user);
 
 /* ---------- bootstrap and change detection ---------- */
 

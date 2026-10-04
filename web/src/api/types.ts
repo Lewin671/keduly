@@ -169,6 +169,14 @@ export interface Counts {
   pending: number;
 }
 
+/** A device asking to be signed in, as shown to the user who may approve it. */
+export interface LoginRequest {
+  id: string;
+  /** The asking browser and system, e.g. "Chrome · Mac"; empty when unrecognised. */
+  device: string;
+  expires_at: string;
+}
+
 export interface Config {
   registration: 'open' | 'closed';
   version: string;

@@ -43,7 +43,7 @@ Every error has the same shape and an HTTP status that matches it:
 | 403 | `forbidden` (token scope too narrow), `csrf`, `registration_closed` |
 | 404 | `not_found` (also returned for objects owned by another user) |
 | 409 | `conflict` (e.g. email already registered, suggestion already decided) |
-| 429 | `rate_limited` |
+| 429 | `rate_limited`. `/auth/` endpoints have a small budget per address, except claiming a login request |
 | 500 | `internal` |
 
 ### Pagination
@@ -314,6 +314,40 @@ e.g. `{ "item": { … } }`, and lists are under the plural, e.g. `{ "items": [ �
 | `POST /me/password` | `current`, `new` | `204`. Ends every other session |
 
 A new account starts with no projects.
+
+### Signing in on another device
+
+Two ways to sign a device in without typing the password, each built around a QR code. Both last
+2 minutes and work once. Only a session cookie can approve or issue: tokens get `403 forbidden`.
+A request or code that is unknown, expired, used, refused or withdrawn is `404 not_found`.
+Changing the password withdraws all of the account's.
+
+**Login request**: the new device shows the QR code and a signed-in device approves it. The QR
+code holds `{origin}/#approve={id}`.
+
+| Method and path | Auth | Body | Response |
+|---|---|---|---|
+| `POST /auth/requests` | none | | `201 { request, pin, secret }`. `request` is `{ id, device, expires_at }`. The device shows `pin` (4 digits) beside the QR code and keeps `secret` to itself |
+| `POST /auth/requests/{id}/claim` | none | `secret` | `{ "status": "pending" }` while it waits. Once approved, `{ "status": "approved", user }` and the session cookie, exactly once. Polled every 2 seconds |
+| `GET /auth/requests/{id}` | session | | `{ request }`, without the pin. `device` names the asking browser and system from a fixed list, e.g. `Chrome · Mac`, and is empty when unrecognised |
+| `POST /auth/requests/{id}/approve` | session | `pin` | `204`: the asking device may sign in as the caller. A wrong pin is `400 invalid_request`; the third one deletes the request |
+| `DELETE /auth/requests/{id}` | session | | `204`. Refuses the request |
+
+The id in the QR code is not a secret. The session goes to the holder of `secret`, and only after
+a signed-in user typed the pin, which is on the asking device's screen and nowhere else: a link
+sent to someone is not enough to be let in.
+
+**Login code**: a signed-in device shows the QR code and the new device opens it. The QR code
+holds `{origin}/#signin={code}`; the code is in the fragment so that it is never sent in a `GET`.
+
+| Method and path | Auth | Body | Response |
+|---|---|---|---|
+| `POST /auth/codes` | session | | `201 { code, expires_at }`. An account has one code at a time: this replaces the previous one |
+| `DELETE /auth/codes` | session | | `204`. Withdraws the code |
+| `POST /auth/codes/check` | none | `code` | `{ name, email }` of the account, so the device can ask before signing in. Does not use the code |
+| `POST /auth/codes/redeem` | none | `code` | `{ user }`, sets the session cookie and ends the session the device had |
+
+A code is a credential until it is used or expires. The server stores only its hash.
 
 ### Bootstrap and change detection
 

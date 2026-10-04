@@ -147,6 +147,7 @@ type Modules = {
   store: typeof import('./state/store');
   route: typeof import('./state/route');
   focus: typeof import('./state/focus');
+  link: typeof import('./state/link');
 };
 let mod: Modules;
 
@@ -162,8 +163,8 @@ beforeAll(async () => {
   // The DOM shim scrolls nothing and has no element scrolling.
   Element.prototype.scrollIntoView = () => {};
   window.scrollTo = () => {};
-  const [{ App }, store, route, focus] = await Promise.all([import('./App'), import('./state/store'), import('./state/route'), import('./state/focus')]);
-  mod = { App, store, route, focus };
+  const [{ App }, store, route, focus, link] = await Promise.all([import('./App'), import('./state/store'), import('./state/route'), import('./state/focus'), import('./state/link')]);
+  mod = { App, store, route, focus, link };
 });
 
 beforeEach(() => {
@@ -176,6 +177,7 @@ beforeEach(() => {
 
 afterEach(() => {
   render(null, document.getElementById('root')!);
+  mod.link.link.value = null;
 });
 
 describe('session', () => {
@@ -207,6 +209,151 @@ describe('session', () => {
     await settle();
     expect(callsTo('POST', '/auth/register')[0]!.body).toEqual({ email: 'me@example.com', password: 'correct horse', name: 'Me', timezone: 'America/New_York' });
     expect(document.querySelector('.app')).not.toBeNull();
+  });
+});
+
+describe('signing in on another device', () => {
+  const submit = () => document.querySelector<HTMLFormElement>('.link-card')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+
+  it('reads a scanned link and nothing else from the hash', () => {
+    const { parseLink } = mod.link;
+    expect(parseLink('#approve=abcdefgh234567ab')).toEqual({ kind: 'approve', id: 'abcdefgh234567ab' });
+    expect(parseLink('#signin=Zm9v_bar-1')).toEqual({ kind: 'signin', code: 'Zm9v_bar-1' });
+    for (const hash of ['', '#/items/today', '#signin=', '#signin=a b', '#approve=a/b', '#other=abc', 'signin=abc']) expect(parseLink(hash)).toBeNull();
+  });
+
+  it('shows a QR code and a pin on the sign-in screen, and enters once another device allows it', async () => {
+    table['GET /bootstrap'] = 401;
+    await mod.store.boot();
+    await settle();
+    table['POST /auth/requests'] = { request: { id: 'r1', device: '', expires_at: at('10:42') }, pin: '4821', secret: 'only-here' };
+    table['POST /auth/requests/r1/claim'] = { status: 'pending' };
+    find('button', '扫码登录').click();
+    await settle();
+    expect(document.querySelector('svg.qr path')?.getAttribute('d')).toMatch(/^M\d+ \d+h1v1h-1z/);
+    expect(document.querySelector('.pin-show')!.textContent).toBe('4821');
+    // The QR code must not carry the secret or the pin.
+    expect(document.querySelector('.qr-card')!.innerHTML).not.toContain('only-here');
+
+    table['POST /auth/requests/r1/claim'] = { status: 'approved', user: bootstrap.user };
+    table['GET /bootstrap'] = bootstrap;
+    await new Promise(resolve => setTimeout(resolve, 2200));
+    await settle();
+    expect(callsTo('POST', '/auth/requests/r1/claim')[0]!.body).toEqual({ secret: 'only-here' });
+    expect(document.querySelector('.app')).not.toBeNull();
+    expect(document.querySelector('.auth')).toBeNull();
+  });
+
+  it('offers a new QR code when the request is gone', async () => {
+    table['GET /bootstrap'] = 401;
+    await mod.store.boot();
+    await settle();
+    table['POST /auth/requests'] = { request: { id: 'r2', device: '', expires_at: at('10:42') }, pin: '0007', secret: 's' };
+    find('button', '扫码登录').click();
+    await new Promise(resolve => setTimeout(resolve, 2200));
+    await settle();
+    expect(text()).toContain('二维码已过期');
+    expect(document.querySelector('svg.qr')).toBeNull();
+    find('button', '重新生成').click();
+    await settle();
+    expect(callsTo('POST', '/auth/requests')).toHaveLength(2);
+    find('button', '用密码登录').click();
+    await settle();
+    expect(document.querySelector('.auth-card input[type=password]')).not.toBeNull();
+  });
+
+  it('asks a signed-in device for the pin before letting the other one in', async () => {
+    table['GET /auth/requests/r1'] = { request: { id: 'r1', device: 'Chrome · Mac', expires_at: at('10:42') } };
+    mod.link.link.value = { kind: 'approve', id: 'r1' };
+    await open('#/items/today');
+    expect(text()).toContain('一台设备（Chrome · Mac）想登录你的账号 me@example.com');
+    const allow = find('.link-card button', '允许登录') as HTMLButtonElement;
+    expect(allow.disabled).toBe(true);
+    await type(document.querySelector<HTMLInputElement>('.fld.pin')!, '48a21');
+    expect(document.querySelector<HTMLInputElement>('.fld.pin')!.value).toBe('4821');
+    table['POST /auth/requests/r1/approve'] = 204;
+    submit();
+    await settle();
+    expect(callsTo('POST', '/auth/requests/r1/approve')[0]!.body).toEqual({ pin: '4821' });
+    expect(text()).toContain('已允许');
+    find('.link-card button', '完成').click();
+    await settle();
+    expect(document.querySelector('.auth')).toBeNull();
+    expect(document.querySelector('.app')).not.toBeNull();
+  });
+
+  it('refuses a request, and says so when a scanned request no longer exists', async () => {
+    table['GET /auth/requests/r1'] = { request: { id: 'r1', device: '', expires_at: at('10:42') } };
+    table['DELETE /auth/requests/r1'] = 204;
+    mod.link.link.value = { kind: 'approve', id: 'r1' };
+    await open('#/items/today');
+    expect(text()).toContain('一台设备想登录你的账号');
+    find('.link-card button', '拒绝').click();
+    await settle();
+    expect(callsTo('DELETE', '/auth/requests/r1')).toHaveLength(1);
+    expect(document.querySelector('.auth')).toBeNull();
+
+    mod.link.link.value = { kind: 'approve', id: 'r9' };
+    await settle();
+    expect(text()).toContain('二维码已失效');
+    expect(document.querySelector('.fld.pin')).toBeNull();
+  });
+
+  it('asks for the password first when the scanning device is not signed in', async () => {
+    table['GET /bootstrap'] = 401;
+    mod.link.link.value = { kind: 'approve', id: 'r1' };
+    await mod.store.boot();
+    await settle();
+    expect(text()).toContain('先登录，再允许另一台设备登录');
+    expect(text()).not.toContain('扫码登录');
+    expect(callsTo('GET', '/auth/requests/r1')).toHaveLength(0);
+  });
+
+  it('signs in with a scanned code only after the user confirms', async () => {
+    table['GET /bootstrap'] = 401;
+    table['POST /auth/codes/check'] = { name: 'Me', email: 'me@example.com' };
+    mod.link.link.value = { kind: 'signin', code: 'one-time' };
+    await mod.store.boot();
+    await settle();
+    expect(text()).toContain('将登录 Me 的账号 me@example.com');
+    expect(callsTo('POST', '/auth/codes/redeem')).toHaveLength(0);
+    table['POST /auth/codes/redeem'] = { user: bootstrap.user };
+    table['GET /bootstrap'] = bootstrap;
+    submit();
+    await settle();
+    expect(callsTo('POST', '/auth/codes/redeem')[0]!.body).toEqual({ code: 'one-time' });
+    expect(document.querySelector('.auth')).toBeNull();
+    expect(document.querySelector('.app')).not.toBeNull();
+  });
+
+  it('does not use a code up on a device that already has the account, and reports a dead code', async () => {
+    table['POST /auth/codes/check'] = { name: 'Me', email: 'me@example.com' };
+    mod.link.link.value = { kind: 'signin', code: 'one-time' };
+    await open('#/items/today');
+    expect(text()).toContain('这台设备已经登录了这个账号');
+
+    delete table['POST /auth/codes/check'];
+    mod.link.link.value = { kind: 'signin', code: 'used' };
+    await settle();
+    expect(text()).toContain('二维码已失效');
+    expect(callsTo('POST', '/auth/codes/redeem')).toHaveLength(0);
+  });
+
+  it('shows a sign-in code in settings and withdraws it when closed', async () => {
+    table['POST /auth/codes'] = { code: 'one-time', expires_at: at('10:42') };
+    table['DELETE /auth/codes'] = 204;
+    await open('#/items/today');
+    find('.rbtn', '设置').click();
+    await settle();
+    find('.g-row', '在其他设备登录…').click();
+    await settle();
+    expect(document.querySelector('.other-device svg.qr')).not.toBeNull();
+    expect(text()).toContain('它相当于临时密码');
+    expect(callsTo('DELETE', '/auth/codes')).toHaveLength(0);
+    find('.other-device button', '完成').click();
+    await settle();
+    expect(callsTo('DELETE', '/auth/codes')).toHaveLength(1);
+    expect(document.querySelector('.other-device')).toBeNull();
   });
 });
 

@@ -66,6 +66,13 @@ func New(cfg Config) http.Handler {
 }
 
 func (s *Server) serve(w http.ResponseWriter, r *http.Request) {
+	// No other site may frame the app: the screens that approve a sign-in or accept a
+	// suggestion must not be clickable through someone else's page.
+	h := w.Header()
+	h.Set("X-Frame-Options", "DENY")
+	h.Set("Content-Security-Policy", "frame-ancestors 'none'")
+	h.Set("X-Content-Type-Options", "nosniff")
+	h.Set("Referrer-Policy", "same-origin")
 	path := r.URL.Path
 	switch {
 	case path == "/healthz":
@@ -92,7 +99,9 @@ func (s *Server) serve(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) serveAPI(w http.ResponseWriter, r *http.Request) {
 	bucket := s.api
-	if strings.HasPrefix(r.URL.Path, "/api/v1/auth/") {
+	// Claiming a login request is polled every two seconds and guarded by a 256-bit secret, so
+	// it does not belong in the small budget that slows password guessing.
+	if strings.HasPrefix(r.URL.Path, "/api/v1/auth/") && !strings.HasSuffix(r.URL.Path, "/claim") {
 		bucket = s.auth
 	}
 	if !bucket.allow(clientIP(r)) {

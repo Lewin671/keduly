@@ -1,6 +1,6 @@
 // The settings sheet: account, agent credentials, system calendar access, the CLI, appearance.
 import type { JSX } from 'preact';
-import { useState } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import * as api from '../api/client';
 import { ApiError } from '../api/client';
 import type { NewToken, Token } from '../api/types';
@@ -15,6 +15,8 @@ import { setTheme, theme, type Theme } from '../state/theme';
 import { showHud, showToast } from '../state/ui';
 import { Icon } from './Icons';
 import { Dialog } from './Popover';
+import { Qr } from './Qr';
+import { signinUrl } from '../state/link';
 import { deviceZone } from '../lib/dates';
 
 function CopyButton({ text }: { text: string }): JSX.Element {
@@ -38,9 +40,47 @@ function timeZones(current: string): string[] {
   return supported.includes(current) ? supported : [current, ...supported];
 }
 
+/** How long a sign-in code lives. Counted from when it arrived, so the device's clock does not matter. */
+const CODE_MS = 120_000;
+
+/** A QR code that signs another device in to this account. Closing it withdraws the code. */
+function OtherDevice({ onClose }: { onClose: () => void }): JSX.Element {
+  const [code, setCode] = useState<string | null>(null);
+  const [state, setState] = useState<'loading' | 'showing' | 'expired'>('loading');
+  const [round, setRound] = useState(0);
+  useEffect(() => {
+    let live = true;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    setState('loading');
+    api.createLoginCode().then(
+      made => {
+        if (!live) return;
+        setCode(made.code);
+        setState('showing');
+        timer = setTimeout(() => { setCode(null); setState('expired'); }, CODE_MS);
+      },
+      err => { if (live) { reportError(err); onClose(); } },
+    );
+    return () => { live = false; clearTimeout(timer); };
+  }, [round]);
+  // A new code replaces the old one on the server, so only leaving has to withdraw it.
+  useEffect(() => () => { api.revokeLoginCode().catch(() => {}); }, []);
+  return (
+    <div class="g-form other-device">
+      {state === 'showing' && code ? <Qr text={signinUrl(code)} label={t('device.qrLabel')} />
+        : <div class="qr blank"><span>{t(state === 'expired' ? 'qr.expired' : 'common.loading')}</span>
+          {state === 'expired' && <button type="button" class="sb go" onClick={() => setRound(round + 1)}>{t('qr.refresh')}</button>}</div>}
+      <div class="sub">{t('device.lead')}</div>
+      <div class="warn">{t('device.warning')}</div>
+      <div class="frow end"><button type="button" class="sb go" onClick={onClose}>{t('common.done')}</button></div>
+    </div>
+  );
+}
+
 function Account(): JSX.Element | null {
   const me = user.value;
   const [changing, setChanging] = useState(false);
+  const [linking, setLinking] = useState(false);
   const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
   if (!me) return null;
@@ -80,6 +120,9 @@ function Account(): JSX.Element | null {
           <span>–</span>
           <input class="fld bare" type="time" aria-label={t('account.workEnd')} defaultValue={me.work_end} onBlur={event => { const v = event.currentTarget.value; if (v && v !== me.work_end) save({ work_end: v }); }} />
         </div></div>
+        {linking
+          ? <OtherDevice onClose={() => setLinking(false)} />
+          : <button class="g-row act" onClick={() => setLinking(true)}><div class="gb">{t('device.open')}</div></button>}
         {changing ? (
           <form class="g-form" onSubmit={event => { event.preventDefault(); void changePassword(); }}>
             <input class="fld" type="password" required autocomplete="current-password" placeholder={t('account.currentPassword')} aria-label={t('account.currentPassword')} value={current} onInput={event => setCurrent(event.currentTarget.value)} />

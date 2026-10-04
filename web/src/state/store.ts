@@ -139,6 +139,12 @@ export async function enter(): Promise<void> {
   }
 }
 
+/** Loads the account this device was just signed in to, dropping what another one left on screen. */
+export async function enterFresh(): Promise<void> {
+  if (session.value === 'ready') signOutLocally();
+  await enter();
+}
+
 export async function signOut(): Promise<void> {
   await attempt(api.logout());
   signOutLocally();
