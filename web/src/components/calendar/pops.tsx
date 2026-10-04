@@ -76,10 +76,10 @@ function EventEditor({ event, initial }: { event?: CalEvent; initial: EventDraft
       <input class="fld title" value={d.title} placeholder={t('event.title')} aria-label={t('event.title')} maxLength={500} autoFocus onInput={e => set({ title: e.currentTarget.value })} />
       <label class="switch"><span>{t('cal.allDay')}</span><input type="checkbox" checked={d.allDay} onChange={e => set({ allDay: e.currentTarget.checked })} /></label>
       {d.allDay ? (
-        <div class="frow">
-          <input class="fld grow" type="date" required value={d.date} aria-label={t('field.startDate')} onInput={e => set({ date: e.currentTarget.value })} />
-          <input class="fld grow" type="date" required value={d.endDate} min={d.date} aria-label={t('field.endDate')} onInput={e => set({ endDate: e.currentTarget.value })} />
-        </div>
+        <>
+          <input class="fld" type="date" required value={d.date} aria-label={t('field.startDate')} onInput={e => set({ date: e.currentTarget.value })} />
+          <input class="fld" type="date" required value={d.endDate} min={d.date} aria-label={t('field.endDate')} onInput={e => set({ endDate: e.currentTarget.value })} />
+        </>
       ) : (
         <>
           <input class="fld" type="date" required value={d.date} aria-label={t('field.date')} onInput={e => set({ date: e.currentTarget.value })} />
