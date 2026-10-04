@@ -14,7 +14,7 @@ type User struct {
 	Email    string `json:"email"`
 	Name     string `json:"name"`
 	Timezone string `json:"timezone"`
-	// TimezoneAuto is true while the zone follows the device rather than a choice made in Settings.
+	// TimezoneAuto is true when the user chose to have the zone follow whatever device the web app runs on.
 	TimezoneAuto bool   `json:"timezone_auto"`
 	WorkStart    string `json:"work_start"`
 	WorkEnd      string `json:"work_end"`

@@ -120,7 +120,7 @@ func (s *Service) Register(ctx context.Context, f Fields) (*api.User, string, er
 		return nil, "", Conflict("email is already registered")
 	}
 	u := &store.User{ID: NewID(), Email: email, Name: name, PasswordHash: s.hashPassword(password),
-		Timezone: zone, TimezoneAuto: true, WorkStart: "09:00", WorkEnd: "18:00", CreatedAt: store.FormatTime(s.now())}
+		Timezone: zone, WorkStart: "09:00", WorkEnd: "18:00", CreatedAt: store.FormatTime(s.now())}
 	if err := store.InsertUser(ctx, s.DB, u); err != nil {
 		if strings.Contains(err.Error(), "constraint failed") {
 			return nil, "", Conflict("email is already registered")

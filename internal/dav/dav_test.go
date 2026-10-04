@@ -615,3 +615,33 @@ func TestRejectsWhatIsNotAnEvent(t *testing.T) {
 		t.Fatalf("something was stored: %+v", got)
 	}
 }
+
+// A weekly meeting at 09:00 New York time must stay at 09:00 on the wall clock when New York
+// leaves daylight saving time (1 November 2026), which moves it by an hour in UTC. The account's
+// own zone (Shanghai, which has no DST) must not influence the expansion.
+func TestRecurringEventKeepsItsWallClockTimeAcrossDST(t *testing.T) {
+	f := setup(t)
+	ics := strings.Join([]string{
+		"BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Example//Calendar Client//EN",
+		"BEGIN:VEVENT", "UID:ny-weekly", "DTSTAMP:20261001T000000Z",
+		"DTSTART;TZID=America/New_York:20261026T090000", "DTEND;TZID=America/New_York:20261026T100000",
+		"RRULE:FREQ=WEEKLY;BYDAY=MO", "SUMMARY:New York sync", "END:VEVENT",
+		"END:VCALENDAR", "",
+	}, "\r\n")
+	status, _, body := f.raw("PUT", "/dav/calendars/"+f.userID+"/inbox/ny-weekly.ics", ics, map[string]string{"Content-Type": "text/calendar; charset=utf-8"})
+	if status/100 != 2 {
+		t.Fatalf("PUT: %d %s", status, body)
+	}
+	events := f.events("2026-10-25T00:00:00Z", "2026-11-10T00:00:00Z")
+	// 26 Oct is still EDT (UTC-4); 2 and 9 Nov are EST (UTC-5).
+	wants := []string{"2026-10-26T13:00:00Z", "2026-11-02T14:00:00Z", "2026-11-09T14:00:00Z"}
+	if len(events) != len(wants) {
+		data, _ := json.Marshal(events)
+		t.Fatalf("%d instances, want %d: %s", len(events), len(wants), data)
+	}
+	for i, want := range wants {
+		if got := *events[i].Start; got != want {
+			t.Fatalf("instance %d starts %s, want %s", i, got, want)
+		}
+	}
+}

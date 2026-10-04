@@ -7,12 +7,14 @@ import { atMinutes, hhmm, minutesOfDay } from '../lib/dates';
 import { cap, weekdayLong } from '../lib/format';
 import { calPop } from '../state/calendar';
 import { navigate, route } from '../state/route';
-import { counts, now, today } from '../state/store';
+import * as api from '../api/client';
+import { counts, keepZone, now, today, user, write, zoneQuestion } from '../state/store';
 import { hideHud, hud, toast } from '../state/ui';
 import { ActivityPanel } from './ActivityPanel';
 import { Calendar } from './calendar/Calendar';
 import { CalPopover } from './calendar/pops';
 import { Icon } from './Icons';
+import { Dialog } from './Popover';
 import { ItemsMain, NewItemButton } from './items/ItemsMain';
 import { Settings } from './Settings';
 import { setMode, Sidebar } from './Sidebar';
@@ -60,6 +62,26 @@ function Hud(): JSX.Element | null {
 
 export function Toast(): JSX.Element | null {
   return toast.value ? <div class="toast" role="alert">{toast.value}</div> : null;
+}
+
+/**
+ * Asks before the account's time zone changes. Shown when the device is in another zone than the
+ * account; closing it any way counts as "keep", and it does not come back on this device.
+ */
+function ZoneQuestion(): JSX.Element | null {
+  const device = zoneQuestion.value;
+  const me = user.value;
+  if (!device || !me) return null;
+  return (
+    <Dialog onClose={keepZone} label={t('zone.title')} class="ask stack">
+      <b>{t('zone.title')}</b>
+      <p>{t('zone.text', { device, account: me.timezone })}</p>
+      <div class="pa">
+        <button class="pbtn go" onClick={() => { void write(api.updateMe({ timezone: device })); }}>{t('zone.switch', { device })}</button>
+        <button class="pbtn" onClick={keepZone}>{t('zone.keep', { account: me.timezone })}</button>
+      </div>
+    </Dialog>
+  );
 }
 
 export function Shell(): JSX.Element {
@@ -114,6 +136,7 @@ export function Shell(): JSX.Element {
         </nav>
       </div>
       {panel === 'settings' && <Settings onClose={() => setPanel(null)} />}
+      <ZoneQuestion />
       <Hud />
     </>
   );

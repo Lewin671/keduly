@@ -23,6 +23,20 @@ export const version = signal(0);
 export const now = signal(wallNow());
 export const today = computed(() => ymd(now.value));
 
+const ZONE_KEPT = 'keduly.zone.kept';
+/** The device zone the user already declined to switch to, on this device. */
+const zoneKept = signal(readStored(ZONE_KEPT));
+/** The device's zone when it differs from the account's and the user has not answered yet. */
+export const zoneQuestion = computed(() => {
+  const me = user.value, device = deviceZone();
+  return me && !me.timezone_auto && device && device !== me.timezone && device !== zoneKept.value ? device : null;
+});
+/** Stop asking on this device for as long as it stays in the zone it is in now. */
+export function keepZone(): void {
+  writeStored(ZONE_KEPT, deviceZone());
+  zoneKept.value = deviceZone();
+}
+
 /** Projects that are not archived, in sidebar order. */
 export const activeProjects = computed(() => projects.value.filter(p => !p.archived).sort((a, b) => a.position - b.position));
 
@@ -106,7 +120,8 @@ export async function boot(): Promise<void> {
 export async function enter(): Promise<void> {
   try {
     let boot = await api.getBootstrap();
-    // Unless a zone was chosen by hand, the account follows the device it is opened on.
+    // Only when the user opted in does the account follow the device silently; otherwise
+    // `zoneQuestion` asks.
     const device = deviceZone();
     if (boot.user.timezone_auto && device && boot.user.timezone !== device) {
       await api.updateMe({ timezone: device });

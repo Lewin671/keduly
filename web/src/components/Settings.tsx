@@ -9,7 +9,7 @@ import { t } from '../i18n';
 import { addDays } from '../lib/dates';
 import { stamp } from '../lib/format';
 import { useResource } from '../state/resource';
-import { config, reportError, signOut, today, user, write } from '../state/store';
+import { config, reportError, signOut, today, user, write, keepZone } from '../state/store';
 import { setTheme, theme, type Theme } from '../state/theme';
 import { showHud, showToast } from '../state/ui';
 import { Icon } from './Icons';
@@ -69,7 +69,7 @@ function Account(): JSX.Element | null {
         <div class="g-row"><div class="gb"><div class="gm">{t('account.email')}</div><span class="tr sel">{me.email}</span></div></div>
         <label class="g-row"><div class="gb"><div class="gm">{t('account.timezone')}</div>
           <select class="fld bare" aria-label={t('account.timezone')} value={me.timezone_auto ? 'auto' : me.timezone}
-            onChange={event => { const v = event.currentTarget.value; save(v === 'auto' ? { timezone_auto: true, timezone: deviceZone() } : { timezone_auto: false, timezone: v }); }}>
+            onChange={event => { const v = event.currentTarget.value; if (v !== 'auto') keepZone(); save(v === 'auto' ? { timezone_auto: true, timezone: deviceZone() } : { timezone_auto: false, timezone: v }); }}>
             <option value="auto">{t('account.timezoneAuto', { zone: deviceZone() })}</option>
             {timeZones(me.timezone).map(zone => <option value={zone}>{zone}</option>)}
           </select>

@@ -67,6 +67,8 @@ textarea.notes { width: calc(100% - 37px); margin: 0 0 12px 37px; }
 .sheet.ask p { color: var(--label-2); font-size: 13px; }
 .sheet.ask .pa { display: flex; gap: 8px; margin-top: 8px; }
 .sheet.ask .pbtn { height: 34px; border-radius: 17px; }
+.sheet.ask.stack .pa { flex-direction: column; }
+.sheet.ask.stack .pbtn { flex: none; }
 .swatches { display: flex; flex-wrap: wrap; gap: 10px; padding: 2px 0; }
 .sw { width: 26px; height: 26px; border-radius: 50%; background: var(--c); }
 .sw.on { box-shadow: 0 0 0 2px var(--sheet), 0 0 0 4px var(--c); }

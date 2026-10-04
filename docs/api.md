@@ -76,15 +76,16 @@ Every write is attributed to an actor, which the activity log shows:
 ```json
 {
   "id": "…", "email": "me@example.com", "name": "Me",
-  "timezone": "Asia/Shanghai", "timezone_auto": true,
+  "timezone": "Asia/Shanghai", "timezone_auto": false,
   "work_start": "09:00", "work_end": "18:00",
   "created_at": "…"
 }
 ```
 
 `timezone` decides what "today" is, how dates are read, and which wall-clock times the web app
-shows. While `timezone_auto` is true (the default) the web app keeps `timezone` equal to the zone
-of the device it runs on; set it to false to keep a zone chosen by hand.
+shows. It is set at registration and stays put: when the web app runs on a device in another zone
+it asks the user whether to switch. `timezone_auto` (default `false`) is the user's opt-in to skip
+the question and always follow the device.
 
 ### Area
 

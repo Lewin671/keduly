@@ -22,7 +22,7 @@ const event = (id: string, title: string, fields: Partial<CalEvent> = {}): CalEv
 });
 
 const bootstrap: Bootstrap = {
-  user: { id: 'u1', email: 'me@example.com', name: 'Me', timezone: 'America/New_York', timezone_auto: true, work_start: '09:00', work_end: '18:00', created_at: at('08:00') },
+  user: { id: 'u1', email: 'me@example.com', name: 'Me', timezone: 'America/New_York', timezone_auto: false, work_start: '09:00', work_end: '18:00', created_at: at('08:00') },
   areas: [{ id: 'a1', name: '工作', position: 0 }],
   projects: [
     { id: 'p1', area_id: 'a1', name: 'Keduly 开发', color: 'blue', notes: '给 AI 用的日历', position: 0, archived: false, open_count: 3, done_count: 2, created_at: at('08:00'), updated_at: at('08:00') },
@@ -645,5 +645,50 @@ describe('change detection', () => {
     await mod.store.poll();
     await settle();
     expect(document.querySelector('.auth-card')).not.toBeNull();
+  });
+});
+
+describe('time zone', () => {
+  const away = () => ({ ...bootstrap, user: { ...bootstrap.user, timezone: 'Asia/Shanghai' } });
+  afterEach(() => localStorage.clear());
+
+  it('asks before changing an account whose zone differs from the device, and shows times in the account zone meanwhile', async () => {
+    table['GET /bootstrap'] = away();
+    await open(`#/cal/day/${DAY}`);
+    expect(text()).toContain('这台设备的时区是 America/New_York，你的账号用的是 Asia/Shanghai');
+    // Nothing was changed on the user's behalf.
+    expect(callsTo('PATCH', '/me')).toEqual([]);
+    // 10:40 in New York is 22:40 in Shanghai.
+    expect(document.querySelector('.nowcap')!.textContent).toBe('22:40');
+  });
+
+  it('switches the account to the device zone when asked to', async () => {
+    table['GET /bootstrap'] = away();
+    table['PATCH /me'] = { user: bootstrap.user };
+    await open(`#/cal/day/${DAY}`);
+    find('.sheet.ask button', '改用 America/New_York').click();
+    await settle();
+    expect(callsTo('PATCH', '/me').map(c => c.body)).toEqual([{ timezone: 'America/New_York' }]);
+  });
+
+  it('follows the device without asking only when the user opted in', async () => {
+    table['GET /bootstrap'] = { ...bootstrap, user: { ...bootstrap.user, timezone: 'Asia/Shanghai', timezone_auto: true } };
+    table['PATCH /me'] = { user: bootstrap.user };
+    await open(`#/cal/day/${DAY}`);
+    expect(callsTo('PATCH', '/me').map(c => c.body)).toEqual([{ timezone: 'America/New_York' }]);
+    expect(document.querySelector('.sheet.ask')).toBeNull();
+  });
+
+  // Last: the answer is remembered for the rest of the page's life.
+  it('stops asking on this device once the user keeps the account zone', async () => {
+    table['GET /bootstrap'] = away();
+    await open(`#/cal/day/${DAY}`);
+    find('.sheet.ask button', '保持 Asia/Shanghai').click();
+    await settle();
+    expect(document.querySelector('.sheet.ask')).toBeNull();
+    expect(callsTo('PATCH', '/me')).toEqual([]);
+    await mod.store.enter();
+    await settle();
+    expect(document.querySelector('.sheet.ask')).toBeNull();
   });
 });
