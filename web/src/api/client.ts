@@ -83,7 +83,7 @@ export const register = (body: { email: string; password: string; name: string; 
   post<{ user: User }>('/auth/register', body).then(r => r.user);
 export const login = (body: { email: string; password: string }) => post<{ user: User }>('/auth/login', body).then(r => r.user);
 export const logout = () => post<void>('/auth/logout');
-export const updateMe = (body: Partial<Pick<User, 'name' | 'timezone' | 'work_start' | 'work_end'>>) =>
+export const updateMe = (body: Partial<Pick<User, 'name' | 'timezone' | 'timezone_auto' | 'work_start' | 'work_end'>>) =>
   patch<{ user: User }>('/me', body).then(r => r.user);
 export const changePassword = (current: string, next: string) => post<void>('/me/password', { current, new: next });
 

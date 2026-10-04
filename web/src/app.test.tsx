@@ -22,7 +22,7 @@ const event = (id: string, title: string, fields: Partial<CalEvent> = {}): CalEv
 });
 
 const bootstrap: Bootstrap = {
-  user: { id: 'u1', email: 'me@example.com', name: 'Me', timezone: 'America/New_York', work_start: '09:00', work_end: '18:00', created_at: at('08:00') },
+  user: { id: 'u1', email: 'me@example.com', name: 'Me', timezone: 'America/New_York', timezone_auto: true, work_start: '09:00', work_end: '18:00', created_at: at('08:00') },
   areas: [{ id: 'a1', name: '工作', position: 0 }],
   projects: [
     { id: 'p1', area_id: 'a1', name: 'Keduly 开发', color: 'blue', notes: '给 AI 用的日历', position: 0, archived: false, open_count: 3, done_count: 2, created_at: at('08:00'), updated_at: at('08:00') },

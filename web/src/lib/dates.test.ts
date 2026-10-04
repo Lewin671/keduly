@@ -1,8 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import {
-  addDays, addMonths, atLocal, atMinutes, daysBetween, hhmm, isoWeek, isYmd, monthEnd, monthGrid, mondayIndex, parseYmd, snap,
-  spanOnDay, startOfWeek, toUtc, utcRange, weekDays, ymd,
-} from './dates';
+import { describe, expect, it, afterEach } from 'vitest';
+import { addDays, addMonths, atLocal, atMinutes, daysBetween, hhmm, isoWeek, isYmd, monthEnd, monthGrid, mondayIndex, parseYmd, snap, spanOnDay, startOfWeek, toUtc, utcRange, weekDays, ymd, setZone, deviceZone, wall } from './dates';
 
 // The suite runs in America/New_York (see vite.config.ts): DST starts 2026-03-08 and ends 2026-11-01.
 describe('time zone of the test run', () => {
@@ -189,5 +186,39 @@ describe('snapping', () => {
     expect(snap(52)).toBe(45);
     expect(snap(-8)).toBe(-15);
     expect(snap(-7)).toBe(-0);
+  });
+});
+
+describe('account time zone', () => {
+  afterEach(() => setZone(deviceZone()));
+
+  it('reads an instant as wall-clock time in the chosen zone and turns it back', () => {
+    setZone('Asia/Shanghai');
+    const date = wall('2026-10-13T02:00:00Z');
+    expect([ymd(date), hhmm(date)]).toEqual(['2026-10-13', '10:00']);
+    expect(toUtc(date)).toBe('2026-10-13T02:00:00Z');
+    // Late evening in UTC is already the next day in Shanghai.
+    expect(ymd(wall('2026-10-13T18:30:00Z'))).toBe('2026-10-14');
+  });
+
+  it('turns a wall-clock time typed by the user into the right instant', () => {
+    setZone('Asia/Shanghai');
+    expect(toUtc(atLocal('2026-10-14', '09:30'))).toBe('2026-10-14T01:30:00Z');
+    expect(utcRange('2026-10-14', '2026-10-15')).toEqual(['2026-10-13T16:00:00Z', '2026-10-14T16:00:00Z']);
+  });
+
+  it('follows daylight saving changes of the chosen zone, not the device', () => {
+    setZone('Europe/Berlin');
+    // Berlin leaves summer time on 2026-10-25: 09:00 is UTC+2 the day before and UTC+1 the day after.
+    expect(toUtc(atLocal('2026-10-24', '09:00'))).toBe('2026-10-24T07:00:00Z');
+    expect(toUtc(atLocal('2026-10-26', '09:00'))).toBe('2026-10-26T08:00:00Z');
+    expect(hhmm(wall('2026-10-26T08:00:00Z'))).toBe('09:00');
+  });
+
+  it('is a no-op while the account follows the device', () => {
+    setZone(deviceZone());
+    const date = wall('2026-10-13T02:00:00Z');
+    expect(date.getTime()).toBe(Date.parse('2026-10-13T02:00:00Z'));
+    expect(toUtc(date)).toBe('2026-10-13T02:00:00Z');
   });
 });

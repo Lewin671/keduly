@@ -14,6 +14,7 @@ import { setTheme, theme, type Theme } from '../state/theme';
 import { showHud, showToast } from '../state/ui';
 import { Icon } from './Icons';
 import { Dialog } from './Popover';
+import { deviceZone } from '../lib/dates';
 
 function CopyButton({ text }: { text: string }): JSX.Element {
   const [copied, setCopied] = useState(false);
@@ -29,6 +30,12 @@ function CopyButton({ text }: { text: string }): JSX.Element {
   return <button type="button" class="tb" onClick={() => { void copy(); }}>{copied ? t('common.copied') : t('common.copy')}</button>;
 }
 
+
+/** Every zone the browser knows, with the current one included even if the list lacks it. */
+function timeZones(current: string): string[] {
+  const supported = (Intl as { supportedValuesOf?: (key: string) => string[] }).supportedValuesOf?.('timeZone') ?? [];
+  return supported.includes(current) ? supported : [current, ...supported];
+}
 
 function Account(): JSX.Element | null {
   const me = user.value;
@@ -61,7 +68,11 @@ function Account(): JSX.Element | null {
         </div></label>
         <div class="g-row"><div class="gb"><div class="gm">{t('account.email')}</div><span class="tr sel">{me.email}</span></div></div>
         <label class="g-row"><div class="gb"><div class="gm">{t('account.timezone')}</div>
-          <span class="tr">{me.timezone}</span>
+          <select class="fld bare" aria-label={t('account.timezone')} value={me.timezone_auto ? 'auto' : me.timezone}
+            onChange={event => { const v = event.currentTarget.value; save(v === 'auto' ? { timezone_auto: true, timezone: deviceZone() } : { timezone_auto: false, timezone: v }); }}>
+            <option value="auto">{t('account.timezoneAuto', { zone: deviceZone() })}</option>
+            {timeZones(me.timezone).map(zone => <option value={zone}>{zone}</option>)}
+          </select>
         </div></label>
         <div class="g-row"><div class="gb"><div class="gm">{t('account.hours')}</div>
           <input class="fld bare" type="time" aria-label={t('account.workStart')} defaultValue={me.work_start} onBlur={event => { const v = event.currentTarget.value; if (v && v !== me.work_start) save({ work_start: v }); }} />

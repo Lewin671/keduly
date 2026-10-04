@@ -239,3 +239,28 @@ func TestIsolationBetweenUsers(t *testing.T) {
 		t.Fatal("alice's item changed")
 	}
 }
+
+func TestTimeZoneFollowsDeviceUntilChosen(t *testing.T) {
+	s := testutil.New(t, testutil.Options{})
+	anon := &testutil.Client{S: s}
+	_, _, header := anon.Do("POST", "/auth/register", M{"email": "zone@example.com", "password": "correct horse", "timezone": "America/Los_Angeles"})
+	me := &testutil.Client{S: s, Cookie: testutil.SessionCookie(header)}
+
+	var got struct {
+		User api.User `json:"user"`
+	}
+	me.Call("GET", "/me", nil, http.StatusOK, &got)
+	if !got.User.TimezoneAuto || got.User.Timezone != "America/Los_Angeles" {
+		t.Fatalf("a new account should follow the device: %+v", got.User)
+	}
+
+	me.Call("PATCH", "/me", M{"timezone": "Asia/Shanghai", "timezone_auto": false}, http.StatusOK, &got)
+	if got.User.TimezoneAuto || got.User.Timezone != "Asia/Shanghai" {
+		t.Fatalf("the chosen zone was not kept: %+v", got.User)
+	}
+	me.Call("GET", "/me", nil, http.StatusOK, &got)
+	if got.User.TimezoneAuto || got.User.Timezone != "Asia/Shanghai" {
+		t.Fatalf("the chosen zone did not persist: %+v", got.User)
+	}
+	wantCode(t, me, "PATCH", "/me", M{"timezone": "Mars/Olympus"}, 400, "invalid_request")
+}

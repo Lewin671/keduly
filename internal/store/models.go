@@ -12,17 +12,18 @@ type User struct {
 	Name         string
 	PasswordHash string
 	Timezone     string
+	TimezoneAuto bool
 	WorkStart    string
 	WorkEnd      string
 	Revision     int64
 	CreatedAt    string
 }
 
-const userCols = "id, email, name, password_hash, timezone, work_start, work_end, revision, created_at"
+const userCols = "id, email, name, password_hash, timezone, timezone_auto, work_start, work_end, revision, created_at"
 
 func scanUser(row *sql.Row) (*User, error) {
 	u := new(User)
-	err := row.Scan(&u.ID, &u.Email, &u.Name, &u.PasswordHash, &u.Timezone, &u.WorkStart, &u.WorkEnd, &u.Revision, &u.CreatedAt)
+	err := row.Scan(&u.ID, &u.Email, &u.Name, &u.PasswordHash, &u.Timezone, &u.TimezoneAuto, &u.WorkStart, &u.WorkEnd, &u.Revision, &u.CreatedAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
@@ -38,14 +39,14 @@ func UserByEmail(ctx context.Context, q Q, email string) (*User, error) {
 }
 
 func InsertUser(ctx context.Context, q Q, u *User) error {
-	_, err := q.ExecContext(ctx, "INSERT INTO users ("+userCols+") VALUES (?,?,?,?,?,?,?,?,?)",
-		u.ID, u.Email, u.Name, u.PasswordHash, u.Timezone, u.WorkStart, u.WorkEnd, u.Revision, u.CreatedAt)
+	_, err := q.ExecContext(ctx, "INSERT INTO users ("+userCols+") VALUES (?,?,?,?,?,?,?,?,?,?)",
+		u.ID, u.Email, u.Name, u.PasswordHash, u.Timezone, u.TimezoneAuto, u.WorkStart, u.WorkEnd, u.Revision, u.CreatedAt)
 	return err
 }
 
 func UpdateUser(ctx context.Context, q Q, u *User) error {
-	_, err := q.ExecContext(ctx, "UPDATE users SET name = ?, password_hash = ?, timezone = ?, work_start = ?, work_end = ? WHERE id = ?",
-		u.Name, u.PasswordHash, u.Timezone, u.WorkStart, u.WorkEnd, u.ID)
+	_, err := q.ExecContext(ctx, "UPDATE users SET name = ?, password_hash = ?, timezone = ?, timezone_auto = ?, work_start = ?, work_end = ? WHERE id = ?",
+		u.Name, u.PasswordHash, u.Timezone, u.TimezoneAuto, u.WorkStart, u.WorkEnd, u.ID)
 	return err
 }
 

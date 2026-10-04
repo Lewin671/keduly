@@ -120,7 +120,7 @@ func (s *Service) Register(ctx context.Context, f Fields) (*api.User, string, er
 		return nil, "", Conflict("email is already registered")
 	}
 	u := &store.User{ID: NewID(), Email: email, Name: name, PasswordHash: s.hashPassword(password),
-		Timezone: zone, WorkStart: "09:00", WorkEnd: "18:00", CreatedAt: store.FormatTime(s.now())}
+		Timezone: zone, TimezoneAuto: true, WorkStart: "09:00", WorkEnd: "18:00", CreatedAt: store.FormatTime(s.now())}
 	if err := store.InsertUser(ctx, s.DB, u); err != nil {
 		if strings.Contains(err.Error(), "constraint failed") {
 			return nil, "", Conflict("email is already registered")
@@ -242,6 +242,7 @@ func (op *Op) UpdateMe(f Fields) (*api.User, error) {
 	r := newReader(f)
 	r.name("name", &u.Name, 100)
 	r.str("timezone", &u.Timezone, 64)
+	r.boolean("timezone_auto", &u.TimezoneAuto)
 	r.str("work_start", &u.WorkStart, 5)
 	r.str("work_end", &u.WorkEnd, 5)
 	if err := r.done(); err != nil {

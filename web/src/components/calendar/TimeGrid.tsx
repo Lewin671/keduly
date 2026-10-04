@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import type { CalEvent } from '../../api/types';
 import { t } from '../../i18n';
 import { allDayOn, eventSpan } from '../../lib/calendar';
-import { addDays, atMinutes, hhmm, minutesOfDay, mondayIndex, snap, toUtc, ymd, type HourSpan } from '../../lib/dates';
+import { addDays, atMinutes, hhmm, minutesOfDay, mondayIndex, snap, toUtc, ymd, type HourSpan, wall } from '../../lib/dates';
 import { weekdayShort } from '../../lib/format';
 import { layoutLanes, type Lane } from '../../lib/lanes';
 import { calPop, justClosed, moveEvent, toggleBlockDone } from '../../state/calendar';
@@ -39,8 +39,8 @@ function isTask(event: CalEvent): boolean {
 /** Confirmed, editable entries within one day can be dragged. */
 function canDrag(event: CalEvent): boolean {
   if (event.status !== 'confirmed' || event.readonly || event.all_day || !event.start || !event.end) return false;
-  const start = new Date(event.start);
-  const end = new Date(event.end);
+  const start = wall(event.start);
+  const end = wall(event.end);
   return end > start && (ymd(start) === ymd(end) || (minutesOfDay(end) === 0 && ymd(end) === addDays(ymd(start), 1)));
 }
 
@@ -199,8 +199,8 @@ export function TimeGrid({ days, events }: { days: string[]; events: readonly Ca
     if (down.button !== 0) return;
     const el = down.currentTarget as HTMLElement;
     const box = scroller.current!;
-    const start = new Date(event.start!);
-    const end = new Date(event.end!);
+    const start = wall(event.start!);
+    const end = wall(event.end!);
     const startDay = ymd(start);
     const startMin = minutesOfDay(start);
     const length = Math.round((end.getTime() - start.getTime()) / 60_000);

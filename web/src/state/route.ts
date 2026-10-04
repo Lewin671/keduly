@@ -2,7 +2,7 @@
 // back/forward work: #/cal/week/2026-10-13, #/items/today, #/items/p/<project id>.
 import { signal } from '@preact/signals';
 import type { CalView } from '../lib/calendar';
-import { isYmd, ymd } from '../lib/dates';
+import { isYmd, ymd, wallNow } from '../lib/dates';
 
 export type Mode = 'cal' | 'items';
 
@@ -29,7 +29,7 @@ export function parseRoute(hash: string, previous: Route): Route {
       ...previous,
       mode: 'cal',
       view: a && VIEWS.includes(a) ? (a as CalView) : previous.view,
-      date: b && isYmd(b) ? b : ymd(new Date()),
+      date: b && isYmd(b) ? b : ymd(wallNow()),
     };
   }
   return previous;
@@ -40,7 +40,7 @@ export function formatRoute(route: Route): string {
   return route.list.startsWith('p:') ? `#/items/p/${encodeURIComponent(route.list.slice(2))}` : `#/items/${route.list}`;
 }
 
-const initial: Route = { mode: 'cal', view: 'day', date: ymd(new Date()), list: 'today' };
+const initial: Route = { mode: 'cal', view: 'day', date: ymd(wallNow()), list: 'today' };
 
 export const route = signal<Route>(parseRoute(location.hash, initial));
 

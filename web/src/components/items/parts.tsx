@@ -3,7 +3,7 @@ import type { ComponentChildren, JSX } from 'preact';
 import { useRef } from 'preact/hooks';
 import type { CalEvent, Item } from '../../api/types';
 import { t } from '../../i18n';
-import { hhmm } from '../../lib/dates';
+import { hhmm, wall } from '../../lib/dates';
 import { keepInPlace } from '../../lib/sticky';
 import { draft, held, isRemoved } from '../../state/items';
 import { colorOf } from '../../state/store';
@@ -80,7 +80,7 @@ interface EventsProps {
   label?: (event: CalEvent) => string;
 }
 
-export const eventTime = (event: CalEvent) => (event.all_day || !event.start ? t('cal.allDay') : hhmm(new Date(event.start)));
+export const eventTime = (event: CalEvent) => (event.all_day || !event.start ? t('cal.allDay') : hhmm(wall(event.start)));
 
 /** A day's calendar events in small grey type, each with its project's colour bar. */
 export function EventsStrip({ events, max = 6, label = eventTime }: EventsProps): JSX.Element | null {

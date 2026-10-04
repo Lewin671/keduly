@@ -4,7 +4,7 @@ import * as api from '../api/client';
 import { ApiError } from '../api/client';
 import type { Area, Bootstrap, Config, Counts, Heading, Project, Suggestion, User } from '../api/types';
 import { hasMessage, t } from '../i18n';
-import { ymd } from '../lib/dates';
+import { ymd, wallNow, deviceZone, setZone } from '../lib/dates';
 import { readStored, writeStored } from '../lib/storage';
 import { showToast } from './ui';
 
@@ -20,7 +20,7 @@ export const suggestions = signal<Suggestion[]>([]);
 /** Increases whenever what is on screen may be stale; data hooks refetch when it changes. */
 export const version = signal(0);
 
-export const now = signal(new Date());
+export const now = signal(wallNow());
 export const today = computed(() => ymd(now.value));
 
 /** Projects that are not archived, in sidebar order. */
@@ -64,8 +64,11 @@ export async function attempt<T>(work: Promise<T>): Promise<T | undefined> {
 /* ---------- loading ---------- */
 
 function applyBootstrap(b: Bootstrap): void {
+  // Times are shown in the account's zone, which is also the zone the server computes "today" in.
+  setZone(b.user.timezone);
   batch(() => {
     user.value = b.user;
+    now.value = wallNow();
     areas.value = [...b.areas].sort((x, y) => x.position - y.position);
     projects.value = b.projects;
     headings.value = [...b.headings].sort((x, y) => x.position - y.position);
@@ -103,11 +106,10 @@ export async function boot(): Promise<void> {
 export async function enter(): Promise<void> {
   try {
     let boot = await api.getBootstrap();
-    // Everything is drawn in the device's time zone, so the account follows the device:
-    // otherwise the server's idea of "today" and the calendar on screen would disagree.
-    const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    if (zone && boot.user.timezone !== zone) {
-      await api.updateMe({ timezone: zone });
+    // Unless a zone was chosen by hand, the account follows the device it is opened on.
+    const device = deviceZone();
+    if (boot.user.timezone_auto && device && boot.user.timezone !== device) {
+      await api.updateMe({ timezone: device });
       boot = await api.getBootstrap();
     }
     applyBootstrap(boot);
@@ -166,7 +168,7 @@ const POLL_MS = 20_000;
 export function startClock(): void {
   setInterval(() => { void poll(); }, POLL_MS);
   addEventListener('focus', () => { void poll(); });
-  setInterval(() => { now.value = new Date(); }, 30_000);
+  setInterval(() => { now.value = wallNow(); }, 30_000);
 }
 
 /* ---------- lookups ---------- */

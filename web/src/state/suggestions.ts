@@ -2,7 +2,7 @@
 import * as api from '../api/client';
 import type { Suggestion } from '../api/types';
 import { t } from '../i18n';
-import { hhmm } from '../lib/dates';
+import { hhmm, wall } from '../lib/dates';
 import { slotLabel } from '../lib/format';
 import { attempt, refresh, suggestions, today, write } from './store';
 import { showHud } from './ui';
@@ -45,13 +45,13 @@ export async function acceptAllPlans(): Promise<void> {
 
 /** What a suggestion would do, in a few words. */
 export function describe(s: Pick<Suggestion, 'kind' | 'start' | 'end' | 'event'>): string {
-  const slot = s.start ? slotLabel(new Date(s.start), today.value) : '';
+  const slot = s.start ? slotLabel(wall(s.start), today.value) : '';
   switch (s.kind) {
     case 'schedule_item': return t('suggest.schedule', { slot });
     case 'create_item': return slot ? t('suggest.createItemAt', { slot }) : t('suggest.createItem');
     case 'create_event': return t('suggest.createEvent', { slot });
     case 'move_event': {
-      const from = s.event?.start ? new Date(s.event.start) : null;
+      const from = s.event?.start ? wall(s.event.start) : null;
       return from ? t('suggest.moveFrom', { from: slotLabel(from, today.value), to: slot }) : t('suggest.move', { slot });
     }
     case 'delete_event': return t('suggest.deleteEvent');
@@ -59,4 +59,4 @@ export function describe(s: Pick<Suggestion, 'kind' | 'start' | 'end' | 'event'>
   }
 }
 
-export const timeRange = (start: string, end: string) => `${hhmm(new Date(start))}–${hhmm(new Date(end))}`;
+export const timeRange = (start: string, end: string) => `${hhmm(wall(start))}–${hhmm(wall(end))}`;

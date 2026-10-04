@@ -12,6 +12,7 @@ export interface User {
   email: string;
   name: string;
   timezone: string;
+  timezone_auto: boolean;
   work_start: string;
   work_end: string;
   created_at: string;

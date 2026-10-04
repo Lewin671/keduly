@@ -3,7 +3,7 @@ import type { JSX, TargetedMouseEvent } from 'preact';
 import type { CalEvent } from '../../api/types';
 import { t } from '../../i18n';
 import { allDayOn, eventSpan } from '../../lib/calendar';
-import { hhmm, monthGrid } from '../../lib/dates';
+import { hhmm, monthGrid, wall } from '../../lib/dates';
 import { pickMonthEntries } from '../../lib/month';
 import { calPop, justClosed } from '../../state/calendar';
 import { eventKey } from '../../state/events';
@@ -39,7 +39,7 @@ function MonthEntry({ entry, day }: { entry: Entry; day: string }): JSX.Element 
     <button class={cls.join(' ')} title={event.title} style={style} onClick={open}>
       <i />
       <span class="mt">{event.title}</span>
-      <span class="mx">{entry.pending ? t('cal.pending') : hhmm(new Date(event.start!))}</span>
+      <span class="mx">{entry.pending ? t('cal.pending') : hhmm(wall(event.start!))}</span>
     </button>
   );
 }

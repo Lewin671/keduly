@@ -4,7 +4,7 @@ import { useEffect, useState } from 'preact/hooks';
 import * as api from '../../api/client';
 import type { FreeSlot, Item, ItemWrite } from '../../api/types';
 import { t } from '../../i18n';
-import { atLocal, hhmm, snap, toUtc, ymd } from '../../lib/dates';
+import { atLocal, hhmm, snap, toUtc, ymd, wall } from '../../lib/dates';
 import { dayLabel, dueLabel, dur, slotLabel } from '../../lib/format';
 import { removeItem, saveItem, toggleImportant } from '../../state/items';
 import { activeProjects, areas, colorOf, headings, now, projectOf, today } from '../../state/store';
@@ -39,8 +39,8 @@ export function ItemChips({ item, ensure, onDeleted }: Props): JSX.Element {
   };
   const patch: Patch = (body, keepOpen) => apply(saved => api.updateItem(saved.id, body), keepOpen);
 
-  const whenText = item.block ? `${dayLabel(ymd(new Date(item.block.start)), day)} ${timeRange(item.block.start, item.block.end)}`
-    : item.suggestion ? t('item.pending', { slot: slotLabel(new Date(item.suggestion.start), day) })
+  const whenText = item.block ? `${dayLabel(ymd(wall(item.block.start)), day)} ${timeRange(item.block.start, item.block.end)}`
+    : item.suggestion ? t('item.pending', { slot: slotLabel(wall(item.suggestion.start), day) })
     : item.planned_date ? (item.evening && item.planned_date === day ? t('when.tonight') : dayLabel(item.planned_date, day))
     : t('when.none');
 
@@ -118,8 +118,8 @@ function nextSlot(): string {
 
 function WhenPop({ item, apply, onClose }: { item: Item; apply: Apply; onClose: () => void }): JSX.Element {
   const slot = item.block ?? item.suggestion;
-  const [date, setDate] = useState(slot ? ymd(new Date(slot.start)) : (item.planned_date ?? today.value));
-  const [time, setTime] = useState(slot ? hhmm(new Date(slot.start)) : nextSlot());
+  const [date, setDate] = useState(slot ? ymd(wall(slot.start)) : (item.planned_date ?? today.value));
+  const [time, setTime] = useState(slot ? hhmm(wall(slot.start)) : nextSlot());
   const [minutes, setMinutes] = useState(
     item.block ? Math.max(15, Math.round((Date.parse(item.block.end) - Date.parse(item.block.start)) / 60_000)) : (item.estimate_minutes ?? 60),
   );
@@ -155,7 +155,7 @@ function WhenPop({ item, apply, onClose }: { item: Item; apply: Apply; onClose: 
           <div class="slots">
             <span>{t('when.free')}</span>
             {free.slice(0, 4).map(s => (
-              <button type="button" class="tb" onClick={() => setTime(hhmm(new Date(s.start)))}>{hhmm(new Date(s.start))}</button>
+              <button type="button" class="tb" onClick={() => setTime(hhmm(wall(s.start)))}>{hhmm(wall(s.start))}</button>
             ))}
           </div>
         )}

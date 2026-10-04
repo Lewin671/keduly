@@ -10,13 +10,15 @@ type Actor struct {
 }
 
 type User struct {
-	ID        string `json:"id"`
-	Email     string `json:"email"`
-	Name      string `json:"name"`
-	Timezone  string `json:"timezone"`
-	WorkStart string `json:"work_start"`
-	WorkEnd   string `json:"work_end"`
-	CreatedAt string `json:"created_at"`
+	ID       string `json:"id"`
+	Email    string `json:"email"`
+	Name     string `json:"name"`
+	Timezone string `json:"timezone"`
+	// TimezoneAuto is true while the zone follows the device rather than a choice made in Settings.
+	TimezoneAuto bool   `json:"timezone_auto"`
+	WorkStart    string `json:"work_start"`
+	WorkEnd      string `json:"work_end"`
+	CreatedAt    string `json:"created_at"`
 }
 
 type Area struct {

@@ -5,7 +5,7 @@ import * as api from '../../api/client';
 import type { CalEvent, EventWrite } from '../../api/types';
 import { keepComposing } from '../../lib/keys';
 import { t } from '../../i18n';
-import { addDays, atLocal, hhmm, toUtc, ymd } from '../../lib/dates';
+import { addDays, atLocal, hhmm, toUtc, ymd, wall } from '../../lib/dates';
 import { dayLabel } from '../../lib/format';
 import { calPop, closeCalPop, type EventDraft } from '../../state/calendar';
 import { openItem } from '../../state/items';
@@ -15,8 +15,8 @@ import { decide, describe, timeRange } from '../../state/suggestions';
 import { Popover } from '../Popover';
 
 export function draftFor(event: CalEvent): EventDraft {
-  const start = event.start ? new Date(event.start) : null;
-  const end = event.end ? new Date(event.end) : null;
+  const start = event.start ? wall(event.start) : null;
+  const end = event.end ? wall(event.end) : null;
   const date = event.all_day ? event.start_date! : ymd(start!);
   return {
     title: event.title,
@@ -109,7 +109,7 @@ function whenText(event: CalEvent): string {
     const from = dayLabel(event.start_date!, day);
     return event.end_date && event.end_date !== event.start_date ? `${from} – ${dayLabel(event.end_date, day)} · ${t('cal.allDay')}` : `${from} · ${t('cal.allDay')}`;
   }
-  return `${dayLabel(ymd(new Date(event.start!)), day)} ${timeRange(event.start!, event.end!)}`;
+  return `${dayLabel(ymd(wall(event.start!)), day)} ${timeRange(event.start!, event.end!)}`;
 }
 
 function SuggestionPop({ event }: { event: CalEvent }): JSX.Element {

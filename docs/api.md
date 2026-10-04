@@ -76,11 +76,15 @@ Every write is attributed to an actor, which the activity log shows:
 ```json
 {
   "id": "…", "email": "me@example.com", "name": "Me",
-  "timezone": "Asia/Shanghai",
+  "timezone": "Asia/Shanghai", "timezone_auto": true,
   "work_start": "09:00", "work_end": "18:00",
   "created_at": "…"
 }
 ```
+
+`timezone` decides what "today" is, how dates are read, and which wall-clock times the web app
+shows. While `timezone_auto` is true (the default) the web app keeps `timezone` equal to the zone
+of the device it runs on; set it to false to keep a zone chosen by hand.
 
 ### Area
 
@@ -255,7 +259,7 @@ e.g. `{ "item": { … } }`, and lists are under the plural, e.g. `{ "items": [ �
 | `POST /auth/login` | `email`, `password` | `{ user }`, sets the session cookie. `401 unauthenticated` on a wrong email or password |
 | `POST /auth/logout` | | `204` |
 | `GET /me` | | `{ user }` |
-| `PATCH /me` | any of `name`, `timezone`, `work_start`, `work_end` | `{ user }` |
+| `PATCH /me` | any of `name`, `timezone`, `timezone_auto`, `work_start`, `work_end` | `{ user }` |
 | `POST /me/password` | `current`, `new` | `204`. Ends every other session |
 
 A new account starts with no projects.

@@ -10,7 +10,7 @@ import (
 )
 
 func userJSON(u *store.User) api.User {
-	return api.User{ID: u.ID, Email: u.Email, Name: u.Name, Timezone: u.Timezone,
+	return api.User{ID: u.ID, Email: u.Email, Name: u.Name, Timezone: u.Timezone, TimezoneAuto: u.TimezoneAuto,
 		WorkStart: u.WorkStart, WorkEnd: u.WorkEnd, CreatedAt: u.CreatedAt}
 }
 

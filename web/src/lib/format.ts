@@ -1,6 +1,6 @@
 // How dates, times and amounts are worded in the interface.
 import { t } from '../i18n';
-import { addDays, daysBetween, hhmm, mondayIndex, startOfWeek, ymd } from './dates';
+import { addDays, daysBetween, hhmm, mondayIndex, startOfWeek, ymd, wall } from './dates';
 
 /** A length of time: "45 分钟", "2 小时", "1.5 小时". */
 export function dur(minutes: number): string {
@@ -60,7 +60,7 @@ export function overdueDays(dueDate: string, today: string): number {
 
 /** When something happened, for the activity log: "今天 07:58", "昨天 21:14", "10月11日 20:30". */
 export function stamp(iso: string, today: string): string {
-  const date = new Date(iso);
+  const date = wall(iso);
   const day = ymd(date);
   const label = day === today ? t('day.today') : day === addDays(today, -1) ? t('day.yesterday') : monthDay(day, today);
   return `${label} ${hhmm(date)}`;

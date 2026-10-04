@@ -5,7 +5,7 @@ import { useState } from 'preact/hooks';
 import * as api from '../../api/client';
 import type { Heading, Item, Project } from '../../api/types';
 import { t } from '../../i18n';
-import { ymd } from '../../lib/dates';
+import { ymd, wall } from '../../lib/dates';
 import { dayLabel } from '../../lib/format';
 import { current, draft, held, startDraft } from '../../state/items';
 import { useResource } from '../../state/resource';
@@ -160,7 +160,7 @@ export function ProjectPage({ id }: { id: string }): JSX.Element {
           {openCount > 0 && detail.data ? (gaps ? t('project.unplanned', { n: gaps }) : t('project.allPlanned')) : ''}
         </p>
       )}
-      <EventsStrip events={detail.data?.upcoming_events ?? []} label={event => `${dayLabel(event.all_day ? event.start_date! : ymd(new Date(event.start!)), day)} ${eventTime(event)}`} />
+      <EventsStrip events={detail.data?.upcoming_events ?? []} label={event => `${dayLabel(event.all_day ? event.start_date! : ymd(wall(event.start!)), day)} ${eventTime(event)}`} />
       {d && !d.context.heading_id && <DraftRow />}
       {empty && !d ? <Blank title={t('project.empty')} tip={t('project.emptyTip')} /> : <Rows items={loose} opts={{ star: true }} />}
       {heads.map(h => <HeadingSection key={h.id} heading={h} items={open.items!.filter(i => i.heading_id === h.id)} />)}

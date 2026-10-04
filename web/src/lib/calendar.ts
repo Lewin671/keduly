@@ -1,13 +1,13 @@
 // How events map onto days, and how the calendar pages through time.
 import type { CalEvent } from '../api/types';
-import { addDays, addMonths, isoWeek, monthStart, spanOnDay, startOfWeek, type HourSpan } from './dates';
+import { addDays, addMonths, isoWeek, monthStart, spanOnDay, startOfWeek, type HourSpan, wall } from './dates';
 
 export type CalView = 'day' | 'week' | 'month' | 'year';
 
 /** The part of a timed event on a day, in hours from midnight; `null` for all-day events and other days. */
 export function eventSpan(event: CalEvent, day: string): HourSpan | null {
   if (event.all_day || !event.start || !event.end) return null;
-  return spanOnDay(new Date(event.start), new Date(event.end), day);
+  return spanOnDay(wall(event.start), wall(event.end), day);
 }
 
 /** Whether an all-day event covers a day (its end date is inclusive). */

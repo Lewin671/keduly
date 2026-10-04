@@ -1,6 +1,51 @@
-// Date helpers. A "day" is a `YYYY-MM-DD` string in the browser's time zone; instants are `Date`s.
+// Date helpers. A "day" is a `YYYY-MM-DD` string in the account's time zone.
+//
+// Every `Date` the interface works with is a "wall date": its local fields (hours, date, …) are the
+// wall-clock reading in the account's time zone, whatever zone the device is in. `wall()` turns an
+// instant from the API into one and `toUtc()` turns one back, so the rest of the code can keep
+// using plain local getters. When the account follows the device the two are the same thing.
+//
 // Arithmetic on days goes through local calendar fields, never through fixed 24-hour steps, so it
 // stays correct across daylight saving transitions.
+
+export const deviceZone = (): string => Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+let zone: string | null = null;            // null: the device's own zone, no conversion needed
+let fields: Intl.DateTimeFormat | null = null;
+
+/** Chooses the zone everything is shown in. */
+export function setZone(next: string): void {
+  zone = next && next !== deviceZone() ? next : null;
+  fields = zone ? new Intl.DateTimeFormat('en-US', { timeZone: zone, hourCycle: 'h23', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' }) : null;
+}
+
+/** The wall-clock reading of an instant in the account's zone, as UTC milliseconds. */
+function wallAsUtc(instant: number): number {
+  const part: Record<string, number> = {};
+  for (const { type, value } of fields!.formatToParts(instant)) if (type !== 'literal') part[type] = Number(value);
+  return Date.UTC(part.year!, part.month! - 1, part.day!, part.hour!, part.minute!, part.second!);
+}
+
+/** An instant (a `Date` or an API timestamp) as a wall date. */
+export function wall(input: string | Date): Date {
+  const instant = new Date(input);
+  if (!zone) return instant;
+  const w = new Date(wallAsUtc(instant.getTime()));
+  return new Date(w.getUTCFullYear(), w.getUTCMonth(), w.getUTCDate(), w.getUTCHours(), w.getUTCMinutes(), w.getUTCSeconds());
+}
+
+/** The current moment as a wall date. */
+export const wallNow = (): Date => wall(new Date());
+
+/** The real instant a wall date stands for. */
+export function instantOf(date: Date): Date {
+  if (!zone) return date;
+  const target = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), date.getHours(), date.getMinutes(), date.getSeconds());
+  // The zone's offset depends on the instant we are looking for; two rounds settle it, DST included.
+  let guess = target;
+  for (let round = 0; round < 2; round++) guess = target - (wallAsUtc(guess) - guess);
+  return new Date(guess);
+}
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
@@ -89,17 +134,17 @@ export function monthGrid(day: string): GridCell[] {
 
 /** RFC 3339 in UTC without fractional seconds, the format the API uses. */
 export function toUtc(date: Date): string {
-  return date.toISOString().replace(/\.\d{3}Z$/, 'Z');
+  return instantOf(date).toISOString().replace(/\.\d{3}Z$/, 'Z');
 }
 
-/** The instant of a local wall-clock time (`HH:MM`) on a day. */
+/** The wall date of a wall-clock time (`HH:MM`) on a day. */
 export function atLocal(day: string, time: string): Date {
   const [y, m, d] = day.split('-').map(Number);
   const [h, min] = time.split(':').map(Number);
   return new Date(y!, m! - 1, d!, h!, min!);
 }
 
-/** The instant `minutes` of wall-clock time after local midnight of a day. */
+/** The wall date `minutes` of wall-clock time after midnight of a day. */
 export function atMinutes(day: string, minutes: number): Date {
   const [y, m, d] = day.split('-').map(Number);
   return new Date(y!, m! - 1, d!, 0, minutes);
@@ -113,7 +158,7 @@ export function minutesOfDay(date: Date): number {
   return date.getHours() * 60 + date.getMinutes();
 }
 
-/** UTC bounds of the local days `from` (inclusive) to `to` (exclusive). */
+/** UTC bounds of the days `from` (inclusive) to `to` (exclusive). */
 export function utcRange(from: string, to: string): [string, string] {
   return [toUtc(parseYmd(from)), toUtc(parseYmd(to))];
 }

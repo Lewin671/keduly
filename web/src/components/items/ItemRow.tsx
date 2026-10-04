@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import * as api from '../../api/client';
 import type { Item, ItemWrite } from '../../api/types';
 import { t } from '../../i18n';
-import { hhmm, ymd } from '../../lib/dates';
+import { hhmm, ymd, wall } from '../../lib/dates';
 import { isComposing, useEscape } from '../../lib/keys';
 import { dayLabel, dueLabel, dur, monthDay, overdueDays, slotLabel, whenLabel } from '../../lib/format';
 import { current, draft, NEW, openCard, openItem, saveItem, toggleDone } from '../../state/items';
@@ -43,7 +43,7 @@ function RightSide({ item, opts }: { item: Item; opts: RowOptions }): JSX.Elemen
   const done = item.status === 'done';
   const parts: JSX.Element[] = [];
   if (done && opts.doneDate && item.completed_at) {
-    parts.push(<span>{monthDay(ymd(new Date(item.completed_at)), day)}</span>);
+    parts.push(<span>{monthDay(ymd(wall(item.completed_at)), day)}</span>);
   }
   if (item.due_date && !done) {
     const late = overdueDays(item.due_date, day);
@@ -55,10 +55,10 @@ function RightSide({ item, opts }: { item: Item; opts: RowOptions }): JSX.Elemen
     );
   }
   if (item.suggestion && !done) {
-    const start = new Date(item.suggestion.start);
+    const start = wall(item.suggestion.start);
     parts.push(<span class="chip-t">{t('item.pending', { slot: opts.timeOnly ? hhmm(start) : slotLabel(start, day) })}</span>);
   } else if (item.block) {
-    const start = new Date(item.block.start);
+    const start = wall(item.block.start);
     parts.push(<span>{opts.timeOnly ? hhmm(start) : whenLabel(start, day)}</span>);
   } else if (item.planned_date && !done && !opts.timeOnly && item.planned_date !== day) {
     parts.push(<span>{dayLabel(item.planned_date, day)}</span>);
