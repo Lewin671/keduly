@@ -18,8 +18,9 @@ type Handler struct {
 func New(svc *core.Service) *Handler { return &Handler{Service: svc} }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path == "/.well-known/caldav" || r.URL.Path == "/dav" {
-		http.Redirect(w, r, root, http.StatusMovedPermanently)
+	if r.URL.Path == "/.well-known/caldav" {
+		// 307 keeps the method: clients arrive here with PROPFIND.
+		http.Redirect(w, r, root, http.StatusTemporaryRedirect)
 		return
 	}
 	// Clients probe with OPTIONS before they have credentials.

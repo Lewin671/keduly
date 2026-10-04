@@ -78,7 +78,10 @@ func (s *Server) serve(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "too many requests", http.StatusTooManyRequests)
 			return
 		}
-		r.Body = http.MaxBytesReader(w, r.Body, maxBodyBytes)
+		// go-webdav recognises a bodiless PROPFIND by http.NoBody; keep it intact.
+		if r.Body != http.NoBody {
+			r.Body = http.MaxBytesReader(w, r.Body, maxBodyBytes)
+		}
 		s.cfg.DAV.ServeHTTP(w, r)
 	case s.cfg.Static != nil:
 		s.cfg.Static.ServeHTTP(w, r)
