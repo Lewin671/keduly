@@ -8,10 +8,12 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -31,33 +33,67 @@ type Env struct {
 
 const usage = `keduly - calendar and task manager with a first-class interface for agents
 
-Usage:
+Setup:
   keduly serve [--addr 127.0.0.1:8080] [--data ./data]    run the server
   keduly login --server URL [--token TOKEN]               save server and token
-  keduly whoami                                           show the signed-in account
-  keduly agenda [--date D] [--days N]                     events, time blocks and planned items per day
-  keduly free --date D --duration 60m                     free slots within working hours
-  keduly item add TITLE [--project P] [--when D] [--due D] [--estimate 30m] [--important] [--notes ...]
-  keduly item list [--view today|inbox|upcoming|all|matrix|done] [--project P] [--limit N]
-  keduly item show|done|reopen|rm|unschedule ID
-  keduly item edit ID [flags]
-  keduly item schedule ID --start T (--end T | --duration 1h)
-  keduly event add TITLE --start T (--end T | --duration 1h) [--all-day] [--project P]
+  keduly whoami                                           account, time zone, working hours
+  keduly version | help
+
+Reading:
+  keduly agenda [--date D] [--days N]       events, time blocks and planned items per day
+  keduly free --date D --duration 60m       free slots within working hours
+  keduly item list [--view today|inbox|upcoming|all|matrix|done] [--project P] [--heading H]
+                   [--query TEXT] [--status open|done|any] [--quadrant do|plan|quick|later]
+                   [--limit N] [--cursor C] [--all]
+  keduly item show ID
   keduly event list [--from D] [--to D]
-  keduly event edit ID [flags] | move ID --start T | rm ID
-  keduly project list | add NAME [--color C] [--area A]
+  keduly project list [--archived]
+  keduly project show P                     notes, headings, counts, upcoming events
+  keduly area list
+  keduly heading list P
+  keduly suggest list [--status pending|accepted|rejected|any]
+  keduly activity [--limit N]
+
+Items:
+  keduly item add TITLE [--project P] [--heading H] [--when D] [--due D] [--estimate 30m]
+                  [--important] [--evening] [--notes TEXT]
+  keduly item edit ID [the flags of add] [--title T] [--no-important] [--no-evening]
+  keduly item done ID | reopen ID | rm ID
+  keduly item schedule ID --start T (--end T | --duration 1h)
+  keduly item unschedule ID
+
+Events:
+  keduly event add TITLE --start T (--end T | --duration 1h) [--project P] [--notes TEXT] [--location L]
+  keduly event add TITLE --all-day --start D [--end D]
+  keduly event edit ID [--title T] [--start T] [--end T | --duration 1h] [--all-day | --timed]
+                   [--project P] [--notes TEXT] [--location L]
+  keduly event move ID --start T
+  keduly event rm ID
+
+Projects, areas and headings:
+  keduly project add NAME [--color C] [--area A] [--notes TEXT]
+  keduly project edit P [--name N] [--color C] [--area A|none] [--notes TEXT]
+  keduly project archive P | unarchive P | rm P
+  keduly area add NAME | rename A NAME | rm A
+  keduly heading add P NAME | rename H NAME | rm H
+
+Suggestions (the user accepts or rejects them):
   keduly suggest schedule ITEM_ID --start T --duration 1h --reason "..."
   keduly suggest add-item TITLE [item flags] [--start T --duration D] --reason "..."
   keduly suggest add-event TITLE --start T --duration D --reason "..."
   keduly suggest move EVENT_ID --start T [--duration D] --reason "..."
-  keduly suggest list
-  keduly activity [--limit N]
-  keduly undo [ACTIVITY_ID]
-  keduly version
+  keduly suggest delete-item ID --reason "..."
+  keduly suggest delete-event ID --reason "..."
+  keduly suggest withdraw SUGGESTION_ID     take back a suggestion this token made
 
-Every client command accepts --json. Commands that change something accept
+Activity:
+  keduly undo [ACTIVITY_ID]                 without an ID: this token's most recent change
+  keduly redo ACTIVITY_ID
+
+Every command accepts --json and --help. Commands that change something accept
 --dry-run and --reason "...". IDs may be shortened to a unique prefix of at
-least 4 characters.
+least 4 characters. P and A are a name, an ID or an ID prefix; H is a heading
+ID, an ID prefix or PROJECT/NAME. "none" clears a value.
 
 Dates: today, tomorrow, a weekday name, YYYY-MM-DD. Times: HH:MM (today),
 "YYYY-MM-DD HH:MM", "tomorrow 14:00". Durations: 90m, 1h30m, 2h.
@@ -147,30 +183,51 @@ func (a *app) dispatch(args []string) error {
 		})
 	case "event":
 		return a.sub(rest, "event", map[string]func([]string) error{
-			"add": a.eventAdd, "list": a.eventList, "edit": a.eventEdit, "move": a.eventEdit, "rm": a.eventRemove,
+			"add": a.eventAdd, "list": a.eventList, "edit": a.eventEdit("edit"), "move": a.eventEdit("move"), "rm": a.eventRemove,
 		})
 	case "project":
-		return a.sub(rest, "project", map[string]func([]string) error{"list": a.projectList, "add": a.projectAdd})
+		return a.sub(rest, "project", map[string]func([]string) error{
+			"list": a.projectList, "add": a.projectAdd, "show": a.projectShow, "edit": a.projectEdit,
+			"archive": a.projectArchive(true), "unarchive": a.projectArchive(false), "rm": a.projectRemove,
+		})
+	case "area":
+		return a.sub(rest, "area", map[string]func([]string) error{
+			"list": a.areaList, "add": a.areaAdd, "rename": a.areaRename, "rm": a.areaRemove,
+		})
+	case "heading":
+		return a.sub(rest, "heading", map[string]func([]string) error{
+			"list": a.headingList, "add": a.headingAdd, "rename": a.headingRename, "rm": a.headingRemove,
+		})
 	case "suggest":
 		return a.sub(rest, "suggest", map[string]func([]string) error{
 			"schedule": a.suggestSchedule, "add-item": a.suggestAddItem, "add-event": a.suggestAddEvent,
-			"move": a.suggestMove, "list": a.suggestList,
+			"move": a.suggestMove, "delete-item": a.suggestDelete("item"), "delete-event": a.suggestDelete("event"),
+			"withdraw": a.suggestWithdraw, "list": a.suggestList,
 		})
 	case "activity":
 		return a.activity(rest)
 	case "undo":
 		return a.undo(rest)
+	case "redo":
+		return a.redo(rest)
 	}
 	return usagef("unknown command %q; run `keduly help`", cmd)
 }
 
 func (a *app) sub(args []string, group string, cmds map[string]func([]string) error) error {
+	names := slices.Sorted(maps.Keys(cmds))
+	choices := fmt.Sprintf("keduly %s %s", group, strings.Join(names, "|"))
 	if len(args) == 0 {
-		return usagef("missing subcommand; run `keduly help`")
+		return usagef("missing subcommand; usage: %s", choices)
+	}
+	switch args[0] {
+	case "help", "-h", "--help":
+		a.printf("usage: %s\nEach one describes its flags with --help.\n", choices)
+		return nil
 	}
 	fn, ok := cmds[args[0]]
 	if !ok {
-		return usagef("unknown command %q; run `keduly help`", group+" "+args[0])
+		return usagef("unknown command %q; usage: %s", group+" "+args[0], choices)
 	}
 	return fn(args[1:])
 }
@@ -228,7 +285,9 @@ func (a *app) saveConfig() (string, error) {
 // flags returns a flag set with the options every command shares.
 func (a *app) flags(name string, mutating bool) *flag.FlagSet {
 	fs := flag.NewFlagSet("keduly "+name, flag.ContinueOnError)
-	fs.SetOutput(a.env.Stderr)
+	// The flag package would print errors and its own usage; parse reports both instead.
+	fs.SetOutput(io.Discard)
+	fs.Usage = func() {}
 	fs.BoolVar(&a.json, "json", false, "print the API response as JSON")
 	if mutating {
 		fs.BoolVar(&a.dryRun, "dry-run", false, "validate and show the result without writing")
@@ -237,15 +296,17 @@ func (a *app) flags(name string, mutating bool) *flag.FlagSet {
 	return fs
 }
 
-// parse accepts flags before, between and after positional arguments.
-func parse(fs *flag.FlagSet, args []string) ([]string, error) {
+// parse accepts flags before, between and after positional arguments. what
+// names the arguments in the help that --help prints.
+func (a *app) parse(fs *flag.FlagSet, args []string, what string) ([]string, error) {
 	var positional []string
 	for {
 		if err := fs.Parse(args); err != nil {
 			if errors.Is(err, flag.ErrHelp) {
+				a.help(fs, what)
 				return nil, err
 			}
-			return nil, usageError{err.Error()}
+			return nil, usagef("%v; see `%s --help`", err, fs.Name())
 		}
 		if fs.NArg() == 0 {
 			return positional, nil
@@ -256,8 +317,8 @@ func parse(fs *flag.FlagSet, args []string) ([]string, error) {
 }
 
 // parseN parses and insists on exactly n positional arguments.
-func parseN(fs *flag.FlagSet, args []string, n int, what string) ([]string, error) {
-	pos, err := parse(fs, args)
+func (a *app) parseN(fs *flag.FlagSet, args []string, n int, what string) ([]string, error) {
+	pos, err := a.parse(fs, args, what)
 	if err != nil {
 		return nil, err
 	}
@@ -265,6 +326,18 @@ func parseN(fs *flag.FlagSet, args []string, n int, what string) ([]string, erro
 		return nil, usagef("usage: %s %s", fs.Name(), what)
 	}
 	return pos, nil
+}
+
+// help prints a command's arguments and flags.
+func (a *app) help(fs *flag.FlagSet, what string) {
+	a.printf("usage: %s\n\nflags:\n", strings.TrimSpace(fs.Name()+" "+what))
+	fs.VisitAll(func(f *flag.Flag) {
+		value, text := flag.UnquoteUsage(f)
+		if f.DefValue != "" && f.DefValue != "false" {
+			text += fmt.Sprintf(" (default %s)", f.DefValue)
+		}
+		a.printf("  %-20s %s\n", strings.TrimSpace("--"+f.Name+" "+value), text)
+	})
 }
 
 func given(fs *flag.FlagSet, name string) bool {
