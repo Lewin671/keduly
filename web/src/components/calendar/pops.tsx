@@ -3,6 +3,7 @@ import type { JSX } from 'preact';
 import { useState } from 'preact/hooks';
 import * as api from '../../api/client';
 import type { CalEvent, EventWrite } from '../../api/types';
+import { keepComposing } from '../../lib/keys';
 import { t } from '../../i18n';
 import { addDays, atLocal, hhmm, toUtc, ymd } from '../../lib/dates';
 import { dayLabel } from '../../lib/format';
@@ -71,7 +72,7 @@ function EventEditor({ event, initial }: { event?: CalEvent; initial: EventDraft
   };
 
   return (
-    <form class="form" onSubmit={e => { e.preventDefault(); save(); }}>
+    <form class="form" onKeyDown={keepComposing} onSubmit={e => { e.preventDefault(); save(); }}>
       <input class="fld title" value={d.title} placeholder={t('event.title')} aria-label={t('event.title')} maxLength={500} autoFocus onInput={e => set({ title: e.currentTarget.value })} />
       <label class="switch"><span>{t('cal.allDay')}</span><input type="checkbox" checked={d.allDay} onChange={e => set({ allDay: e.currentTarget.checked })} /></label>
       {d.allDay ? (

@@ -4,6 +4,7 @@ import { useState } from 'preact/hooks';
 import * as api from '../api/client';
 import { ApiError } from '../api/client';
 import type { NewToken, Token } from '../api/types';
+import { keepComposing } from '../lib/keys';
 import { t } from '../i18n';
 import { addDays } from '../lib/dates';
 import { stamp } from '../lib/format';
@@ -140,7 +141,7 @@ function NewTokenForm({ kind, onClose }: { kind: Token['kind']; onClose: () => v
     if (token) setCreated(token);
   };
   return (
-    <form class="g-form" onSubmit={event => { event.preventDefault(); void create(); }}>
+    <form class="g-form" onKeyDown={keepComposing} onSubmit={event => { event.preventDefault(); void create(); }}>
       <input class="fld" required autoFocus maxLength={100} placeholder={kind === 'agent' ? t('token.namePlaceholder') : t('token.devicePlaceholder')} aria-label={t('token.name')} value={name} onInput={event => setName(event.currentTarget.value)} />
       {kind === 'agent' && (
         <>

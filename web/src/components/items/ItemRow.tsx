@@ -5,7 +5,7 @@ import * as api from '../../api/client';
 import type { Item, ItemWrite } from '../../api/types';
 import { t } from '../../i18n';
 import { hhmm, ymd } from '../../lib/dates';
-import { useEscape } from '../../lib/escape';
+import { isComposing, useEscape } from '../../lib/keys';
 import { dayLabel, dueLabel, dur, monthDay, overdueDays, slotLabel, whenLabel } from '../../lib/format';
 import { current, draft, NEW, openCard, openItem, saveItem, toggleDone } from '../../state/items';
 import { route } from '../../state/route';
@@ -133,7 +133,9 @@ function OpenItem({ item, opts, isDraft = false }: { item: Item; opts: RowOption
     }
     now.saved = { title: text, notes: now.notes };
     creating.current = attempt(api.createItem({ title: text, notes: now.notes, ...context.current })).then(created => {
-      if (created && draft.value) draft.value = { ...draft.value, item: created };
+      // Only while this draft is still the one on screen.
+      const d = draft.value;
+      if (created && d && d.context === context.current) draft.value = { ...d, item: created };
       if (!created) creating.current = null;
       void refresh();
       return created;
@@ -212,7 +214,7 @@ function OpenItem({ item, opts, isDraft = false }: { item: Item; opts: RowOption
             onInput={event => { setTitle(event.currentTarget.value.replace(/\n/g, ' ')); edited(); }}
             onBlur={() => { void flush(); }}
             onKeyDown={event => {
-              if (event.key !== 'Enter' || event.isComposing) return;
+              if (event.key !== 'Enter' || isComposing(event)) return;
               event.preventDefault();
               close();
             }}

@@ -7,7 +7,7 @@ import type { Heading, Item, Project } from '../../api/types';
 import { t } from '../../i18n';
 import { ymd } from '../../lib/dates';
 import { dayLabel } from '../../lib/format';
-import { current, draft, fresh, startDraft } from '../../state/items';
+import { current, draft, held, startDraft } from '../../state/items';
 import { useResource } from '../../state/resource';
 import { navigate } from '../../state/route';
 import { colorOf, headings as allHeadings, projectOf, today, write } from '../../state/store';
@@ -144,7 +144,7 @@ export function ProjectPage({ id }: { id: string }): JSX.Element {
   const known = new Set(heads.map(h => h.id));
   const d = draft.value;
   // Finished during this visit: still listed among the open items, so not counted as filed away.
-  const justDone = Object.values(fresh.value).filter(i => i.project_id === id);
+  const justDone = Object.values(held.value).filter(i => i.project_id === id && i.status === 'done');
   const loggedCount = Math.max(project.done_count - justDone.length, 0);
   const openCount = project.open_count;
   const gaps = detail.data?.unplanned_count ?? 0;
@@ -174,7 +174,7 @@ export function ProjectPage({ id }: { id: string }): JSX.Element {
       {showDone && loggedCount > 0 && (
         !logged.items ? <Skeleton /> : (
           <>
-            <Rows items={logged.items.filter(i => !(i.id in fresh.value))} opts={{ star: true, doneDate: true }} />
+            <Rows items={logged.items.filter(i => !(i.id in held.value))} opts={{ star: true, doneDate: true }} />
             <MoreButton rest={logged.rest} step={30} loading={logged.loading} onMore={logged.more} />
           </>
         )

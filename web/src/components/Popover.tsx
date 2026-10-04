@@ -1,8 +1,8 @@
 // Glass popovers, small menus and sheets.
-import type { ComponentChildren, CSSProperties, JSX } from 'preact';
+import { createPortal, type ComponentChildren, type CSSProperties, type JSX } from 'preact';
 import { useEffect, useLayoutEffect, useRef } from 'preact/hooks';
 import { t } from '../i18n';
-import { useEscape } from '../lib/escape';
+import { useEscape } from '../lib/keys';
 
 interface PopoverProps {
   onClose: () => void;
@@ -62,15 +62,19 @@ interface DialogProps {
   children: ComponentChildren;
 }
 
-/** A centred sheet over a dimmed page. */
+/**
+ * A centred sheet over a dimmed page. It is rendered under <body>: inside the glass sidebar,
+ * whose backdrop filter makes it the containing block, a fixed scrim would not cover the page.
+ */
 export function Dialog({ onClose, label, class: cls, children }: DialogProps): JSX.Element {
   useEscape(onClose);
-  return (
+  return createPortal(
     <div class="scrim" onPointerDown={event => { if (event.target === event.currentTarget) onClose(); }}>
       <div class={cls ? `sheet ${cls}` : 'sheet'} role="dialog" aria-modal="true" aria-label={label}>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

@@ -3,6 +3,7 @@ import type { JSX } from 'preact';
 import { useState } from 'preact/hooks';
 import * as api from '../api/client';
 import type { Project, ProjectColor } from '../api/types';
+import { keepComposing } from '../lib/keys';
 import { t } from '../i18n';
 import { navigate } from '../state/route';
 import { areas, write } from '../state/store';
@@ -36,7 +37,7 @@ export function ProjectDialog({ project, onClose }: { project?: Project; onClose
 
   return (
     <Dialog onClose={onClose} label={project ? t('project.edit') : t('project.new')} class="small">
-      <form class="form" onSubmit={event => { event.preventDefault(); void save(); }}>
+      <form class="form" onKeyDown={keepComposing} onSubmit={event => { event.preventDefault(); void save(); }}>
         <div class="sheet-h">
           <button type="button" onClick={onClose}>{t('common.cancel')}</button>
           <b>{project ? t('project.edit') : t('project.new')}</b>

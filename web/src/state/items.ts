@@ -13,8 +13,11 @@ interface Patch {
 
 const patches = signal<Record<string, Patch>>({});
 const removed = signal<Record<string, number>>({});
-/** Items checked off in the list on screen: they stay in place until the list is left. */
-export const fresh = signal<Record<string, Item>>({});
+/**
+ * Items checked off (or back on) in the list on screen. They stay where they are although the
+ * server no longer lists them there, and are let go when the list is left.
+ */
+export const held = signal<Record<string, Item>>({});
 
 /** The item as it should be shown: the server's copy, or a newer local one. */
 export const current = (item: Item): Item => patches.value[item.id]?.item ?? item;
@@ -22,6 +25,10 @@ export const isRemoved = (id: string): boolean => id in removed.value;
 
 function setPatch(item: Item): void {
   patches.value = { ...patches.value, [item.id]: { item, v: version.value } };
+  // Copies kept outside the fetched lists must not fall behind.
+  if (item.id in held.value) held.value = { ...held.value, [item.id]: item };
+  const d = draft.value;
+  if (d?.item?.id === item.id) draft.value = { ...d, item };
 }
 
 function dropPatch(id: string): void {
@@ -29,9 +36,9 @@ function dropPatch(id: string): void {
   patches.value = rest;
 }
 
-function setFresh(item: Item | null, id: string): void {
-  const { [id]: _, ...rest } = fresh.value;
-  fresh.value = item ? { ...rest, [id]: item } : rest;
+function hold(item: Item | null, id: string): void {
+  const { [id]: _, ...rest } = held.value;
+  held.value = item ? { ...rest, [id]: item } : rest;
 }
 
 // Once every list has refetched, local copies made before that refetch are no longer needed.
@@ -62,10 +69,8 @@ async function optimistic(item: Item, change: Partial<Item>, body: ItemWrite & {
 export async function toggleDone(item: Item): Promise<void> {
   const done = item.status !== 'done';
   const change: Partial<Item> = { status: done ? 'done' : 'open', completed_at: done ? new Date().toISOString() : null };
-  setFresh(done ? { ...item, ...change } : null, item.id);
-  const saved = await optimistic(item, change, { status: change.status });
-  if (!saved) setFresh(null, item.id);
-  else if (done) setFresh(saved, item.id);
+  hold({ ...item, ...change }, item.id);
+  if (!(await optimistic(item, change, { status: change.status }))) hold(null, item.id);
 }
 
 export const toggleImportant = (item: Item) => optimistic(item, { important: !item.important }, { important: !item.important });
@@ -123,5 +128,5 @@ export function startDraft(context: Draft['context']): void {
 export function resetListState(): void {
   draft.value = null;
   openCard.value = null;
-  fresh.value = {};
+  held.value = {};
 }

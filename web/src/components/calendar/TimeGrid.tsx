@@ -111,10 +111,11 @@ interface ColumnProps {
 }
 
 function Column({ day, index, events, hour, week, onGrab, dragged }: ColumnProps): JSX.Element {
+  // In time order, so that the keyboard walks through the day as the eye does.
   const timed = events.flatMap(event => {
     const span = eventSpan(event, day);
     return span ? [{ event, ...span }] : [];
-  });
+  }).sort((a, b) => a.s - b.s || b.e - a.e);
   const lanes = layoutLanes(timed);
   const pop = calPop.value;
   const right = week && index >= 4;

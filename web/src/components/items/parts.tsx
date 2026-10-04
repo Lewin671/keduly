@@ -5,7 +5,7 @@ import type { CalEvent, Item } from '../../api/types';
 import { t } from '../../i18n';
 import { hhmm } from '../../lib/dates';
 import { keepInPlace } from '../../lib/sticky';
-import { draft, fresh, isRemoved } from '../../state/items';
+import { draft, held, isRemoved } from '../../state/items';
 import { colorOf } from '../../state/store';
 import { ItemRow, type RowOptions } from './ItemRow';
 
@@ -51,7 +51,7 @@ export function LoadFailed({ retry }: { retry: () => void }): JSX.Element {
  */
 export function Rows({ items, opts }: { items: readonly Item[]; opts?: RowOptions }): JSX.Element {
   const previous = useRef<readonly Item[]>([]);
-  const kept = fresh.value;
+  const kept = held.value;
   const shown = keepInPlace(previous.current, items, id => kept[id]);
   previous.current = shown;
   const drafted = draft.value?.item?.id;

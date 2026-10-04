@@ -1,6 +1,7 @@
 // Text that is edited where it stands: a title, a note, a heading.
 import type { JSX } from 'preact';
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
+import { isComposing } from '../lib/keys';
 
 interface Props {
   value: string;
@@ -51,7 +52,7 @@ export function InlineText({ value, onSave, class: cls, placeholder, label, mult
       onInput={event => setText(event.currentTarget.value)}
       onBlur={commit}
       onKeyDown={event => {
-        if (event.isComposing) return;
+        if (isComposing(event)) return;
         if (event.key === 'Enter' && !(multiline && !event.metaKey && !event.ctrlKey)) {
           event.preventDefault();
           event.currentTarget.blur();

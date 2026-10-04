@@ -36,12 +36,13 @@ select.fld.bare { text-align-last: right; }
 .slots .tb { font-size: 13px; }
 
 /* Text edited where it stands. */
-.ed { display: block; width: 100%; border: 0; margin: 0; padding: 0; background: none; color: inherit; font: inherit; letter-spacing: inherit; resize: none; overflow: hidden; outline: none; border-radius: 4px; }
+.ed { display: block; width: 100%; border: 0; padding: 0; background: none; color: inherit; font: inherit; letter-spacing: inherit; resize: none; overflow: hidden; outline: none; border-radius: 4px; }
 .ed:focus-visible { outline: none; }
 .todo .tt.ed { -webkit-line-clamp: none; font-weight: 600; }
-.card textarea.cn { padding: 0; margin-bottom: 12px; min-height: 20px; }
+.card textarea.cn { padding: 0; margin: 0 0 12px; min-height: 20px; }
 .lh h2 { flex: 1; min-width: 0; }
-textarea.notes { width: calc(100% - 37px); }
+textarea.notes { width: calc(100% - 37px); margin: 0 0 12px 37px; }
+.todo textarea.tt, .lh textarea, .sec textarea, .area textarea { margin: 0; }
 .sec-ed { font-weight: 700; }
 
 /* ---------- popovers attached to a button, menus, sheets ---------- */
@@ -153,6 +154,7 @@ button.g-row, label.g-row { width: 100%; text-align: left; }
   .fld, .todo .tt.ed, .card textarea.cn, textarea.notes, .area .ed, .sec-ed { font-size: 16px; }
   .todo .rt { flex-wrap: wrap; justify-content: flex-end; max-width: 46%; gap: 2px 10px; }
   .scrim { padding: 12px; }
+  .hud { bottom: calc(84px + env(safe-area-inset-bottom)); }
   .sheet { padding: 0 14px 18px; }
   .fld.bare { max-width: 56%; }
 }

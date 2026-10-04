@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import * as api from '../api/client';
 import type { Activity, Actor } from '../api/types';
 import { t } from '../i18n';
-import { useEscape } from '../lib/escape';
+import { useEscape } from '../lib/keys';
 import { stamp } from '../lib/format';
 import { track } from '../state/resource';
 import { attempt, refresh, reportError, today, version } from '../state/store';

@@ -3,6 +3,7 @@ import type { JSX } from 'preact';
 import { useState } from 'preact/hooks';
 import * as api from '../api/client';
 import { ApiError } from '../api/client';
+import { keepComposing } from '../lib/keys';
 import { t } from '../i18n';
 import { config, enter, errorText } from '../state/store';
 
@@ -38,7 +39,7 @@ export function Auth(): JSX.Element {
 
   return (
     <div class="auth">
-      <form class="auth-card" onSubmit={event => { event.preventDefault(); void submit(); }}>
+      <form class="auth-card" onKeyDown={keepComposing} onSubmit={event => { event.preventDefault(); void submit(); }}>
         <h1>Keduly</h1>
         <p>{registering ? t('auth.registerLead') : t('auth.loginLead')}</p>
         {registering && (
