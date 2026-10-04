@@ -1,0 +1,44 @@
+/* Colours follow Apple's system palette (light / dark). */
+:root {
+  --bg: #ffffff; --label: #1c1c1e; --label-2: rgba(60, 60, 67, .62); --label-3: rgba(60, 60, 67, .32);
+  --sep: rgba(60, 60, 67, .14); --fill: rgba(118, 118, 128, .12); --fill-2: rgba(118, 118, 128, .07);
+  --group: #f5f5f7; --tile: #ffffff; --seg-on: #ffffff; --sheet: #ffffff;
+  --glass: rgba(242, 242, 247, .78); --glass-edge: rgba(0, 0, 0, .07); --glass-hi: rgba(255, 255, 255, .7);
+  --pop: rgba(255, 255, 255, .88);
+  --blue: #007aff; --red: #ff3b30; --green: #34c759; --orange: #ff9500; --indigo: #5856d6; --teal: #30b0c7; --pink: #ff2d55; --purple: #af52de; --brown: #a2845e; --gray: #8e8e93; --ink: #48484a;
+  --mix: #000000; --shadow: 0 12px 40px rgba(0, 0, 0, .18), 0 0 0 .5px rgba(0, 0, 0, .1);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1c1c1e; --label: #ffffff; --label-2: rgba(235, 235, 245, .62); --label-3: rgba(235, 235, 245, .3);
+    --sep: rgba(84, 84, 88, .62); --fill: rgba(118, 118, 128, .26); --fill-2: rgba(118, 118, 128, .14);
+    --group: rgba(255, 255, 255, .055); --tile: rgba(255, 255, 255, .08); --seg-on: #636366; --sheet: #242426;
+    --glass: rgba(44, 44, 46, .74); --glass-edge: rgba(0, 0, 0, .4); --glass-hi: rgba(255, 255, 255, .1);
+    --pop: rgba(44, 44, 46, .9);
+    --blue: #0a84ff; --red: #ff453a; --green: #30d158; --orange: #ff9f0a; --indigo: #7d7aff; --teal: #40c8e0; --pink: #ff375f; --purple: #bf5af2; --brown: #ac8e68; --ink: #8e8e93;
+    --mix: #ffffff; --shadow: 0 12px 40px rgba(0, 0, 0, .55), 0 0 0 .5px rgba(255, 255, 255, .14);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #1c1c1e; --label: #ffffff; --label-2: rgba(235, 235, 245, .62); --label-3: rgba(235, 235, 245, .3);
+  --sep: rgba(84, 84, 88, .62); --fill: rgba(118, 118, 128, .26); --fill-2: rgba(118, 118, 128, .14);
+  --group: rgba(255, 255, 255, .055); --tile: rgba(255, 255, 255, .08); --seg-on: #636366; --sheet: #242426;
+  --glass: rgba(44, 44, 46, .74); --glass-edge: rgba(0, 0, 0, .4); --glass-hi: rgba(255, 255, 255, .1);
+  --pop: rgba(44, 44, 46, .9);
+  --blue: #0a84ff; --red: #ff453a; --green: #30d158; --orange: #ff9f0a; --indigo: #7d7aff; --teal: #40c8e0; --pink: #ff375f; --purple: #bf5af2; --brown: #ac8e68; --ink: #8e8e93;
+  --mix: #ffffff; --shadow: 0 12px 40px rgba(0, 0, 0, .55), 0 0 0 .5px rgba(255, 255, 255, .14);
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--label);
+  font: 15px/1.4 -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Helvetica Neue", "Segoe UI", "Microsoft YaHei", sans-serif;
+  font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; letter-spacing: -.1px;
+}
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; letter-spacing: inherit; }
+h1, h2, h3, p { margin: 0; }
+svg.i { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+code, pre { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 12.5px; letter-spacing: 0; }
+:focus-visible { outline: 3px solid color-mix(in srgb, var(--blue) 45%, transparent); outline-offset: 1px; }
+.glass { background: var(--glass); -webkit-backdrop-filter: saturate(180%) blur(28px); backdrop-filter: saturate(180%) blur(28px); box-shadow: inset 0 0 0 .5px var(--glass-hi), 0 0 0 .5px var(--glass-edge), 0 8px 28px rgba(0, 0, 0, .07); }

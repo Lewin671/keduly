@@ -1,0 +1,49 @@
+/* ---------- items: list ---------- */
+.list { max-width: 700px; margin: 4px auto 0; padding-bottom: 90px; }
+.lh { display: flex; align-items: flex-start; gap: 11px; margin-bottom: 8px; }
+.lh svg { width: 26px; height: 26px; color: var(--c); flex: none; margin-top: 4px; }
+.lh h2 { font-size: 26px; font-weight: 700; letter-spacing: -.4px; line-height: 1.3; overflow-wrap: anywhere; }
+.notes, .summary { color: var(--label-2); font-size: 14px; margin: 0 0 12px 37px; max-width: 560px; }
+.evs { margin: 0 0 16px 37px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; }
+.ev { display: flex; gap: 10px; font-size: 13px; line-height: 18px; color: var(--label-2); padding-left: 9px; border-left: 2px solid var(--c); }
+.ev time { flex: none; min-width: 40px; }
+.sec { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; padding: 24px 0 7px 2px; margin-bottom: 4px; border-bottom: .5px solid var(--sep); }
+.sec svg { width: 16px; height: 16px; color: var(--c); }
+button.sec { width: 100%; text-align: left; }
+.dh { display: flex; align-items: baseline; gap: 10px; padding: 16px 0 4px 2px; margin-top: 12px; border-top: .5px solid var(--sep); }
+.dh b { font-size: 26px; font-weight: 700; letter-spacing: -.5px; }
+.dh span { font-size: 14px; font-weight: 600; color: var(--label-2); }
+.dh + .evs { margin-left: 2px; margin-bottom: 8px; }
+.todo { border-radius: 9px; margin: 0 -10px; padding: 0 10px; }
+.todo .tr { display: flex; align-items: flex-start; gap: 10px; padding: 7px 0; width: 100%; text-align: left; }
+.todo .tm { flex: 1; min-width: 0; }
+.todo .tt svg { width: 14px; height: 14px; color: #f5b400; vertical-align: -2px; margin-right: 5px; }
+.todo .ts { color: var(--label-2); font-size: 12.5px; }
+.todo .rt { display: flex; align-items: center; gap: 12px; color: var(--label-2); font-size: 13px; white-space: nowrap; padding-top: 1px; }
+.flag { display: inline-flex; align-items: center; gap: 3px; }
+.flag svg { width: 12px; height: 12px; stroke-width: 2; }
+.flag.hot { color: var(--red); }
+.chip-t { border: 1px dashed var(--label-3); border-radius: 5px; padding: 0 6px; font-size: 12px; line-height: 18px; }
+.todo.done .tt { color: var(--label-2); text-decoration: line-through; }
+/* An opened item becomes a card in place. */
+.todo.open { background: var(--sheet); box-shadow: 0 0 0 .5px var(--glass-edge), 0 8px 26px rgba(0, 0, 0, .13); margin: 10px -16px; padding: 7px 16px 14px; animation: pop .2s cubic-bezier(.25, 1.1, .4, 1); transform-origin: center top; }
+.todo.open .tt { font-weight: 600; }
+.card { margin-left: 27px; }
+.card .cn { color: var(--label-2); font-size: 14px; padding: 0 0 12px; }
+.card .cn.ph { color: var(--label-3); }
+.card .sg { display: flex; align-items: center; gap: 8px; background: var(--fill-2); border-radius: 9px; padding: 9px 9px 9px 12px; font-size: 13px; margin-bottom: 12px; }
+.card .sg div { flex: 1; min-width: 0; }
+.card .sg b { font-weight: 600; }
+.card .cm { display: flex; flex-wrap: wrap; gap: 6px; }
+.ck { display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 9px; border-radius: 6px; background: var(--fill); font-size: 12.5px; color: var(--label-2); }
+.ck { max-width: 100%; overflow: hidden; white-space: nowrap; }
+.ck svg { width: 13px; height: 13px; stroke-width: 1.9; flex: none; }
+.ck i { width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
+.empty { color: var(--label-2); font-size: 14px; padding: 10px 0 0 37px; }
+.chk { --c: var(--blue); width: 17px; height: 17px; border-radius: 5px; border: 1.5px solid var(--label-3); flex: none; display: grid; place-items: center; margin-top: 2px; transition: background .15s, border-color .15s; }
+.chk::after { content: ""; width: 8px; height: 4px; border-left: 1.8px solid #fff; border-bottom: 1.8px solid #fff; transform: rotate(-45deg) translate(.5px, -1px) scale(0); transition: transform .2s cubic-bezier(.3, 1.5, .5, 1); }
+.chk.on { background: var(--c); border-color: var(--c); }
+.chk.on::after { transform: rotate(-45deg) translate(.5px, -1px) scale(1); }
+.fab { position: fixed; right: 34px; bottom: 30px; z-index: 9; width: 52px; height: 52px; border-radius: 50%; background: var(--blue); color: #fff; display: grid; place-items: center; box-shadow: 0 6px 18px color-mix(in srgb, var(--blue) 40%, transparent); }
+.fab svg { width: 24px; height: 24px; stroke-width: 2.2; }
+body[data-mode="cal"] .fab { display: none; }

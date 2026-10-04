@@ -1,0 +1,31 @@
+/* ---------- task sidebar ---------- */
+.app { display: grid; grid-template-columns: 272px minmax(0, 1fr); min-height: 100vh; }
+.sidebar { position: sticky; top: 10px; height: calc(100vh - 20px); margin: 10px 0 10px 10px; border-radius: 18px; padding: 12px 12px 4px; overflow-y: auto; display: flex; flex-direction: column; }
+.mode { margin-bottom: 14px; }
+.mode button { flex: 1; }
+body[data-mode="cal"] #side-tasks, body[data-mode="cal"] #list, body[data-mode="tasks"] #side-cal, body[data-mode="tasks"] #cal, body[data-mode="tasks"] .only-cal { display: none; }
+.mini { padding: 2px 2px 16px; }
+.mini-h { font-size: 13px; font-weight: 600; padding: 0 7px 6px; }
+.mini-g { display: grid; grid-template-columns: repeat(7, 1fr); justify-items: center; row-gap: 1px; font-size: 12px; }
+.mini-g em { font-style: normal; color: var(--label-3); font-size: 10.5px; padding-bottom: 3px; }
+.mini-g span { width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%; }
+.mini-g .out { color: var(--label-3); }
+.mini-g .today { background: var(--red); color: #fff; font-weight: 600; }
+.pc { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--c); display: grid; place-items: center; flex: none; margin: 0 5px; }
+.pc.on { background: var(--c); }
+.pc.on::after { content: ""; width: 7px; height: 3.5px; border-left: 1.6px solid #fff; border-bottom: 1.6px solid #fff; transform: rotate(-45deg) translate(.5px, -.5px); }
+.proj.off .pn { color: var(--label-2); }
+.s-label { font-size: 13px; font-weight: 600; color: var(--label-2); padding: 0 8px 4px; }
+.projects { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1px; margin-bottom: 18px; }
+.proj { display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 8px 0 6px; border-radius: 9px; width: 100%; text-align: left; }
+.proj .pn { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ---------- items: sidebar ---------- */
+.nav { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1px; }
+.nv { display: flex; align-items: center; gap: 9px; height: 32px; padding: 0 9px; border-radius: 8px; width: 100%; text-align: left; font-size: 14.5px; }
+.nv svg { color: var(--c); }
+.nv .n { margin-left: auto; color: var(--label-2); font-size: 13px; }
+.nv.on { background: var(--fill); }
+.nv.add { color: var(--label-2); margin-top: 8px; --c: var(--label-2); }
+.area { font-size: 13px; font-weight: 700; padding: 18px 9px 4px; }
+.pie { width: 16px; height: 16px; flex: none; margin: 0 1px; }
