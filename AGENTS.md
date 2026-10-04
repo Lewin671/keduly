@@ -25,6 +25,11 @@ Keduly is a calendar and task manager with a first-class interface for AI agents
   server paths, account names, email addresses, tokens. Use `example.com` and placeholders.
   Deployment-specific files belong outside the repository or under the ignored `deploy/local/`.
 - UI changes start in `docs/design/mockup.html`, then in `web/`.
+- Every capability ships on both surfaces. A feature is not done until a person can use it in the
+  web app **and** an agent can use it through the CLI, with `skills/keduly/SKILL.md` updated to
+  describe it. The order is: `docs/api.md`, server, web app, CLI, skill. The only exceptions are
+  the actions reserved for the person, listed under "Only the user can" in the skill (deciding
+  suggestions, tokens, account settings); adding to that list is a product decision, not a shortcut.
 - Run `scripts/check.sh` before committing. It must pass.
 - The server has no runtime dependencies besides its SQLite file. Keep it that way.
 
