@@ -1,6 +1,6 @@
 ---
 name: keduly
-description: Operate the user's Keduly calendar and task manager through the `keduly` CLI. Use when the user asks about their schedule or agenda, tasks/to-dos/items, projects, deadlines, priorities or what to do today, wants help planning a day or week or finding free time, or wants something added, captured, scheduled, moved, completed or reorganised.
+description: Operate the user's Keduly calendar and task manager through the `keduly` CLI. Use when the user asks about their schedule or agenda, tasks/to-dos/items, projects, deadlines, priorities or what to do today, wants help planning a day or week or finding free time, wants something added, captured, scheduled, moved, completed or reorganised, or asks about their pomodoro (focus) timer, tomatoes, or where their time went.
 ---
 
 # Keduly
@@ -20,6 +20,10 @@ the server URL and a token (web app, Settings), then `keduly login --server URL 
 - **Important** is the user's mark. **Urgent** is derived, never set: an open item that is overdue
   or due today or tomorrow. Quadrants: `do` important and urgent, `plan` important only, `quick`
   urgent only, `later` neither.
+- **Focus**: a pomodoro timer, one per account. A **tomato** is one work period run to its end
+  (`keduly whoami` shows its length, 25 minutes by default); giving it up keeps the minutes but
+  earns no tomato. A rest follows each tomato and a long rest every fourth. Each tomato counts
+  towards one item or is free focus. Tomatoes are what was actually done, next to `--estimate`.
 - **Suggestion**: a change you propose. It shows on the user's calendar as tentative and happens
   only when the user accepts it.
 - **Activity log**: every change, who made it and why. Most entries can be undone and redone.
@@ -48,11 +52,14 @@ the server URL and a token (web app, Settings), then `keduly login --server URL 
 | `keduly item list` | Today: planned and overdue items, free and unplanned minutes |
 | `keduly item list --view inbox\|upcoming\|matrix\|done\|all` | `matrix` = the four quadrants; `upcoming` = the next 14 days |
 | `keduly item list [--project P] [--heading H] [--query TEXT] [--status open\|done\|any] [--quadrant do\|plan\|quick\|later]` | Filtered items (open ones unless `--status`); filters combine |
-| `keduly item show ID` | One item: notes, heading, time block |
+| `keduly item show ID` | One item: notes, heading, time block, tomatoes and time spent (番茄 2 · 已用 50m) |
 | `keduly event list [--from D] [--to D]` | Events (default: the next 7 days) |
-| `keduly project list [--archived]` · `keduly project show P` | Projects with counts · one project: notes, headings, unplanned count, next events |
+| `keduly project list [--archived]` · `keduly project show P` | Projects with counts · one project: notes, headings, unplanned count, focus time this week, next events |
 | `keduly area list` · `keduly heading list P` | Areas · the headings of a project |
 | `keduly suggest list [--status pending\|accepted\|rejected\|any]` | Suggestions; see what the user decided |
+| `keduly focus status` | The timer: idle, working (on what, time left), a tomato that ran out and waits for the user, or resting; today's tomatoes and the round |
+| `keduly focus log [--from D] [--to D]` | Focus sessions (default: today's): time, length, tomato or given up (未完成), item |
+| `keduly focus stats` | The last 7 days: tomatoes and time per day and per project, and the streak of days with a tomato |
 | `keduly activity [--limit N]` | Recent changes with their IDs, authors and reasons |
 
 ## Suggesting (the default for the user's time)
@@ -83,12 +90,19 @@ the server URL and a token (web app, Settings), then `keduly login --server URL 
 | `keduly project archive P` · `unarchive P` · `rm P` | Hides, restores, deletes with all its items and events |
 | `keduly area add NAME` · `rename A NAME` · `rm A` | Areas; removing one keeps its projects |
 | `keduly heading add P NAME` · `rename H NAME` · `rm H` | Headings; removing one keeps its items |
+| `keduly focus start [ITEM]` | Starts a tomato on the item, or free focus without one. Gives up a tomato that is running |
+| `keduly focus stop` | Gives up the running tomato, skips the rest, or dismisses a tomato that ran out |
+| `keduly focus rest` | Starts the rest after a tomato (the long one after every fourth) |
 | `keduly undo [ACTIVITY]` · `keduly redo ACTIVITY` | Undo (default: your latest change) and redo |
+
+The timer is the user's attention: start, stop or rest it only when they ask. It is not in the
+activity log and `undo` does not apply to it. `keduly item done ID` also ends a tomato running on
+that item.
 
 ## Only the user can
 
 Accept or reject suggestions; create or revoke tokens and app passwords; change the account (name,
-password, time zone, working hours); register; delete a project when the token needs delete
+password, time zone, working hours, the lengths of a tomato and of the rests); register; delete a project when the token needs delete
 confirmation. Do not look for a way around these: tell the user to do it in the web app.
 
 ## Conventions
@@ -124,6 +138,17 @@ keduly suggest schedule ab12cd34 --start 14:00 --duration 90m \
 Place `do` items first, then `plan`; give each its estimate, never overlap an event or another
 proposal, and stop when the day is full: say what did not fit instead of squeezing it in. Then
 summarise what you proposed and that it waits for the user to accept.
+
+## Example: check the estimates against what happened
+
+```sh
+keduly focus stats                             # tomatoes and time per day and per project
+keduly focus log --from 2026-10-12 --to today  # each session, with its item
+keduly item list --status any --query sync     # 预计 1h30m · 番茄 5 · 已用 2h5m: it took longer
+```
+
+Use the gap between estimate and time spent when you plan: if items of a kind keep taking longer,
+say so and propose larger slots, rather than silently padding.
 
 ## Example: capture what the user mentions
 

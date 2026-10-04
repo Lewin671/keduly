@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/Lewin671/keduly/internal/api"
 	"github.com/Lewin671/keduly/internal/core"
 )
 
@@ -51,6 +52,13 @@ func (s *Server) routes() {
 	s.handle("DELETE /events/{id}", member, s.deleteEvent)
 	s.handle("GET /calendar/heat", member, s.heat)
 	s.handle("GET /free", member, s.free)
+
+	s.handle("GET /focus", member, s.focus)
+	s.handle("POST /focus/start", member, s.startFocus)
+	s.handle("POST /focus/stop", member, s.stopFocus)
+	s.handle("POST /focus/rest", member, s.restFocus)
+	s.handle("GET /focus/sessions", member, s.focusSessions)
+	s.handle("GET /focus/stats", member, s.focusStats)
 
 	s.handle("GET /suggestions", member, s.listSuggestions)
 	s.handle("POST /suggestions", member, s.createSuggestion)
@@ -354,6 +362,42 @@ func (s *Server) free(c *call) error {
 		return err
 	}
 	return c.ok(obj{"slots": slots})
+}
+
+func (s *Server) focus(c *call) error {
+	focus, err := s.read(c).Focus()
+	if err != nil {
+		return err
+	}
+	return c.ok(obj{"focus": focus})
+}
+
+// focusWrite runs one of the timer's commands and answers with its new state.
+func (s *Server) focusWrite(c *call, fn func(*core.Op, core.Fields) (*api.Focus, error)) error {
+	return s.write(c, http.StatusOK, func(op *core.Op) (obj, error) {
+		focus, err := fn(op, c.fields)
+		return obj{"focus": focus}, err
+	})
+}
+
+func (s *Server) startFocus(c *call) error { return s.focusWrite(c, (*core.Op).StartFocus) }
+func (s *Server) stopFocus(c *call) error  { return s.focusWrite(c, (*core.Op).StopFocus) }
+func (s *Server) restFocus(c *call) error  { return s.focusWrite(c, (*core.Op).RestFocus) }
+
+func (s *Server) focusSessions(c *call) error {
+	sessions, err := s.read(c).FocusSessions(c.query("from"), c.query("to"))
+	if err != nil {
+		return err
+	}
+	return c.ok(obj{"sessions": sessions})
+}
+
+func (s *Server) focusStats(c *call) error {
+	stats, err := s.read(c).FocusStats()
+	if err != nil {
+		return err
+	}
+	return c.ok(stats)
 }
 
 func (s *Server) listSuggestions(c *call) error {

@@ -15,15 +15,23 @@ type User struct {
 	TimezoneAuto bool
 	WorkStart    string
 	WorkEnd      string
-	Revision     int64
-	CreatedAt    string
+	// The focus timer: the length of a tomato, of the rest after it, of the rest after every
+	// RoundSize-th tomato of the day.
+	FocusMinutes    int
+	RestMinutes     int
+	LongRestMinutes int
+	RoundSize       int
+	Revision        int64
+	CreatedAt       string
 }
 
-const userCols = "id, email, name, password_hash, timezone, timezone_auto, work_start, work_end, revision, created_at"
+const userCols = "id, email, name, password_hash, timezone, timezone_auto, work_start, work_end, " +
+	"focus_minutes, rest_minutes, long_rest_minutes, round_size, revision, created_at"
 
 func scanUser(row *sql.Row) (*User, error) {
 	u := new(User)
-	err := row.Scan(&u.ID, &u.Email, &u.Name, &u.PasswordHash, &u.Timezone, &u.TimezoneAuto, &u.WorkStart, &u.WorkEnd, &u.Revision, &u.CreatedAt)
+	err := row.Scan(&u.ID, &u.Email, &u.Name, &u.PasswordHash, &u.Timezone, &u.TimezoneAuto, &u.WorkStart, &u.WorkEnd,
+		&u.FocusMinutes, &u.RestMinutes, &u.LongRestMinutes, &u.RoundSize, &u.Revision, &u.CreatedAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
@@ -39,14 +47,17 @@ func UserByEmail(ctx context.Context, q Q, email string) (*User, error) {
 }
 
 func InsertUser(ctx context.Context, q Q, u *User) error {
-	_, err := q.ExecContext(ctx, "INSERT INTO users ("+userCols+") VALUES (?,?,?,?,?,?,?,?,?,?)",
-		u.ID, u.Email, u.Name, u.PasswordHash, u.Timezone, u.TimezoneAuto, u.WorkStart, u.WorkEnd, u.Revision, u.CreatedAt)
+	_, err := q.ExecContext(ctx, "INSERT INTO users ("+userCols+") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+		u.ID, u.Email, u.Name, u.PasswordHash, u.Timezone, u.TimezoneAuto, u.WorkStart, u.WorkEnd,
+		u.FocusMinutes, u.RestMinutes, u.LongRestMinutes, u.RoundSize, u.Revision, u.CreatedAt)
 	return err
 }
 
 func UpdateUser(ctx context.Context, q Q, u *User) error {
-	_, err := q.ExecContext(ctx, "UPDATE users SET name = ?, password_hash = ?, timezone = ?, timezone_auto = ?, work_start = ?, work_end = ? WHERE id = ?",
-		u.Name, u.PasswordHash, u.Timezone, u.TimezoneAuto, u.WorkStart, u.WorkEnd, u.ID)
+	_, err := q.ExecContext(ctx, `UPDATE users SET name = ?, password_hash = ?, timezone = ?, timezone_auto = ?, work_start = ?, work_end = ?,
+		focus_minutes = ?, rest_minutes = ?, long_rest_minutes = ?, round_size = ? WHERE id = ?`,
+		u.Name, u.PasswordHash, u.Timezone, u.TimezoneAuto, u.WorkStart, u.WorkEnd,
+		u.FocusMinutes, u.RestMinutes, u.LongRestMinutes, u.RoundSize, u.ID)
 	return err
 }
 
@@ -290,6 +301,33 @@ var Suggestions = Table[Suggestion]{
 	fields: func(s *Suggestion) []any {
 		return []any{&s.ID, &s.UserID, &s.Status, &s.Kind, &s.ActorKind, &s.ActorName, &s.Reason, &s.Title,
 			&s.ItemID, &s.EventID, &s.StartAt, &s.EndAt, &s.Payload, &s.CreatedAt, &s.DecidedAt, &s.TokenID}
+	},
+}
+
+// FocusSession is one stretch of the focus timer. EndAt is the planned end until the session
+// is given up, which moves it to that moment.
+type FocusSession struct {
+	ID             string
+	UserID         string
+	Kind           string // "work" or "rest"
+	ItemID         *string
+	Title          string // the item's title when the session started
+	StartAt        string
+	EndAt          string
+	PlannedMinutes int
+	Answered       bool
+	CreatedByKind  string
+	CreatedByName  string
+}
+
+var FocusSessions = Table[FocusSession]{
+	Name: "focus_sessions",
+	Cols: []string{"id", "user_id", "kind", "item_id", "title", "start_at", "end_at", "planned_minutes",
+		"answered", "created_by_kind", "created_by_name"},
+	Order: "start_at, rowid",
+	fields: func(s *FocusSession) []any {
+		return []any{&s.ID, &s.UserID, &s.Kind, &s.ItemID, &s.Title, &s.StartAt, &s.EndAt, &s.PlannedMinutes,
+			&s.Answered, &s.CreatedByKind, &s.CreatedByName}
 	},
 }
 

@@ -18,7 +18,13 @@ type User struct {
 	TimezoneAuto bool   `json:"timezone_auto"`
 	WorkStart    string `json:"work_start"`
 	WorkEnd      string `json:"work_end"`
-	CreatedAt    string `json:"created_at"`
+	// The focus timer's lengths: one tomato, the rest after it, and the rest after every
+	// RoundSize-th tomato of the day.
+	FocusMinutes    int    `json:"focus_minutes"`
+	RestMinutes     int    `json:"rest_minutes"`
+	LongRestMinutes int    `json:"long_rest_minutes"`
+	RoundSize       int    `json:"round_size"`
+	CreatedAt       string `json:"created_at"`
 }
 
 type Area struct {
@@ -54,6 +60,58 @@ type Block struct {
 	End     string `json:"end"`
 }
 
+// ItemFocus is the time spent on an item with the focus timer.
+type ItemFocus struct {
+	Tomatoes int `json:"tomatoes"`
+	Minutes  int `json:"minutes"`
+}
+
+type FocusSession struct {
+	ID             string  `json:"id"`
+	Kind           string  `json:"kind"`
+	ItemID         *string `json:"item_id"`
+	ProjectID      *string `json:"project_id"`
+	Title          string  `json:"title"`
+	Start          string  `json:"start"`
+	End            string  `json:"end"`
+	PlannedMinutes int     `json:"planned_minutes"`
+	Completed      bool    `json:"completed"`
+	CreatedBy      Actor   `json:"created_by"`
+}
+
+// Focus is the state of the user's one timer.
+type Focus struct {
+	State         string        `json:"state"`
+	Session       *FocusSession `json:"session"`
+	TomatoesToday int           `json:"tomatoes_today"`
+	MinutesToday  int           `json:"minutes_today"`
+	RoundSize     int           `json:"round_size"`
+	RoundDone     int           `json:"round_done"`
+	RestMinutes   int           `json:"rest_minutes"`
+	Now           string        `json:"now"`
+}
+
+type FocusProject struct {
+	ProjectID *string `json:"project_id"`
+	Tomatoes  int     `json:"tomatoes"`
+	Minutes   int     `json:"minutes"`
+}
+
+type FocusDay struct {
+	Date     string         `json:"date"`
+	Tomatoes int            `json:"tomatoes"`
+	Minutes  int            `json:"minutes"`
+	Projects []FocusProject `json:"projects"`
+}
+
+type FocusStats struct {
+	Days     []FocusDay     `json:"days"`
+	Projects []FocusProject `json:"projects"`
+	Tomatoes int            `json:"tomatoes"`
+	Minutes  int            `json:"minutes"`
+	Streak   int            `json:"streak"`
+}
+
 type ItemSuggestion struct {
 	ID     string `json:"id"`
 	Start  string `json:"start"`
@@ -78,6 +136,7 @@ type Item struct {
 	CompletedAt     *string         `json:"completed_at"`
 	Position        int             `json:"position"`
 	Block           *Block          `json:"block"`
+	Focus           ItemFocus       `json:"focus"`
 	Suggestion      *ItemSuggestion `json:"suggestion"`
 	CreatedBy       Actor           `json:"created_by"`
 	CreatedAt       string          `json:"created_at"`
@@ -189,6 +248,8 @@ type ProjectDetail struct {
 	Headings       []Heading `json:"headings"`
 	UpcomingEvents []Event   `json:"upcoming_events"`
 	UnplannedCount int       `json:"unplanned_count"`
+	// FocusWeekMinutes is the focus time on the project's items since Monday.
+	FocusWeekMinutes int `json:"focus_week_minutes"`
 }
 
 type Bootstrap struct {

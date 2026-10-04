@@ -81,8 +81,10 @@ func (a *app) whoami(args []string) error {
 	if printed, _, err := a.send(http.MethodGet, "/me", nil, nil, &me); err != nil || printed {
 		return err
 	}
-	a.printf("%s <%s>\n时区 %s · 工作时间 %s-%s\n凭证「%s」 · 服务器 %s\n", me.User.Name, me.User.Email,
-		me.User.Timezone, me.User.WorkStart, me.User.WorkEnd, me.Actor.Name, a.cfg.Server)
+	a.printf("%s <%s>\n时区 %s · 工作时间 %s-%s\n番茄 %s · 休息 %s · 每 %d 个番茄后长休息 %s\n凭证「%s」 · 服务器 %s\n", me.User.Name, me.User.Email,
+		me.User.Timezone, me.User.WorkStart, me.User.WorkEnd,
+		minutesLabel(me.User.FocusMinutes), minutesLabel(me.User.RestMinutes), me.User.RoundSize, minutesLabel(me.User.LongRestMinutes),
+		me.Actor.Name, a.cfg.Server)
 	return nil
 }
 

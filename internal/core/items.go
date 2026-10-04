@@ -13,6 +13,7 @@ import (
 type decorations struct {
 	blocks map[string][]*store.Event
 	sugs   map[string]*store.Suggestion
+	focus  map[string]api.ItemFocus
 }
 
 func (op *Op) decorate() (*decorations, error) {
@@ -35,6 +36,9 @@ func (op *Op) decorate() (*decorations, error) {
 		if _, ok := d.sugs[*s.ItemID]; !ok {
 			d.sugs[*s.ItemID] = s
 		}
+	}
+	if d.focus, err = op.itemFocus(); err != nil {
+		return nil, err
 	}
 	op.deco = d
 	return d, nil
@@ -69,6 +73,7 @@ func (op *Op) renderItem(it *store.Item) (api.Item, error) {
 		EstimateMinutes: it.EstimateMinutes, PlannedDate: it.PlannedDate, Evening: it.Evening,
 		DueDate: it.DueDate, DueTime: it.DueTime, Important: it.Important,
 		Status: it.Status, CompletedAt: it.CompletedAt, Position: it.Position,
+		Focus:     d.focus[it.ID],
 		CreatedBy: api.Actor{Kind: it.CreatedByKind, Name: it.CreatedByName},
 		CreatedAt: it.CreatedAt, UpdatedAt: it.UpdatedAt,
 	}
@@ -253,6 +258,10 @@ func (op *Op) UpdateItem(id string, f Fields) (*api.Item, error) {
 	switch {
 	case before.Status != it.Status && it.Status == "done":
 		action, summary = "item.complete", "完成了"+quote(it.Title)
+		if err := op.stopFocusOn(it.ID); err != nil {
+			return nil, err
+		}
+		op.deco = nil // the time just given up now counts towards the item
 	case before.Status != it.Status:
 		action, summary = "item.reopen", "重新打开"+quote(it.Title)
 	default:

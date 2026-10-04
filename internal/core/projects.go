@@ -376,7 +376,9 @@ func (op *Op) ProjectDetail(id string) (*api.ProjectDetail, error) {
 			out.UnplannedCount++
 		}
 	}
-	return out, nil
+	seconds, err := op.focusWeekSeconds(id)
+	out.FocusWeekMinutes = roundMinutes(seconds)
+	return out, err
 }
 
 func (op *Op) CreateHeading(projectID string, f Fields) (*api.Heading, error) {

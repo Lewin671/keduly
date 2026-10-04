@@ -59,6 +59,9 @@ func New(t testing.TB, opts Options) *Server {
 	return s
 }
 
+// Now is the server's clock.
+func (s *Server) Now() time.Time { return s.now }
+
 // SetNow moves the server's clock.
 func (s *Server) SetNow(t time.Time) { s.now = t }
 

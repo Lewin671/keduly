@@ -120,7 +120,8 @@ func (s *Service) Register(ctx context.Context, f Fields) (*api.User, string, er
 		return nil, "", Conflict("email is already registered")
 	}
 	u := &store.User{ID: NewID(), Email: email, Name: name, PasswordHash: s.hashPassword(password),
-		Timezone: zone, WorkStart: "09:00", WorkEnd: "18:00", CreatedAt: store.FormatTime(s.now())}
+		Timezone: zone, WorkStart: "09:00", WorkEnd: "18:00",
+		FocusMinutes: 25, RestMinutes: 5, LongRestMinutes: 15, RoundSize: 4, CreatedAt: store.FormatTime(s.now())}
 	if err := store.InsertUser(ctx, s.DB, u); err != nil {
 		if strings.Contains(err.Error(), "constraint failed") {
 			return nil, "", Conflict("email is already registered")
@@ -245,8 +246,23 @@ func (op *Op) UpdateMe(f Fields) (*api.User, error) {
 	r.boolean("timezone_auto", &u.TimezoneAuto)
 	r.str("work_start", &u.WorkStart, 5)
 	r.str("work_end", &u.WorkEnd, 5)
+	r.integer("focus_minutes", &u.FocusMinutes)
+	r.integer("rest_minutes", &u.RestMinutes)
+	r.integer("long_rest_minutes", &u.LongRestMinutes)
+	r.integer("round_size", &u.RoundSize)
 	if err := r.done(); err != nil {
 		return nil, err
+	}
+	within := func(n, lo, hi int) bool { return n >= lo && n <= hi }
+	switch {
+	case !within(u.FocusMinutes, 1, 180):
+		return nil, Invalid("focus_minutes must be between 1 and 180")
+	case !within(u.RestMinutes, 1, 60):
+		return nil, Invalid("rest_minutes must be between 1 and 60")
+	case !within(u.LongRestMinutes, 1, 120):
+		return nil, Invalid("long_rest_minutes must be between 1 and 120")
+	case !within(u.RoundSize, 2, 12):
+		return nil, Invalid("round_size must be between 2 and 12")
 	}
 	switch {
 	case !validZone(u.Timezone):

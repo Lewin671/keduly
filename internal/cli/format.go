@@ -77,6 +77,9 @@ func (a *app) itemLine(it api.Item, projects map[string]string) string {
 	if it.EstimateMinutes != nil {
 		tags = append(tags, "预计 "+minutesLabel(*it.EstimateMinutes))
 	}
+	if it.Focus.Minutes > 0 {
+		tags = append(tags, fmt.Sprintf("番茄 %d · 已用 %s", it.Focus.Tomatoes, minutesLabel(it.Focus.Minutes)))
+	}
 	if it.Block != nil {
 		tags = append(tags, "已排 "+span(it.Block.Start, it.Block.End, a.loc))
 	}

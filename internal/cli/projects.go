@@ -81,7 +81,7 @@ func (a *app) projectShow(args []string) error {
 	if _, err := a.zone(); err != nil {
 		return err
 	}
-	a.printf("%s\nID %s · 未安排 %d\n", projectLine(d.Project, areaNames(b)), d.Project.ID, d.UnplannedCount)
+	a.printf("%s\nID %s · 未安排 %d · 本周专注 %s\n", projectLine(d.Project, areaNames(b)), d.Project.ID, d.UnplannedCount, minutesLabel(d.FocusWeekMinutes))
 	if d.Project.Notes != "" {
 		a.printf("\n%s\n", d.Project.Notes)
 	}

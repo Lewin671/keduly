@@ -11,7 +11,9 @@ import (
 
 func userJSON(u *store.User) api.User {
 	return api.User{ID: u.ID, Email: u.Email, Name: u.Name, Timezone: u.Timezone, TimezoneAuto: u.TimezoneAuto,
-		WorkStart: u.WorkStart, WorkEnd: u.WorkEnd, CreatedAt: u.CreatedAt}
+		WorkStart: u.WorkStart, WorkEnd: u.WorkEnd,
+		FocusMinutes: u.FocusMinutes, RestMinutes: u.RestMinutes, LongRestMinutes: u.LongRestMinutes, RoundSize: u.RoundSize,
+		CreatedAt: u.CreatedAt}
 }
 
 func (op *Op) Me() api.User { return userJSON(op.User) }
@@ -105,7 +107,8 @@ func (op *Op) Today() (*api.Today, error) {
 	}
 	for _, it := range out.Items {
 		if it.Status == "open" && !it.Evening && it.Block == nil && it.Suggestion == nil && it.EstimateMinutes != nil {
-			out.UnplannedMinutes += *it.EstimateMinutes
+			// What is left to do: the estimate less the time already spent focusing on it.
+			out.UnplannedMinutes += max(*it.EstimateMinutes-it.Focus.Minutes, 0)
 		}
 	}
 	entries, err := op.entries(from, to, true)

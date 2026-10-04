@@ -52,6 +52,9 @@ Reading:
   keduly area list
   keduly heading list P
   keduly suggest list [--status pending|accepted|rejected|any]
+  keduly focus status                       the pomodoro timer and today's tomatoes
+  keduly focus log [--from D] [--to D]      focus sessions, today's by default
+  keduly focus stats                        the last 7 days: per day, per project, streak
   keduly activity [--limit N]
 
 Items:
@@ -76,6 +79,11 @@ Projects, areas and headings:
   keduly project archive P | unarchive P | rm P
   keduly area add NAME | rename A NAME | rm A
   keduly heading add P NAME | rename H NAME | rm H
+
+Focus (a pomodoro timer; one tomato is the account's focus length, 25 minutes by default):
+  keduly focus start [ITEM_ID]              start a tomato on the item, or free focus without one
+  keduly focus stop                         give up the tomato, skip the rest, or dismiss one that ran out
+  keduly focus rest                         start the rest after a tomato
 
 Suggestions (the user accepts or rejects them):
   keduly suggest schedule ITEM_ID --start T --duration 1h --reason "..."
@@ -203,6 +211,11 @@ func (a *app) dispatch(args []string) error {
 			"schedule": a.suggestSchedule, "add-item": a.suggestAddItem, "add-event": a.suggestAddEvent,
 			"move": a.suggestMove, "delete-item": a.suggestDelete("item"), "delete-event": a.suggestDelete("event"),
 			"withdraw": a.suggestWithdraw, "list": a.suggestList,
+		})
+	case "focus":
+		return a.sub(rest, "focus", map[string]func([]string) error{
+			"status": a.focusStatus, "start": a.focusStart, "stop": a.focusStop, "rest": a.focusRest,
+			"log": a.focusLog, "stats": a.focusStats,
 		})
 	case "activity":
 		return a.activity(rest)

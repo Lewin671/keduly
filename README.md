@@ -11,6 +11,8 @@ A calendar and task manager built for working with AI agents.
   Deletes by an agent wait for your consent.
 - **Every change is traceable.** The activity log records who changed what and why, and each
   change can be undone.
+- **A pomodoro timer that knows your items.** Focus on an item one tomato at a time; the time
+  actually spent shows next to its estimate, and statistics show where the week went.
 - **Important and urgent.** Mark what is important; urgency follows from the deadline. A
   four-quadrant list sorts everything open.
 - **Works with the calendar apps you already use** through CalDAV: iPhone, Mac, Android with
