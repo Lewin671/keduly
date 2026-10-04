@@ -21,7 +21,7 @@ func (a *app) login(args []string) error {
 	fs := a.flags("login", false)
 	server := fs.String("server", a.env.Getenv("KEDULY_SERVER"), "server URL, e.g. https://keduly.example.com")
 	token := fs.String("token", "", "API token (kdl_...); prompted for when omitted")
-	if _, err := parseN(fs, args, 0, "--server URL [--token TOKEN]"); err != nil {
+	if _, err := a.parseN(fs, args, 0, "--server URL [--token TOKEN]"); err != nil {
 		return err
 	}
 	if *server == "" {
@@ -74,7 +74,7 @@ func (a *app) promptToken() (string, error) {
 
 func (a *app) whoami(args []string) error {
 	fs := a.flags("whoami", false)
-	if _, err := parseN(fs, args, 0, ""); err != nil {
+	if _, err := a.parseN(fs, args, 0, ""); err != nil {
 		return err
 	}
 	var me meResponse
@@ -90,7 +90,7 @@ func (a *app) agenda(args []string) error {
 	fs := a.flags("agenda", false)
 	date := fs.String("date", "today", "first day")
 	days := fs.Int("days", 1, "number of days (1-31)")
-	if _, err := parseN(fs, args, 0, "[--date D] [--days N]"); err != nil {
+	if _, err := a.parseN(fs, args, 0, "[--date D] [--days N]"); err != nil {
 		return err
 	}
 	if *days < 1 || *days > 31 {
@@ -177,7 +177,7 @@ func (a *app) free(args []string) error {
 	fs := a.flags("free", false)
 	date := fs.String("date", "today", "day to look at")
 	duration := fs.String("duration", "30m", "minimum length of a slot")
-	if _, err := parseN(fs, args, 0, "--date D --duration 60m"); err != nil {
+	if _, err := a.parseN(fs, args, 0, "--date D --duration 60m"); err != nil {
 		return err
 	}
 	loc, err := a.zone()
@@ -210,62 +210,6 @@ func (a *app) free(args []string) error {
 	return nil
 }
 
-func (a *app) projectList(args []string) error {
-	fs := a.flags("project list", false)
-	if _, err := parseN(fs, args, 0, ""); err != nil {
-		return err
-	}
-	var b api.Bootstrap
-	if printed, _, err := a.send(http.MethodGet, "/bootstrap", nil, nil, &b); err != nil || printed {
-		return err
-	}
-	areas := map[string]string{}
-	for _, area := range b.Areas {
-		areas[area.ID] = area.Name
-	}
-	for _, p := range b.Projects {
-		line := fmt.Sprintf("%s  %s  (%s · 未完成 %d · 已完成 %d", short(p.ID), p.Name, p.Color, p.OpenCount, p.DoneCount)
-		if p.AreaID != nil && areas[*p.AreaID] != "" {
-			line += " · " + areas[*p.AreaID]
-		}
-		if p.Archived {
-			line += " · 已归档"
-		}
-		a.printf("%s)\n", line)
-	}
-	if len(b.Projects) == 0 {
-		a.printf("（还没有项目）\n")
-	}
-	return nil
-}
-
-// areaID finds an area by name or ID, creating it when it does not exist.
-func (a *app) areaID(ref string) (string, error) {
-	b, err := a.bootstrap()
-	if err != nil {
-		return "", err
-	}
-	for _, area := range b.Areas {
-		if area.ID == ref || strings.EqualFold(area.Name, ref) {
-			return area.ID, nil
-		}
-	}
-	if a.dryRun {
-		return "", fmt.Errorf("area %q does not exist; a dry run does not create it", ref)
-	}
-	var resp struct {
-		Area api.Area `json:"area"`
-	}
-	data, _, err := a.request(http.MethodPost, "/areas", nil, map[string]any{"name": ref})
-	if err != nil {
-		return "", err
-	}
-	if err := json.Unmarshal(data, &resp); err != nil {
-		return "", err
-	}
-	return resp.Area.ID, nil
-}
-
 func (a *app) printJSON(v any) error {
 	data, err := json.Marshal(v)
 	if err != nil {
@@ -275,43 +219,10 @@ func (a *app) printJSON(v any) error {
 	return nil
 }
 
-func (a *app) projectAdd(args []string) error {
-	fs := a.flags("project add", true)
-	color := fs.String("color", "", "blue, indigo, orange, teal, green, pink, purple or brown")
-	area := fs.String("area", "", "area name or ID; created when missing")
-	notes := fs.String("notes", "", "notes")
-	pos, err := parseN(fs, args, 1, "NAME [--color C] [--area A]")
-	if err != nil {
-		return err
-	}
-	body := map[string]any{"name": pos[0]}
-	if *color != "" {
-		body["color"] = *color
-	}
-	if *notes != "" {
-		body["notes"] = *notes
-	}
-	if *area != "" {
-		id, err := a.areaID(*area)
-		if err != nil {
-			return err
-		}
-		body["area_id"] = id
-	}
-	var resp struct {
-		Project api.Project `json:"project"`
-	}
-	if printed, _, err := a.send(http.MethodPost, "/projects", nil, body, &resp); err != nil || printed {
-		return err
-	}
-	a.printf("已新建项目「%s」 %s (%s)%s\n", resp.Project.Name, short(resp.Project.ID), resp.Project.Color, a.dryNote())
-	return nil
-}
-
 func (a *app) activity(args []string) error {
 	fs := a.flags("activity", false)
 	limit := fs.Int("limit", 20, "number of entries (1-200)")
-	if _, err := parseN(fs, args, 0, "[--limit N]"); err != nil {
+	if _, err := a.parseN(fs, args, 0, "[--limit N]"); err != nil {
 		return err
 	}
 	var resp struct {
@@ -337,42 +248,21 @@ func (a *app) activity(args []string) error {
 // undoable entry this token made.
 func (a *app) undo(args []string) error {
 	fs := a.flags("undo", true)
-	pos, err := parse(fs, args)
+	pos, err := a.parse(fs, args, "[ACTIVITY_ID]")
 	if err != nil {
 		return err
 	}
 	if len(pos) > 1 {
 		return usagef("usage: keduly undo [ACTIVITY_ID]")
 	}
-	recent, err := a.activities(200)
+	var id string
+	if len(pos) == 1 {
+		id, err = a.activityID(pos[0])
+	} else {
+		id, err = a.lastChange()
+	}
 	if err != nil {
 		return err
-	}
-	id := ""
-	if len(pos) == 1 {
-		ids := make([]string, 0, len(recent))
-		for _, act := range recent {
-			ids = append(ids, act.ID)
-		}
-		if id = pos[0]; len(id) != idLength {
-			if id, err = pick("activity", pos[0], ids); err != nil {
-				return err
-			}
-		}
-	} else {
-		me, err := a.account()
-		if err != nil {
-			return err
-		}
-		for _, act := range recent {
-			if act.Undoable && !act.Undone && act.Actor == me.Actor {
-				id = act.ID
-				break
-			}
-		}
-		if id == "" {
-			return fmt.Errorf("nothing to undo: no recent undoable change was made by %q", me.Actor.Name)
-		}
 	}
 	var resp struct {
 		Activity api.Activity `json:"activity"`
@@ -380,6 +270,45 @@ func (a *app) undo(args []string) error {
 	if printed, _, err := a.send(http.MethodPost, "/activity/"+id+"/undo", nil, nil, &resp); err != nil || printed {
 		return err
 	}
-	a.printf("已撤销：%s\n", resp.Activity.Summary)
+	a.printf("已撤销：%s  (%s)%s\n", resp.Activity.Summary, short(id), a.dryNote())
+	return nil
+}
+
+// lastChange is the most recent entry this token made that can be undone.
+func (a *app) lastChange() (string, error) {
+	recent, err := a.activities(200)
+	if err != nil {
+		return "", err
+	}
+	me, err := a.account()
+	if err != nil {
+		return "", err
+	}
+	for _, act := range recent {
+		if act.Undoable && !act.Undone && act.Actor == me.Actor {
+			return act.ID, nil
+		}
+	}
+	return "", fmt.Errorf("nothing to undo: no recent undoable change was made by %q", me.Actor.Name)
+}
+
+// redo applies an undone activity entry again.
+func (a *app) redo(args []string) error {
+	fs := a.flags("redo", true)
+	pos, err := a.parseN(fs, args, 1, "ACTIVITY_ID")
+	if err != nil {
+		return err
+	}
+	id, err := a.activityID(pos[0])
+	if err != nil {
+		return err
+	}
+	var resp struct {
+		Activity api.Activity `json:"activity"`
+	}
+	if printed, _, err := a.send(http.MethodPost, "/activity/"+id+"/redo", nil, nil, &resp); err != nil || printed {
+		return err
+	}
+	a.printf("已重做：%s  (%s)%s\n", resp.Activity.Summary, short(id), a.dryNote())
 	return nil
 }

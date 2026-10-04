@@ -57,6 +57,7 @@ func (s *Server) routes() {
 	s.handle("POST /suggestions/accept-all", sessionOnly, s.acceptAll)
 	s.handle("POST /suggestions/{id}/accept", sessionOnly, s.acceptSuggestion)
 	s.handle("POST /suggestions/{id}/reject", sessionOnly, s.rejectSuggestion)
+	s.handle("DELETE /suggestions/{id}", member, s.withdrawSuggestion)
 
 	s.handle("GET /activity", member, s.listActivity)
 	s.handle("POST /activity/undo", member, s.undoMany)
@@ -382,6 +383,10 @@ func (s *Server) rejectSuggestion(c *call) error {
 		suggestion, err := op.RejectSuggestion(c.pathID())
 		return obj{"suggestion": suggestion}, err
 	})
+}
+
+func (s *Server) withdrawSuggestion(c *call) error {
+	return s.write(c, 0, func(op *core.Op) (obj, error) { return nil, op.WithdrawSuggestion(c.pathID()) })
 }
 
 func (s *Server) acceptAll(c *call) error {

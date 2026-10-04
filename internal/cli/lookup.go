@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"net/url"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -103,25 +104,139 @@ func (a *app) bootstrap() (*api.Bootstrap, error) {
 	return &b, a.get("/bootstrap", nil, &b)
 }
 
-// projectID resolves a project by exact name, ID or ID prefix.
-func (a *app) projectID(ref string) (string, error) {
-	b, err := a.bootstrap()
+// activityID resolves a prefix among the 200 most recent entries.
+func (a *app) activityID(prefix string) (string, error) {
+	if len(prefix) == idLength {
+		return prefix, nil
+	}
+	recent, err := a.activities(200)
 	if err != nil {
 		return "", err
 	}
+	ids := make([]string, 0, len(recent))
+	for _, act := range recent {
+		ids = append(ids, act.ID)
+	}
+	return pick("activity", prefix, ids)
+}
+
+// isProject reports whether ref names p: its ID, its name or an ID prefix.
+func isProject(p api.Project, ref string) bool {
+	return p.ID == ref || strings.EqualFold(p.Name, ref) || (len(ref) >= 4 && strings.HasPrefix(p.ID, ref))
+}
+
+// findProject resolves a project by exact name, ID or ID prefix.
+func findProject(b *api.Bootstrap, ref string) (*api.Project, error) {
 	var ids []string
-	for _, p := range b.Projects {
+	for i, p := range b.Projects {
 		if p.ID == ref || strings.EqualFold(p.Name, ref) {
-			return p.ID, nil
+			return &b.Projects[i], nil
 		}
 		ids = append(ids, p.ID)
 	}
 	if len(ref) >= 4 {
 		if id, err := pick("project", ref, ids); err == nil {
-			return id, nil
+			return &b.Projects[slices.Index(ids, id)], nil
 		}
 	}
-	return "", fmt.Errorf("no project is named %q; see `keduly project list`", ref)
+	return nil, fmt.Errorf("no project is named %q; see `keduly project list --archived`", ref)
+}
+
+func (a *app) project(ref string) (*api.Project, error) {
+	b, err := a.bootstrap()
+	if err != nil {
+		return nil, err
+	}
+	return findProject(b, ref)
+}
+
+func (a *app) projectID(ref string) (string, error) {
+	p, err := a.project(ref)
+	if err != nil {
+		return "", err
+	}
+	return p.ID, nil
+}
+
+// findArea resolves an area by exact name, ID or ID prefix; nil when none matches.
+func findArea(b *api.Bootstrap, ref string) *api.Area {
+	var ids []string
+	for i, area := range b.Areas {
+		if area.ID == ref || strings.EqualFold(area.Name, ref) {
+			return &b.Areas[i]
+		}
+		ids = append(ids, area.ID)
+	}
+	if len(ref) >= 4 {
+		if id, err := pick("area", ref, ids); err == nil {
+			return &b.Areas[slices.Index(ids, id)]
+		}
+	}
+	return nil
+}
+
+func (a *app) area(ref string) (*api.Area, error) {
+	b, err := a.bootstrap()
+	if err != nil {
+		return nil, err
+	}
+	if area := findArea(b, ref); area != nil {
+		return area, nil
+	}
+	return nil, fmt.Errorf("no area is named %q; see `keduly area list`", ref)
+}
+
+// findHeading resolves a heading by ID, ID prefix or PROJECT/NAME. A bare name
+// is looked up among the headings of projectID, which may be empty.
+func findHeading(b *api.Bootstrap, ref, projectID string) (*api.Heading, error) {
+	projects := map[string]api.Project{}
+	for _, p := range b.Projects {
+		projects[p.ID] = p
+	}
+	var named, pathed []*api.Heading
+	var ids []string
+	for i := range b.Headings {
+		h := &b.Headings[i]
+		if h.ID == ref {
+			return h, nil
+		}
+		ids = append(ids, h.ID)
+		if h.ProjectID == projectID && strings.EqualFold(h.Name, ref) {
+			named = append(named, h)
+		}
+		if n := len(ref) - len(h.Name) - 1; n > 0 && ref[n] == '/' && strings.EqualFold(ref[n+1:], h.Name) &&
+			isProject(projects[h.ProjectID], ref[:n]) {
+			pathed = append(pathed, h)
+		}
+	}
+	matches := named
+	if len(matches) == 0 {
+		matches = pathed
+	}
+	switch {
+	case len(matches) == 1:
+		return matches[0], nil
+	case len(matches) > 1:
+		return nil, fmt.Errorf("%d headings are named %q; give the heading ID, see `keduly heading list %s`",
+			len(matches), ref, projects[matches[0].ProjectID].Name)
+	}
+	if len(ref) >= 4 {
+		if id, err := pick("heading", ref, ids); err == nil {
+			return &b.Headings[slices.Index(ids, id)], nil
+		}
+	}
+	if projectID == "" && !strings.Contains(ref, "/") {
+		return nil, fmt.Errorf("heading %q is a name and the project is not known; give PROJECT/NAME or a heading ID", ref)
+	}
+	return nil, fmt.Errorf("no heading matches %q; see `keduly heading list PROJECT`", ref)
+}
+
+func (a *app) heading(ref, projectID string) (*api.Heading, error) {
+	b, err := a.bootstrap()
+	if err != nil {
+		return nil, err
+	}
+	return findHeading(b, ref, projectID)
 }
 
 // projectNames maps project IDs to names for display.

@@ -14,6 +14,9 @@ func (op *Op) suggest(s *store.Suggestion) (*api.Suggestion, error) {
 	s.ID, s.UserID, s.Status = NewID(), op.User.ID, "pending"
 	s.ActorKind, s.ActorName = op.ID.Actor.Kind, op.ID.Actor.Name
 	s.Reason, s.CreatedAt = op.Reason, op.now()
+	if t := op.ID.Token; t != nil {
+		s.TokenID = &t.ID
+	}
 	if err := store.Suggestions.Put(op.ctx, op.q, s); err != nil {
 		return nil, err
 	}
@@ -262,6 +265,24 @@ func (op *Op) RejectSuggestion(id string) (*api.Suggestion, error) {
 		return nil, err
 	}
 	return op.renderSuggestion(s)
+}
+
+// WithdrawSuggestion removes a pending suggestion, as its proposer taking it
+// back. A token reaches only the suggestions it made itself: any other one
+// looks missing to it.
+func (op *Op) WithdrawSuggestion(id string) error {
+	s, err := store.Suggestions.Get(op.ctx, op.q, op.User.ID, id)
+	if err != nil {
+		return err
+	}
+	if s == nil || (op.ID.Token != nil && !eqStr(s.TokenID, &op.ID.Token.ID)) {
+		return NotFound("suggestion")
+	}
+	if s.Status != "pending" {
+		return Conflict("the suggestion is already %s", s.Status)
+	}
+	op.deco = nil
+	return store.Suggestions.Delete(op.ctx, op.q, op.User.ID, id)
 }
 
 // AcceptSuggestion applies a pending suggestion. One that can no longer be

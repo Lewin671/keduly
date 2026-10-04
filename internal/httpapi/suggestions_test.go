@@ -3,6 +3,7 @@ package httpapi_test
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/Lewin671/keduly/internal/api"
@@ -280,4 +281,86 @@ func TestSuggestionShapeIsStable(t *testing.T) {
 	if string(raw.Suggestion["event"]) != "null" || string(raw.Suggestion["start"]) != "null" {
 		t.Fatalf("absent values must be null: %s", data)
 	}
+}
+
+func TestWithdrawSuggestion(t *testing.T) {
+	_, me := setup(t)
+	agent := me.NewToken("Claude Code", "agent", "write", true)
+	other := me.NewToken("Claude Code", "agent", "write", true) // same name, another token
+	reader := me.NewToken("Reader", "agent", "read", true)
+	item := mkItem(t, me, M{"title": "写周报"})
+	slot := M{"kind": "schedule_item", "item_id": item.ID, "start": "2026-10-13T06:00:00Z", "end": "2026-10-13T07:00:00Z", "reason": "r"}
+	own := suggest(t, agent, slot)
+
+	wantCode(t, other, "DELETE", "/suggestions/"+own.ID, nil, 404, "not_found")
+	wantCode(t, reader, "DELETE", "/suggestions/"+own.ID, nil, 403, "forbidden")
+	wantCode(t, agent, "DELETE", "/suggestions/aaaaaaaaaaaaaaaa", nil, 404, "not_found")
+
+	// A dry run leaves it in place.
+	agent.Call("DELETE", "/suggestions/"+own.ID+"?dry_run=1", nil, http.StatusOK, nil)
+	if getItem(t, me, item.ID).Suggestion == nil {
+		t.Fatal("a dry run withdrew the suggestion")
+	}
+
+	before, logged := revision(t, me), len(activities(t, me))
+	agent.Call("DELETE", "/suggestions/"+own.ID, nil, http.StatusNoContent, nil)
+	if len(pending(t, me)) != 0 || getItem(t, me, item.ID).Suggestion != nil {
+		t.Fatal("the withdrawn suggestion is still pending")
+	}
+	if revision(t, me) <= before {
+		t.Fatal("withdrawing did not bump the revision")
+	}
+	if len(activities(t, me)) != logged {
+		t.Fatal("withdrawing wrote an activity entry")
+	}
+	wantCode(t, agent, "DELETE", "/suggestions/"+own.ID, nil, 404, "not_found")
+
+	// A delete that became a suggestion belongs to the token that asked for it.
+	var proposed struct {
+		Suggestion api.Suggestion `json:"suggestion"`
+	}
+	agent.Call("DELETE", "/items/"+item.ID, M{"reason": "duplicate"}, http.StatusAccepted, &proposed)
+	wantCode(t, other, "DELETE", "/suggestions/"+proposed.Suggestion.ID, nil, 404, "not_found")
+	agent.Call("DELETE", "/suggestions/"+proposed.Suggestion.ID, nil, http.StatusNoContent, nil)
+
+	// The session may withdraw any pending suggestion, including its own.
+	fromAgent, fromUser := suggest(t, agent, slot), suggest(t, me, slot)
+	wantCode(t, agent, "DELETE", "/suggestions/"+fromUser.ID, nil, 404, "not_found")
+	me.Call("DELETE", "/suggestions/"+fromAgent.ID, nil, http.StatusNoContent, nil)
+	me.Call("DELETE", "/suggestions/"+fromUser.ID, nil, http.StatusNoContent, nil)
+
+	// Once decided, a suggestion can no longer be withdrawn, by anyone.
+	accepted, rejected := suggest(t, agent, slot), suggest(t, agent, slot)
+	me.Call("POST", "/suggestions/"+accepted.ID+"/accept", nil, http.StatusOK, nil)
+	me.Call("POST", "/suggestions/"+rejected.ID+"/reject", nil, http.StatusOK, nil)
+	for _, id := range []string{accepted.ID, rejected.ID} {
+		wantCode(t, agent, "DELETE", "/suggestions/"+id, nil, 409, "conflict")
+		wantCode(t, me, "DELETE", "/suggestions/"+id, nil, 409, "conflict")
+		wantCode(t, other, "DELETE", "/suggestions/"+id, nil, 404, "not_found")
+	}
+}
+
+func TestProjectDeleteNeedsTheUser(t *testing.T) {
+	_, me := setup(t)
+	careful := me.NewToken("Careful", "agent", "write", true)
+	trusted := me.NewToken("Trusted", "agent", "write", false)
+	project := mkProject(t, me, "Work")
+	item := mkItem(t, me, M{"title": "写周报", "project_id": project.ID})
+
+	status, data, _ := careful.Do("DELETE", "/projects/"+project.ID, nil)
+	var body api.ErrorBody
+	if json.Unmarshal(data, &body) != nil || status != http.StatusForbidden || body.Error.Code != "forbidden" ||
+		!strings.Contains(body.Error.Message, "web app") {
+		t.Fatalf("a confirm_delete token deleting a project: %d %s", status, data)
+	}
+	wantCode(t, careful, "DELETE", "/projects/"+project.ID+"?dry_run=1", nil, 403, "forbidden")
+	wantCode(t, careful, "DELETE", "/projects/aaaaaaaaaaaaaaaa", nil, 404, "not_found")
+	if getItem(t, me, item.ID).ProjectID == nil || len(pending(t, me)) != 0 {
+		t.Fatal("the refused delete left a trace")
+	}
+
+	trusted.Call("DELETE", "/projects/"+project.ID, nil, http.StatusNoContent, nil)
+	wantCode(t, me, "GET", "/items/"+item.ID, nil, 404, "not_found")
+	second := mkProject(t, me, "Home")
+	me.Call("DELETE", "/projects/"+second.ID, nil, http.StatusNoContent, nil)
 }

@@ -279,16 +279,17 @@ type Suggestion struct {
 	Payload   *string
 	CreatedAt string
 	DecidedAt *string
+	TokenID   *string // the token that proposed it; nil for the web session
 }
 
 var Suggestions = Table[Suggestion]{
 	Name: "suggestions",
 	Cols: []string{"id", "user_id", "status", "kind", "actor_kind", "actor_name", "reason", "title",
-		"item_id", "event_id", "start_at", "end_at", "payload", "created_at", "decided_at"},
+		"item_id", "event_id", "start_at", "end_at", "payload", "created_at", "decided_at", "token_id"},
 	Order: "created_at, rowid",
 	fields: func(s *Suggestion) []any {
 		return []any{&s.ID, &s.UserID, &s.Status, &s.Kind, &s.ActorKind, &s.ActorName, &s.Reason, &s.Title,
-			&s.ItemID, &s.EventID, &s.StartAt, &s.EndAt, &s.Payload, &s.CreatedAt, &s.DecidedAt}
+			&s.ItemID, &s.EventID, &s.StartAt, &s.EndAt, &s.Payload, &s.CreatedAt, &s.DecidedAt, &s.TokenID}
 	},
 }
 
