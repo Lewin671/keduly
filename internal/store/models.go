@@ -120,7 +120,7 @@ type Token struct {
 var Tokens = Table[Token]{
 	Name:  "tokens",
 	Cols:  []string{"id", "user_id", "name", "kind", "scope", "confirm_delete", "hash", "last_used_at", "created_at"},
-	Order: "created_at, id",
+	Order: "rowid",
 	fields: func(t *Token) []any {
 		return []any{&t.ID, &t.UserID, &t.Name, &t.Kind, &t.Scope, &t.ConfirmDelete, &t.Hash, &t.LastUsedAt, &t.CreatedAt}
 	},

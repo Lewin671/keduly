@@ -206,24 +206,12 @@ func (op *Op) createItem(f Fields) (*store.Item, string, error) {
 		return nil, "", err
 	}
 	it := &store.Item{
-		ID: NewID(), UserID: op.User.ID, Status: "open", Position: -1,
+		ID: NewID(), UserID: op.User.ID, Status: "open",
 		CreatedByKind: op.ID.Actor.Kind, CreatedByName: op.ID.Actor.Name,
 		CreatedAt: op.now(), UpdatedAt: op.now(),
 	}
 	if err := op.applyItemFields(it, f, true); err != nil {
 		return nil, "", err
-	}
-	if _, given := f["position"]; !given {
-		// New items go to the end of their list.
-		where, args := "project_id IS NULL", []any{}
-		if it.ProjectID != nil {
-			where, args = "project_id = ?", []any{*it.ProjectID}
-		}
-		err := op.q.QueryRowContext(op.ctx, "SELECT coalesce(max(position), -1) + 1 FROM items WHERE user_id = ? AND "+where,
-			append([]any{op.User.ID}, args...)...).Scan(&it.Position)
-		if err != nil {
-			return nil, "", err
-		}
 	}
 	if err := save(op, kindItem, store.Items, it); err != nil {
 		return nil, "", err

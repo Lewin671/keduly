@@ -9,8 +9,11 @@ version=${VERSION:-$(git describe --tags --always --dirty 2>/dev/null || echo de
 if [ -f web/package.json ]; then
   pnpm -C web install --frozen-lockfile
   pnpm -C web run build
-  find internal/webui/dist -mindepth 1 ! -name .gitkeep -delete
-  cp -R web/dist/. internal/webui/dist/
+  # Copy the build over unless the web app already writes into the embed directory.
+  if [ -d web/dist ]; then
+    find internal/webui/dist -mindepth 1 ! -name .gitkeep -delete
+    cp -R web/dist/. internal/webui/dist/
+  fi
 fi
 
 mkdir -p bin

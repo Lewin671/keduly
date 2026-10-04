@@ -92,8 +92,8 @@ func (op *Op) log(action, summary string) (*store.Activity, error) {
 		Action: action, Summary: summary,
 		Undoable: len(op.changes) > 0, Changes: string(changes), CreatedAt: op.now(),
 	}
-	if op.Reason != "" {
-		a.Reason = &op.Reason
+	if reason := op.Reason; reason != "" {
+		a.Reason = &reason
 	}
 	op.changes = nil
 	return a, store.Activities.Put(op.ctx, op.q, a)
