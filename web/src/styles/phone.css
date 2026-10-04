@@ -1,0 +1,34 @@
+/* ---------- iPhone: calendar and tasks become two tabs ---------- */
+.tabbar { display: none; }
+@media (max-width: 860px) {
+  .app { display: block; }
+  .sidebar { position: static; height: auto; margin: 0; border-radius: 0; background: none; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; padding: 14px 16px 0; }
+  .mode, body[data-mode="cal"] .sidebar { display: none; }
+  .main { padding: 14px 16px 110px; }
+  .bar { flex-wrap: wrap; gap: 10px; }
+  .bar h1 { width: 100%; font-size: 30px; }
+  .tools { margin-left: 0; width: 100%; }
+  .tools .seg { margin-right: auto; }
+  body[data-mode="tasks"] .bar h1 { width: auto; flex: 1; }
+  body[data-mode="tasks"] .tools { width: auto; }
+  .seg button { padding: 0 11px; }
+  .nav-cap { display: none; }
+  .panel { left: 0; right: 0; width: auto; }
+  /* Month cells are too narrow for titles: show one dot per item, as on iPhone. */
+  .mo-head div { text-align: center; padding: 0 0 6px; font-size: 12px; }
+  .mcell { min-height: 62px; padding: 4px 2px; display: flex; flex-wrap: wrap; align-content: flex-start; justify-content: center; gap: 3px; }
+  .mday { width: 100%; justify-content: center; margin-bottom: 1px; }
+  .me { width: auto; } .me .mt, .me .mx, .more { display: none; }
+  .yr { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 18px; }
+  .list { margin-top: 0; }
+  .matrix { grid-template-columns: minmax(0, 1fr); }
+  .quad { max-height: none; min-height: 0; }
+  .cal-scroll { max-height: calc(100vh - 250px); }
+  .me.ad { width: 6px; height: 6px; padding: 0; margin: 0; font-size: 0; border-radius: 50%; background: var(--c); }
+  .fab { right: 18px; bottom: calc(84px + env(safe-area-inset-bottom)); }
+  .yg span { width: 21px; height: 21px; font-size: 11px; }
+  .tabbar { display: grid; grid-template-columns: 1fr 1fr; position: fixed; left: 50%; transform: translateX(-50%); width: 210px; bottom: calc(14px + env(safe-area-inset-bottom)); z-index: 10; border-radius: 30px; padding: 5px; }
+  .tabbar button { display: grid; justify-items: center; gap: 1px; padding: 6px 0 5px; font-size: 10px; font-weight: 500; color: var(--label-2); border-radius: 25px; }
+  .tabbar button.on { color: var(--blue); background: var(--fill); }
+  .tabbar svg { width: 23px; height: 23px; }
+}

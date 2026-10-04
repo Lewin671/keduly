@@ -1,0 +1,51 @@
+/* ---------- popovers ---------- */
+@keyframes pop { from { opacity: 0; transform: scale(.92); } }
+.pop, .panel { z-index: 20; border-radius: 14px; background: var(--pop); -webkit-backdrop-filter: saturate(180%) blur(30px); backdrop-filter: saturate(180%) blur(30px); box-shadow: var(--shadow); animation: pop .22s cubic-bezier(.25, 1.25, .4, 1); color: var(--label); }
+.pop { position: absolute; width: 286px; padding: 14px; font-size: 13px; transform-origin: 24px 0; }
+.pop .pt { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 7px; }
+.pop .pt i { width: 9px; height: 9px; border-radius: 50%; background: var(--c); flex: none; }
+.pop .pw { color: var(--label-2); margin: 2px 0 0 16px; }
+.pop .pr { margin-top: 11px; padding-top: 11px; border-top: .5px solid var(--sep); }
+.pop .pr span { display: block; color: var(--label-2); font-size: 12px; margin-bottom: 1px; }
+.pop .pa { display: flex; gap: 8px; margin-top: 13px; }
+.pbtn { flex: 1; height: 30px; border-radius: 15px; background: var(--fill); font-weight: 500; font-size: 13px; }
+.pbtn.go { background: var(--blue); color: #fff; }
+
+.panel { position: absolute; top: 44px; right: 0; width: 380px; max-height: 70vh; overflow-y: auto; padding: 6px 0 4px; transform-origin: calc(100% - 60px) 0; }
+.panel h3 { font-size: 12px; font-weight: 600; color: var(--label-2); padding: 10px 16px 2px; }
+.p-row { display: flex; gap: 10px; padding-left: 14px; align-items: center; }
+.p-row .gb { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; padding: 9px 14px 9px 0; border-bottom: .5px solid var(--sep); }
+.p-row.last .gb, .p-row:last-child .gb { border-bottom: 0; }
+.p-row .gm { flex: 1; min-width: 0; font-size: 14px; }
+.p-row .sub { color: var(--label-2); font-size: 12.5px; }
+.p-row.undone .gm > div:first-child { text-decoration: line-through; color: var(--label-2); }
+.ico { width: 28px; height: 28px; border-radius: 7px; background: var(--c, var(--gray)); color: #fff; display: grid; place-items: center; flex: none; }
+.ico svg { width: 16px; height: 16px; stroke-width: 2; }
+.tb { color: var(--blue); font-size: 14px; white-space: nowrap; }
+.sb { height: 28px; padding: 0 13px; border-radius: 14px; background: var(--fill); font-size: 13px; font-weight: 500; }
+.sb.go { background: var(--blue); color: #fff; }
+
+.hud { position: fixed; left: 50%; bottom: 30px; transform: translateX(-50%); z-index: 30; border-radius: 20px; padding: 9px 16px; font-size: 13px; display: none; gap: 14px; white-space: nowrap; }
+.hud.on { display: flex; animation: pop .22s cubic-bezier(.25, 1.25, .4, 1); transform-origin: center; }
+.hud button { color: var(--blue); font-weight: 600; }
+
+/* ---------- settings sheet (System Settings style) ---------- */
+.scrim { position: fixed; inset: 0; z-index: 40; background: rgba(0, 0, 0, .28); display: grid; place-items: center; padding: 20px; }
+.sheet { width: min(600px, 100%); max-height: 86vh; overflow-y: auto; background: var(--sheet); border-radius: 16px; box-shadow: var(--shadow); padding: 0 20px 22px; animation: pop .24s cubic-bezier(.25, 1.2, .4, 1); }
+.sheet-h { position: sticky; top: 0; background: var(--sheet); display: flex; align-items: center; justify-content: space-between; padding: 16px 0 12px; z-index: 1; }
+.sheet-h b { font-size: 17px; font-weight: 600; }
+.sheet-h button { color: var(--blue); font-weight: 600; }
+.groups { display: grid; gap: 20px; }
+.g-h { font-size: 13px; font-weight: 600; color: var(--label-2); padding: 0 14px 6px; }
+.g-f { font-size: 12px; color: var(--label-2); padding: 6px 14px 0; }
+.group { background: var(--group); border-radius: 12px; overflow: hidden; }
+.g-row { display: flex; gap: 11px; padding-left: 12px; align-items: center; }
+.g-row .gb { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; padding: 9px 13px 9px 0; border-bottom: .5px solid var(--sep); min-height: 44px; }
+.g-row:last-child .gb { border-bottom: 0; }
+.g-row .gm { flex: 1; min-width: 0; }
+.g-row .sub, .g-row .tr { color: var(--label-2); font-size: 13px; }
+.g-row .tr { white-space: nowrap; }
+.g-row .chev { color: var(--label-3); width: 14px; height: 14px; stroke-width: 2.2; }
+.g-row.act { color: var(--blue); }
+pre.cli { margin: 0; padding: 13px 14px; overflow-x: auto; line-height: 1.75; }
+pre.cli .c { color: var(--label-2); }
