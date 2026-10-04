@@ -1,0 +1,105 @@
+/* ---------- focus: the pomodoro timer ---------- */
+#focus-slot { display: contents; }
+body[data-mode="focus"] :is(#side-tasks, #side-cal, #cal, #list, .only-cal, .fab), body:not([data-mode="focus"]) :is(#side-focus, #focus) { display: none; }
+/* A tomato is the unit: filled when earned, an outline when still to do. */
+.tom { width: 14px; height: 14px; flex: none; color: var(--tomato); vertical-align: -2.5px; }
+.tom.off { color: var(--label-3); }
+.tc { white-space: nowrap; }
+.tc .tom { margin-right: 2px; }
+.nv .tom, .sec .tom { width: 14px; height: 14px; color: var(--tomato); margin-right: 2px; }
+.nv .tom.off { color: var(--label-3); }
+/* While a timer runs the timer page takes the whole window, tinted with the project's colour. */
+body[data-zen] { background: color-mix(in srgb, var(--zc) 7%, var(--bg)); }
+body[data-zen] :is(.sidebar, .bar, .tabbar) { display: none; }
+body[data-zen] .app { grid-template-columns: minmax(0, 1fr); }
+.zen { position: relative; display: grid; justify-items: center; align-content: center; text-align: center; min-height: calc(100vh - 150px); padding: 10px 0 30px; }
+body[data-zen] .zen { min-height: calc(100vh - 64px); }
+.zback { position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 3px; height: 34px; padding: 0 15px 0 9px; border-radius: 17px; background: var(--fill); font-size: 14px; font-weight: 500; }
+.zback svg { width: 15px; height: 15px; stroke-width: 2.2; }
+.zlab { font-size: 15px; font-weight: 600; color: var(--label-2); margin-bottom: 20px; }
+.dial { position: relative; width: 300px; height: 300px; }
+.dial > svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.dial circle { fill: none; stroke-width: 9; }
+.dial .r0 { stroke: var(--fill); }
+.dial .r1 { stroke: var(--c); stroke-linecap: round; transition: stroke-dasharray .5s linear; }
+.dial .dt { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 6px; }
+.dial .dt b { font: 200 78px/1 -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", sans-serif; letter-spacing: -2px; }
+.dial .dt span { color: var(--label-2); font-size: 13px; }
+.dial .tom { width: 96px; height: 96px; animation: pop .45s cubic-bezier(.25, 1.6, .4, 1); }
+.zt { margin-top: 28px; max-width: min(560px, 100%); font-size: 20px; font-weight: 600; line-height: 1.35; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.zt i, .fdot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--c); flex: none; }
+.zt i { margin-right: 9px; vertical-align: 2px; }
+.fdot.o { background: none; border: 1.5px solid var(--c); }
+.zs { color: var(--label-2); font-size: 14px; margin-top: 4px; min-height: 20px; }
+.round { display: flex; align-items: center; gap: 7px; margin-top: 24px; color: var(--label-2); font-size: 13px; }
+.round .tom { width: 22px; height: 22px; }
+.round span { margin-left: 5px; }
+.za { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 28px; }
+.zb { height: 44px; min-width: 128px; padding: 0 22px; border-radius: 22px; background: var(--fill); font-size: 15px; font-weight: 600; }
+.zb.go { background: var(--blue); color: #fff; min-width: 170px; }
+.zf { color: var(--label-2); font-size: 13px; margin-top: 22px; }
+.nv.sel .nl { font-weight: 600; }
+.nv .fdot { margin: 0 4px; }
+/* The running timer elsewhere in the app: a capsule in the toolbar that leads back to the timer page. */
+.fcap { display: flex; align-items: center; gap: 7px; height: 34px; padding: 0 13px 0 9px; border-radius: 17px; background: var(--fill); font-size: 13px; min-width: 0; max-width: 260px; }
+.fcap b { font-weight: 600; font-size: 14px; white-space: nowrap; }
+.fcap span { color: var(--label-2); min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ring { width: 18px; height: 18px; flex: none; color: var(--c); transform: rotate(-90deg); }
+.ring circle { fill: none; stroke-width: 2.4; }
+.ring .r0 { stroke: var(--label-3); }
+.ring .r1 { stroke: currentColor; stroke-linecap: round; }
+/* On an item row: a play button on hover, and the countdown while it is the one being worked on. */
+.play { width: 22px; height: 22px; border-radius: 50%; background: var(--fill); color: var(--label-2); display: grid; place-items: center; }
+.play svg { width: 10px; height: 10px; margin-left: 1px; }
+@media (hover: hover) { .todo .play { opacity: 0; } .todo:hover .play, .todo.open .play, .play:focus-visible { opacity: 1; } }
+.fgo { display: inline-flex; align-items: center; gap: 5px; font-weight: 600; color: color-mix(in srgb, var(--c) 70%, var(--mix)); }
+.fgo .ring { width: 14px; height: 14px; }
+.ck.go { background: color-mix(in srgb, var(--blue) 14%, transparent); color: var(--blue); font-weight: 500; }
+.ck.go svg { width: 10px; height: 10px; }
+/* What was actually done: a thin line in the project's colour beside the plan. */
+.fs { position: absolute; left: -5px; width: 3px; border-radius: 2px; background: var(--c); z-index: 1; }
+.wk .fs { left: 0; width: 2px; }
+.blk[data-fpop] { cursor: pointer; }
+/* Statistics, after Screen Time: a few figures, a week of stacked bars, then where the time went. */
+.figs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin: 10px 0 26px 2px; }
+.figs span, .figs em { display: block; font-style: normal; font-size: 12.5px; color: var(--label-2); }
+.figs b { display: block; font-size: 28px; font-weight: 700; letter-spacing: -.6px; line-height: 1.25; white-space: nowrap; }
+.figs b .tom { width: 22px; height: 22px; vertical-align: -3px; margin-right: 4px; }
+.figs b small { font-size: 15px; font-weight: 600; letter-spacing: 0; margin-left: 2px; }
+.chart, .cx { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)) 40px; }
+.chart { position: relative; height: 176px; border-bottom: .5px solid var(--sep); }
+.cc { height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 3px; position: relative; z-index: 1; }
+.cc em { font-style: normal; font-size: 12px; font-weight: 600; color: var(--label-2); }
+.cst { width: min(34px, 60%); flex: none; display: flex; flex-direction: column-reverse; border-radius: 6px 6px 0 0; overflow: hidden; }
+.gl { position: absolute; left: 0; right: 40px; border-top: .5px solid var(--sep); }
+.gl span { position: absolute; left: 100%; top: -8px; padding-left: 8px; font-size: 11px; color: var(--label-2); white-space: nowrap; }
+.gl.avg { border-top: 1px dashed var(--label-3); }
+.cx { margin: 6px 0 4px; font-size: 12px; color: var(--label-2); text-align: center; }
+.cx .tdy { color: var(--red); font-weight: 600; }
+.srow { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 6px 14px; padding: 9px 2px; font-size: 14.5px; }
+.srow .sn { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.srow .sn span { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.srow em { font-style: normal; color: var(--label-2); font-size: 13px; white-space: nowrap; }
+.srow .sbar { grid-column: 1 / -1; height: 4px; border-radius: 2px; background: var(--fill); overflow: hidden; }
+.srow .sbar i { display: block; height: 100%; border-radius: 2px; background: var(--c); }
+.rrow { display: flex; align-items: center; gap: 10px; padding: 7px 2px; font-size: 14.5px; }
+.rrow time { flex: none; width: 92px; color: var(--label-2); font-size: 13px; }
+.rrow span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rrow em { font-style: normal; color: var(--label-2); font-size: 13px; white-space: nowrap; }
+
+/* ---------- beyond the mockup ---------- */
+body[data-zen] .fab { display: none; }
+.fcap .ring { margin: 0; }
+.zen .sk { justify-content: center; }
+.g-row .fld.num { width: 64px; }
+.g-row .unit { color: var(--label-2); font-size: 13px; }
+@media (max-width: 860px) {
+  .fcap span { display: none; }
+  .fcap { padding-right: 11px; }
+  .dial { width: 260px; height: 260px; }
+  .dial .dt b { font-size: 66px; }
+  .zen { min-height: calc(100vh - 330px); }
+  .figs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  body[data-mode="focus"] .bar h1 { width: auto; flex: 1; }
+  body[data-mode="focus"] .tools { width: auto; }
+}

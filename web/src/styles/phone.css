@@ -1,4 +1,4 @@
-/* ---------- iPhone: calendar and tasks become two tabs ---------- */
+/* ---------- iPhone: items, calendar and focus become three tabs ---------- */
 .tabbar { display: none; }
 @media (max-width: 860px) {
   .app { display: block; }
@@ -27,7 +27,7 @@
   .me.ad { width: 6px; height: 6px; padding: 0; margin: 0; font-size: 0; border-radius: 50%; background: var(--c); }
   .fab { right: 18px; bottom: calc(84px + env(safe-area-inset-bottom)); }
   .yg span { width: 21px; height: 21px; font-size: 11px; }
-  .tabbar { display: grid; grid-template-columns: 1fr 1fr; position: fixed; left: 50%; transform: translateX(-50%); width: 210px; bottom: calc(14px + env(safe-area-inset-bottom)); z-index: 10; border-radius: 30px; padding: 5px; }
+  .tabbar { display: grid; grid-template-columns: 1fr 1fr 1fr; position: fixed; left: 50%; transform: translateX(-50%); width: 290px; bottom: calc(14px + env(safe-area-inset-bottom)); z-index: 10; border-radius: 30px; padding: 5px; }
   .tabbar button { display: grid; justify-items: center; gap: 1px; padding: 6px 0 5px; font-size: 10px; font-weight: 500; color: var(--label-2); border-radius: 25px; }
   .tabbar button.on { color: var(--blue); background: var(--fill); }
   .tabbar svg { width: 23px; height: 23px; }

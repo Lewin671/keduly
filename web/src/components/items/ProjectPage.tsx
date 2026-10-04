@@ -6,7 +6,7 @@ import * as api from '../../api/client';
 import type { Heading, Item, Project } from '../../api/types';
 import { t } from '../../i18n';
 import { ymd, wall } from '../../lib/dates';
-import { dayLabel } from '../../lib/format';
+import { dayLabel, span } from '../../lib/format';
 import { current, draft, held, startDraft } from '../../state/items';
 import { useResource } from '../../state/resource';
 import { navigate } from '../../state/route';
@@ -158,6 +158,7 @@ export function ProjectPage({ id }: { id: string }): JSX.Element {
         <p class="summary">
           {t('project.open', { n: openCount })}
           {openCount > 0 && detail.data ? (gaps ? t('project.unplanned', { n: gaps }) : t('project.allPlanned')) : ''}
+          {detail.data && detail.data.focus_week_minutes > 0 ? t('project.focusWeek', { dur: span(detail.data.focus_week_minutes) }) : ''}
         </p>
       )}
       <EventsStrip events={detail.data?.upcoming_events ?? []} label={event => `${dayLabel(event.all_day ? event.start_date! : ymd(wall(event.start!)), day)} ${eventTime(event)}`} />

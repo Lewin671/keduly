@@ -1,14 +1,15 @@
 // Day and week views: one scrolling 24-hour timeline, a column per day.
 import type { CSSProperties, JSX, TargetedMouseEvent } from 'preact';
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
-import type { CalEvent } from '../../api/types';
+import type { CalEvent, FocusSession } from '../../api/types';
 import { t } from '../../i18n';
 import { allDayOn, eventSpan } from '../../lib/calendar';
-import { addDays, atMinutes, hhmm, minutesOfDay, mondayIndex, snap, toUtc, ymd, type HourSpan, wall } from '../../lib/dates';
+import { addDays, atMinutes, hhmm, minutesOfDay, mondayIndex, snap, spanOnDay, toUtc, ymd, type HourSpan, wall } from '../../lib/dates';
 import { weekdayShort } from '../../lib/format';
 import { layoutLanes, type Lane } from '../../lib/lanes';
 import { calPop, justClosed, moveEvent, toggleBlockDone } from '../../state/calendar';
 import { eventKey } from '../../state/events';
+import { serverNow, serverTime, sessionTitle } from '../../state/focus';
 import { navigate } from '../../state/route';
 import { colorOf, now, suggestions, today } from '../../state/store';
 import { timeRange } from '../../state/suggestions';
@@ -104,13 +105,34 @@ interface ColumnProps {
   day: string;
   index: number;
   events: readonly CalEvent[];
+  sessions: readonly FocusSession[];
   hour: number;
   week: boolean;
   onGrab: BlockProps['onGrab'];
   dragged: () => boolean;
 }
 
-function Column({ day, index, events, hour, week, onGrab, dragged }: ColumnProps): JSX.Element {
+/** What was actually done: a thin line in the project's colour beside the plan. A running session reaches to now. */
+function Strips({ day, sessions, hour }: { day: string; sessions: readonly FocusSession[]; hour: number }): JSX.Element {
+  // Only a session still running needs the moving clock.
+  const nowMs = sessions.some(s => Date.parse(s.end) > serverTime()) ? serverNow() : Infinity;
+  return (
+    <>
+      {sessions.map(s => {
+        const end = Math.min(Date.parse(s.end), Math.max(nowMs, Date.parse(s.start)));
+        const at = spanOnDay(wall(s.start), wall(new Date(end).toISOString()), day);
+        return at && (
+          <i
+            key={s.id} class="fs" title={t('focus.session', { range: timeRange(s.start, new Date(end).toISOString()), title: sessionTitle(s) })}
+            style={{ '--c': colorOf(s.project_id), top: `${at.s * hour}px`, height: `${Math.max((at.e - at.s) * hour, 3)}px` }}
+          />
+        );
+      })}
+    </>
+  );
+}
+
+function Column({ day, index, events, sessions, hour, week, onGrab, dragged }: ColumnProps): JSX.Element {
   // In time order, so that the keyboard walks through the day as the eye does.
   const timed = events.flatMap(event => {
     const span = eventSpan(event, day);
@@ -141,6 +163,7 @@ function Column({ day, index, events, hour, week, onGrab, dragged }: ColumnProps
 
   return (
     <div class={`col ${week && index >= 5 ? 'we' : ''}`} data-day={day} style={{ height: `${24 * hour}px` }} onClick={create}>
+      <Strips day={day} sessions={sessions} hour={hour} />
       {timed.map(x => (
         <Block key={eventKey(x.event)} event={x.event} span={x} lane={lanes.get(x)!} hour={hour} week={week} day={day} onGrab={onGrab} dragged={dragged} />
       ))}
@@ -170,7 +193,7 @@ function AllDay({ event, style }: { event: CalEvent; style?: CSSProperties }): J
   );
 }
 
-export function TimeGrid({ days, events }: { days: string[]; events: readonly CalEvent[] }): JSX.Element {
+export function TimeGrid({ days, events, sessions }: { days: string[]; events: readonly CalEvent[]; sessions: readonly FocusSession[] }): JSX.Element {
   const week = days.length > 1;
   const hour = week ? WEEK_HOUR : DAY_HOUR;
   const scroller = useRef<HTMLDivElement>(null);
@@ -271,7 +294,7 @@ export function TimeGrid({ days, events }: { days: string[]; events: readonly Ca
   const dragged = () => wasDragged.current;
   const hasToday = days.includes(today.value);
   const columns = days.map((day, index) => (
-    <Column key={day} day={day} index={index} events={shown} hour={hour} week={week} onGrab={grab} dragged={dragged} />
+    <Column key={day} day={day} index={index} events={shown} sessions={sessions} hour={hour} week={week} onGrab={grab} dragged={dragged} />
   ));
 
   if (!week) {

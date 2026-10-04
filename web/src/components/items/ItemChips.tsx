@@ -5,7 +5,8 @@ import * as api from '../../api/client';
 import type { FreeSlot, Item, ItemWrite } from '../../api/types';
 import { t } from '../../i18n';
 import { atLocal, hhmm, snap, toUtc, ymd, wall } from '../../lib/dates';
-import { dayLabel, dueLabel, dur, slotLabel } from '../../lib/format';
+import { dayLabel, dueLabel, dur, slotLabel, span } from '../../lib/format';
+import { openTimer, startFocus, workingOn } from '../../state/focus';
 import { removeItem, saveItem, toggleImportant } from '../../state/items';
 import { activeProjects, areas, colorOf, headings, now, projectOf, today } from '../../state/store';
 import { decide, describe, timeRange } from '../../state/suggestions';
@@ -60,10 +61,13 @@ export function ItemChips({ item, ensure, onDeleted }: Props): JSX.Element {
         </span>
         <span class="anch">
           <button class="ck" aria-expanded={chip === 'estimate'} onClick={() => toggle('estimate')}>
-            <Icon name="clock" />{item.estimate_minutes ? dur(item.estimate_minutes) : t('estimate.none')}
+            <Icon name="clock" />{item.estimate_minutes ? dur(item.estimate_minutes) : t('estimate.none')}{item.focus.minutes > 0 ? ` · ${t('focus.used', { dur: span(item.focus.minutes) })}` : ''}
           </button>
           {chip === 'estimate' && <EstimatePop item={item} patch={patch} onClose={close} />}
         </span>
+        {item.id && item.status === 'open' && (workingOn(item.id)
+          ? <button class="ck go" onClick={openTimer}><Icon name="timer" />{t('focus.back')}</button>
+          : <button class="ck go" onClick={() => { void startFocus(item.id, item); }}><Icon name="play" />{t('focus.start')}</button>)}
         <span class="anch">
           <button class="ck" aria-expanded={chip === 'due'} onClick={() => toggle('due')}>
             <Icon name="flag" />{item.due_date ? t('due.label', { due: dueLabel(item.due_date, item.due_time, day) }) : t('due.none')}

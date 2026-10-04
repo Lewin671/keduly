@@ -1,4 +1,4 @@
-// The signed-in app: sidebar, toolbar, and the calendar or the item lists.
+// The signed-in app: sidebar, toolbar, and the calendar, the item lists or the focus timer.
 import type { JSX } from 'preact';
 import { useState } from 'preact/hooks';
 import { t } from '../i18n';
@@ -6,6 +6,7 @@ import { stepDate, weekTitle, type CalView } from '../lib/calendar';
 import { atMinutes, hhmm, minutesOfDay } from '../lib/dates';
 import { cap, weekdayLong } from '../lib/format';
 import { calPop } from '../state/calendar';
+import { focus, focusColor, zen } from '../state/focus';
 import { navigate, route } from '../state/route';
 import * as api from '../api/client';
 import { counts, keepZone, now, today, user, write, zoneQuestion } from '../state/store';
@@ -13,6 +14,8 @@ import { hideHud, hud, toast } from '../state/ui';
 import { ActivityPanel } from './ActivityPanel';
 import { Calendar } from './calendar/Calendar';
 import { CalPopover } from './calendar/pops';
+import { FocusMain } from './focus/FocusMain';
+import { FocusCapsule } from './focus/parts';
 import { Icon } from './Icons';
 import { Dialog } from './Popover';
 import { ItemsMain, NewItemButton } from './items/ItemsMain';
@@ -55,7 +58,7 @@ function Hud(): JSX.Element | null {
   return (
     <div class="hud glass on" role="status">
       <span>{h.text}</span>
-      {h.undo && <button onClick={() => { h.undo!(); hideHud(); }}>{t('activity.undo')}</button>}
+      {h.undo && <button onClick={() => { h.undo!(); hideHud(); }}>{h.label ?? t('activity.undo')}</button>}
     </div>
   );
 }
@@ -88,12 +91,16 @@ export function Shell(): JSX.Element {
   const { mode, view, date } = route.value;
   const [panel, setPanel] = useState<'activity' | 'settings' | null>(null);
   const cal = mode === 'cal';
+  const focusing = mode === 'focus';
   const pending = counts.value.pending;
 
-  // The mockup's stylesheet switches between the two modes on this attribute.
+  // The mockup's stylesheet switches between the modes on this attribute.
   // Set during render, not in an effect: children measure and scroll in their own layout effects,
   // which run before a parent's, and the stylesheet hides the inactive mode by this attribute.
-  document.body.dataset.mode = cal ? 'cal' : 'tasks';
+  document.body.dataset.mode = cal ? 'cal' : focusing ? 'focus' : 'tasks';
+  // While a timer is active its page takes the whole window, tinted with the timer's colour.
+  document.body.toggleAttribute('data-zen', zen.value);
+  document.body.style.setProperty('--zc', focus.value && focus.value.state !== 'idle' ? focusColor(focus.value) : 'transparent');
 
   return (
     <>
@@ -118,6 +125,7 @@ export function Shell(): JSX.Element {
                   <button class="rbtn only-cal" aria-label={t('event.new')} onClick={newEvent}><Icon name="plus" /></button>
                 </>
               )}
+              <FocusCapsule />
               <button class={`rbtn ${panel === 'activity' ? 'on' : ''}`} data-panel-toggle aria-label={t('activity.title')} aria-expanded={panel === 'activity'} onClick={() => setPanel(panel === 'activity' ? null : 'activity')}>
                 <Icon name="bell" />
                 {pending > 0 && <span class="badge">{cap(pending)}</span>}
@@ -127,12 +135,13 @@ export function Shell(): JSX.Element {
               {cal && <CalPopover day={null} place="top:44px;right:0;transform-origin:calc(100% - 60px) 0" />}
             </div>
           </div>
-          {cal ? <Calendar /> : <ItemsMain />}
+          {cal ? <Calendar /> : focusing ? <FocusMain /> : <ItemsMain />}
         </main>
-        {!cal && <NewItemButton />}
+        {mode === 'items' && <NewItemButton />}
         <nav class="tabbar glass" aria-label={t('mode.label')}>
-          <button class={cal ? '' : 'on'} aria-pressed={!cal} onClick={() => setMode('items')}><Icon name="checklist" />{t('mode.items')}</button>
+          <button class={mode === 'items' ? 'on' : ''} aria-pressed={mode === 'items'} onClick={() => setMode('items')}><Icon name="checklist" />{t('mode.items')}</button>
           <button class={cal ? 'on' : ''} aria-pressed={cal} onClick={() => setMode('cal')}><Icon name="cal" />{t('mode.cal')}</button>
+          <button class={focusing ? 'on' : ''} aria-pressed={focusing} onClick={() => setMode('focus')}><Icon name="timer" />{t('mode.focus')}</button>
         </nav>
       </div>
       {panel === 'settings' && <Settings onClose={() => setPanel(null)} />}

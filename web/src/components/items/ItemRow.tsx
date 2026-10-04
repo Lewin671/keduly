@@ -6,11 +6,12 @@ import type { Item, ItemWrite } from '../../api/types';
 import { t } from '../../i18n';
 import { hhmm, ymd, wall } from '../../lib/dates';
 import { isComposing, useEscape } from '../../lib/keys';
-import { dayLabel, dueLabel, dur, monthDay, overdueDays, slotLabel, whenLabel } from '../../lib/format';
+import { dayLabel, dueLabel, dur, monthDay, overdueDays, slotLabel, span, whenLabel } from '../../lib/format';
 import { current, draft, NEW, openCard, openItem, saveItem, toggleDone } from '../../state/items';
 import { route } from '../../state/route';
 import { attempt, projectOf, refresh, today } from '../../state/store';
 import { showHud } from '../../state/ui';
+import { RowFocus, TomCount } from '../focus/parts';
 import { Icon } from '../Icons';
 import { ItemChips } from './ItemChips';
 
@@ -63,7 +64,7 @@ function RightSide({ item, opts }: { item: Item; opts: RowOptions }): JSX.Elemen
   } else if (item.planned_date && !done && !opts.timeOnly && item.planned_date !== day) {
     parts.push(<span>{dayLabel(item.planned_date, day)}</span>);
   }
-  return <div class="rt">{parts}</div>;
+  return <div class="rt">{parts}<RowFocus item={item} /></div>;
 }
 
 export function ItemRow({ item: raw, opts = {} }: { item: Item; opts?: RowOptions }): JSX.Element {
@@ -71,7 +72,16 @@ export function ItemRow({ item: raw, opts = {} }: { item: Item; opts?: RowOption
   if (openCard.value === item.id) return <OpenItem key={item.id} item={item} opts={opts} />;
   const done = item.status === 'done';
   const project = projectOf(item.project_id);
-  const sub = opts.sub ? [project?.name, item.estimate_minutes ? dur(item.estimate_minutes) : ''].filter(Boolean).join(' · ') : '';
+  // Tomatoes earned sit next to the estimate: "1.5 小时 · 2/4"; once done, the time it took.
+  const sub: Array<JSX.Element | string> = [];
+  if (opts.sub) {
+    const spent = item.focus.minutes;
+    if (project) sub.push(project.name);
+    if (done && spent) sub.push(t('focus.took', { dur: span(spent) }));
+    else if (item.estimate_minutes) sub.push(dur(item.estimate_minutes));
+    if (item.focus.tomatoes) sub.push(<TomCount item={item} />);
+    else if (spent && !done) sub.push(t('focus.used', { dur: span(spent) }));
+  }
   const starred = opts.star && !done && item.planned_date !== null && item.planned_date <= today.value;
   const open = () => openItem(item.id);
   return (
@@ -84,7 +94,7 @@ export function ItemRow({ item: raw, opts = {} }: { item: Item; opts?: RowOption
             {starred && <Icon name="star" />}
             {item.title}
           </div>
-          {sub && <div class="ts">{sub}</div>}
+          {sub.length > 0 && <div class="ts">{sub.map((part, k) => <>{k > 0 && ' · '}{part}</>)}</div>}
         </div>
         <RightSide item={item} opts={opts} />
       </div>
@@ -98,7 +108,7 @@ export function DraftRow(): JSX.Element | null {
   if (!d || openCard.value !== NEW) return null;
   const item: Item = d.item ? current(d.item) : {
     id: '', title: '', notes: '', estimate_minutes: null, evening: false, due_date: null, due_time: null, important: false,
-    status: 'open', completed_at: null, position: 0, block: null, suggestion: null,
+    status: 'open', completed_at: null, position: 0, block: null, suggestion: null, focus: { tomatoes: 0, minutes: 0 },
     created_by: { kind: 'user', name: '' }, created_at: '', updated_at: '', ...d.context,
   };
   return <OpenItem key={NEW} item={item} opts={{}} isDraft />;

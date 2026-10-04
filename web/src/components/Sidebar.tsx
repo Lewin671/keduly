@@ -1,4 +1,4 @@
-// The sidebar navigates within the current mode: calendar or items.
+// The sidebar navigates within the current mode: items, calendar or focus.
 import type { JSX } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import * as api from '../api/client';
@@ -8,6 +8,7 @@ import { addMonths, monthGrid, monthStart } from '../lib/dates';
 import { cap } from '../lib/format';
 import { navigate, route, type Mode } from '../state/route';
 import { activeProjects, areas, colorOf, counts, hiddenProjects, today, toggleProjectVisible, write } from '../state/store';
+import { FocusSide } from './focus/FocusSide';
 import { Icon, Pie, type IconName } from './Icons';
 import { InlineText } from './InlineText';
 import { Confirm, Popover } from './Popover';
@@ -164,9 +165,11 @@ export function Sidebar(): JSX.Element {
       <div class="seg mode" role="group" aria-label={t('mode.label')}>
         <button class={mode === 'items' ? 'on' : ''} aria-pressed={mode === 'items'} onClick={() => setMode('items')}>{t('mode.items')}</button>
         <button class={mode === 'cal' ? 'on' : ''} aria-pressed={mode === 'cal'} onClick={() => setMode('cal')}>{t('mode.cal')}</button>
+        <button class={mode === 'focus' ? 'on' : ''} aria-pressed={mode === 'focus'} onClick={() => setMode('focus')}>{t('mode.focus')}</button>
       </div>
       <CalendarSide />
       <ItemsSide />
+      {mode === 'focus' && <FocusSide />}
     </aside>
   );
 }

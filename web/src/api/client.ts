@@ -1,6 +1,6 @@
 // Every request the web app makes goes through this module, one function per endpoint of docs/api.md.
 import type {
-  Activity, Area, Bootstrap, CalEvent, Config, Counts, EventWrite, FreeSlot, Heading, Item, ItemFilters, ItemPage, ItemWrite,
+  Activity, Area, Bootstrap, CalEvent, Config, Counts, EventWrite, Focus, FocusSession, FocusStats, FreeSlot, Heading, Item, ItemFilters, ItemPage, ItemWrite,
   NewToken, OverviewProject, Project, ProjectColor, ProjectDetail, Quadrant, QuadrantKey, Suggestion, TodayView, Token,
   UpcomingDay, User,
 } from './types';
@@ -83,7 +83,7 @@ export const register = (body: { email: string; password: string; name: string; 
   post<{ user: User }>('/auth/register', body).then(r => r.user);
 export const login = (body: { email: string; password: string }) => post<{ user: User }>('/auth/login', body).then(r => r.user);
 export const logout = () => post<void>('/auth/logout');
-export const updateMe = (body: Partial<Pick<User, 'name' | 'timezone' | 'timezone_auto' | 'work_start' | 'work_end'>>) =>
+export const updateMe = (body: Partial<Pick<User, 'name' | 'timezone' | 'timezone_auto' | 'work_start' | 'work_end' | 'focus_minutes' | 'rest_minutes' | 'long_rest_minutes' | 'round_size'>>) =>
   patch<{ user: User }>('/me', body).then(r => r.user);
 export const changePassword = (current: string, next: string) => post<void>('/me/password', { current, new: next });
 
@@ -156,6 +156,17 @@ export const updateEvent = (eventId: string, body: EventWrite) => patch<{ event:
 export const deleteEvent = (eventId: string) => del(`/events/${id(eventId)}`);
 export const getHeat = (year: number) => get<{ days: Record<string, number> }>('/calendar/heat', { year }).then(r => r.days);
 export const getFree = (date: string, duration: number) => get<{ slots: FreeSlot[] }>('/free', { date, duration }).then(r => r.slots);
+
+/* ---------- focus ---------- */
+
+export const getFocus = () => get<{ focus: Focus }>('/focus').then(r => r.focus);
+/** Starts a tomato on the item, or free focus without one. */
+export const startFocus = (itemId: string | null) => post<{ focus: Focus }>('/focus/start', itemId ? { item_id: itemId } : {}).then(r => r.focus);
+export const stopFocus = () => post<{ focus: Focus }>('/focus/stop').then(r => r.focus);
+export const restFocus = () => post<{ focus: Focus }>('/focus/rest').then(r => r.focus);
+/** Work sessions that started on the days `from` to `to`, both inclusive. */
+export const listFocusSessions = (from: string, to: string) => get<{ sessions: FocusSession[] }>('/focus/sessions', { from, to }).then(r => r.sessions);
+export const getFocusStats = () => get<FocusStats>('/focus/stats');
 
 /* ---------- suggestions ---------- */
 

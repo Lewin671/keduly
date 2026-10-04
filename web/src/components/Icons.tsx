@@ -3,7 +3,7 @@ import type { JSX } from 'preact';
 
 export type IconName =
   | 'cal' | 'week' | 'tray' | 'list' | 'checklist' | 'bell' | 'gear' | 'search' | 'plus' | 'pluscircle' | 'left' | 'right'
-  | 'term' | 'phone' | 'star' | 'layers' | 'book' | 'flag' | 'clock' | 'moon' | 'grid' | 'person' | 'more' | 'trash' | 'copy';
+  | 'term' | 'phone' | 'star' | 'layers' | 'book' | 'flag' | 'clock' | 'moon' | 'grid' | 'person' | 'more' | 'trash' | 'copy' | 'timer' | 'chart' | 'play';
 
 export function Sprite(): JSX.Element {
   return (
@@ -33,6 +33,11 @@ export function Sprite(): JSX.Element {
       <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="1.4" fill="currentColor" stroke="none" /><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none" /><circle cx="18.5" cy="12" r="1.4" fill="currentColor" stroke="none" /></symbol>
       <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l.9 11.2a2 2 0 002 1.8h5.2a2 2 0 002-1.8L17.5 7" /></symbol>
       <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8.5" y="8.5" width="11" height="11.5" rx="2.5" /><path d="M15.5 5.5V5a2 2 0 00-2-2H6.5a2 2 0 00-2 2v8.5a2 2 0 002 2H6" /></symbol>
+      <symbol id="i-timer" viewBox="0 0 24 24"><circle cx="12" cy="13.5" r="7.5" /><path d="M12 9.5v4M9.5 3h5M12 3v3" /></symbol>
+      <symbol id="i-chart" viewBox="0 0 24 24"><path d="M6 19.5v-7M12 19.5v-14M18 19.5v-10" stroke-width="2.6" /></symbol>
+      <symbol id="i-play" viewBox="0 0 24 24"><path d="M6 3.5v17l14-8.5z" fill="currentColor" stroke="none" /></symbol>
+      <symbol id="i-tom" viewBox="0 0 24 24"><circle cx="12" cy="14" r="7.6" fill="currentColor" /><path d="M12 7.8V4.2M12 7.6c-1.3-1.5-2.9-1.8-4.3-1.3M12 7.6c1.3-1.5 2.9-1.8 4.3-1.3" fill="none" stroke="var(--green)" stroke-width="1.8" stroke-linecap="round" /></symbol>
+      <symbol id="i-tom-o" viewBox="0 0 24 24"><circle cx="12" cy="14" r="7" fill="none" stroke="currentColor" stroke-width="1.5" /><path d="M12 7.2V4.2M12 7c-1.3-1.5-2.9-1.8-4.3-1.3M12 7c1.3-1.5 2.9-1.8 4.3-1.3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" /></symbol>
     </svg>
   );
 }

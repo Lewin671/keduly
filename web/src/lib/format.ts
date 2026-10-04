@@ -9,6 +9,13 @@ export function dur(minutes: number): string {
   return t('dur.hours', { n: Number.isInteger(hours) ? hours : hours.toFixed(1) });
 }
 
+/** Time spent, to the minute: "50 分钟", "2 小时", "2 小时 15 分钟". Anything under a minute counts as one. */
+export function span(minutes: number): string {
+  const m = Math.max(1, Math.round(minutes));
+  if (m < 60) return t('dur.minutes', { n: m });
+  return m % 60 ? t('dur.hoursMinutes', { h: Math.floor(m / 60), m: m % 60 }) : t('dur.hours', { n: m / 60 });
+}
+
 /** Counts above 99 are not spelled out. */
 export function cap(n: number): string {
   return n > 99 ? '99+' : String(n);

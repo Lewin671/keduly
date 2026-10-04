@@ -8,6 +8,7 @@ import { keepComposing } from '../lib/keys';
 import { t } from '../i18n';
 import { addDays } from '../lib/dates';
 import { stamp } from '../lib/format';
+import { notifyBlocked, remind, setRemind } from '../state/focus';
 import { useResource } from '../state/resource';
 import { config, reportError, signOut, today, user, write, keepZone } from '../state/store';
 import { setTheme, theme, type Theme } from '../state/theme';
@@ -211,12 +212,59 @@ function SystemCalendar({ tokens }: { tokens: Token[] }): JSX.Element {
   );
 }
 
+const FOCUS_FIELDS = [
+  ['focus_minutes', 'focusSettings.tomato', 1, 180],
+  ['rest_minutes', 'focusSettings.rest', 1, 60],
+  ['long_rest_minutes', 'focusSettings.longRest', 1, 120],
+] as const;
+
+/** The lengths of a tomato and its rests, and the reminder when time is up. */
+function FocusSettings(): JSX.Element | null {
+  const me = user.value;
+  if (!me) return null;
+  const save = (body: Parameters<typeof api.updateMe>[0]) => { void write(api.updateMe(body)); };
+  /** A whole number within the field's range, or nothing to save. */
+  const read = (input: HTMLInputElement, old: number): number | null => {
+    const n = Number(input.value);
+    if (Number.isInteger(n) && n >= Number(input.min) && n <= Number(input.max) && n !== old) return n;
+    input.value = String(old);
+    return null;
+  };
+  return (
+    <div>
+      <div class="g-h">{t('focusSettings.title')}</div>
+      <div class="group">
+        {FOCUS_FIELDS.map(([field, label, min, max]) => (
+          <label class="g-row"><div class="gb"><div class="gm">{t(label)}</div>
+            <input class="fld bare num" type="number" inputMode="numeric" min={min} max={max} step={1} defaultValue={String(me[field])} key={me[field]}
+              onBlur={event => { const n = read(event.currentTarget, me[field]); if (n !== null) save({ [field]: n }); }} />
+            <span class="unit">{t('focusSettings.minutes')}</span>
+          </div></label>
+        ))}
+        <label class="g-row"><div class="gb"><div class="gm">{t('focusSettings.round')}</div>
+          <input class="fld bare num" type="number" inputMode="numeric" min={2} max={12} step={1} defaultValue={String(me.round_size)} key={me.round_size}
+            onBlur={event => { const n = read(event.currentTarget, me.round_size); if (n !== null) save({ round_size: n }); }} />
+          <span class="unit">{t('stats.unitCount')}</span>
+        </div></label>
+        <div class="g-row"><div class="gb">
+          <label class="switch grow">
+            <span class="gm">{t('focusSettings.remind')}<div class="sub">{t(remind.value && notifyBlocked() ? 'focusSettings.remindBlocked' : 'focusSettings.remindNote')}</div></span>
+            <input type="checkbox" checked={remind.value} onChange={event => setRemind(event.currentTarget.checked)} />
+          </label>
+        </div></div>
+      </div>
+      <div class="g-f">{t('focusSettings.footer')}</div>
+    </div>
+  );
+}
+
 function Cli(): JSX.Element {
   const lines: Array<[comment: string, ...commands: string[]]> = [
     [t('cli.login'), `keduly login --server ${location.origin}`],
     [t('cli.look'), 'keduly agenda --today --json', `keduly free --date ${addDays(today.value, 1)} --duration 60m`],
     [t('cli.add'), t('cli.addCommand')],
     [t('cli.plan'), 'keduly plan --today', 'keduly undo'],
+    [t('cli.focus'), 'keduly focus start "实现 CalDAV 同步"', 'keduly focus status', 'keduly focus stop'],
   ];
   return (
     <div>
@@ -259,6 +307,7 @@ export function Settings({ onClose }: { onClose: () => void }): JSX.Element {
         <Account />
         <Tokens tokens={tokens.filter(x => x.kind === 'agent')} />
         <SystemCalendar tokens={tokens.filter(x => x.kind === 'caldav')} />
+        <FocusSettings />
         <Cli />
         <Appearance />
       </div>
