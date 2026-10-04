@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/Lewin671/keduly/internal/core"
+	"github.com/Lewin671/keduly/internal/store"
 )
 
 // go-webdav answers the standard properties but not the ones calendar apps
@@ -72,6 +73,20 @@ var colorHex = map[string]string{
 
 func href(path string) *node { return text(nsDAV, "href", path) }
 
+// privileges lists what the caller may do, one privilege per element as RFC 3744 requires.
+// go-webdav puts read and write into a single element, which clients cannot interpret.
+func privileges(id *core.Identity) *node {
+	names := []string{"read", "read-current-user-privilege-set"}
+	if id.Token == nil || id.Token.Scope == "write" {
+		names = append(names, "write", "write-properties", "write-content", "bind", "unbind")
+	}
+	set := el(nsDAV, "current-user-privilege-set")
+	for _, name := range names {
+		set.Children = append(set.Children, el(nsDAV, "privilege", el(nsDAV, name)))
+	}
+	return set
+}
+
 func reportSet() *node {
 	set := el(nsDAV, "supported-report-set")
 	for _, name := range []string{"calendar-query", "calendar-multiget"} {
@@ -81,7 +96,7 @@ func reportSet() *node {
 }
 
 // extraProps returns the additional properties of the resource at path.
-func extraProps(id *core.Identity, calendars map[string]core.Calendar, path string) map[xml.Name]*node {
+func extraProps(id *core.Identity, calendars map[string]core.Calendar, stored map[string][]store.DavProp, path string) map[xml.Name]*node {
 	t := parsePath(path)
 	uid := id.User.ID
 	props := map[xml.Name]*node{}
@@ -103,8 +118,16 @@ func extraProps(id *core.Identity, calendars map[string]core.Calendar, path stri
 		add(text(nsCS, "getctag", strconv.FormatInt(c.CTag, 10)))
 		add(el(nsDAV, "owner", href(principalPath(uid))))
 		add(reportSet())
-		if hex := colorHex[c.Color]; hex != "" {
-			add(text(nsApple, "calendar-color", hex))
+		hex := colorHex[c.Color]
+		if hex == "" {
+			// The inbox has no project colour. Without one, clients pick their own and write it back.
+			hex = "#8E8E93FF"
+		}
+		add(text(nsApple, "calendar-color", hex))
+		add(privileges(id))
+		// What the client stored itself comes last, so a colour it chose wins on that client.
+		for _, p := range stored[t.key] {
+			add(text(p.Space, p.Local, p.Value))
 		}
 	}
 	return props
@@ -125,6 +148,10 @@ func (h *Handler) addProps(r *http.Request, id *core.Identity, t target, body []
 	for _, c := range list {
 		calendars[c.Key] = c
 	}
+	stored, err := store.DavProps(r.Context(), h.Service.DB, id.User.ID)
+	if err != nil {
+		return nil, err
+	}
 	for _, resp := range ms.Children {
 		hrefNode := resp.child("href")
 		if resp.XMLName.Local != "response" || hrefNode == nil {
@@ -139,7 +166,7 @@ func (h *Handler) addProps(r *http.Request, id *core.Identity, t target, body []
 		if u, err := url.Parse(path); err == nil {
 			path = u.Path
 		}
-		fill(resp, extraProps(id, calendars, path))
+		fill(resp, extraProps(id, calendars, stored, path))
 	}
 	var out bytes.Buffer
 	out.WriteString(xml.Header)
@@ -149,10 +176,22 @@ func (h *Handler) addProps(r *http.Request, id *core.Identity, t target, body []
 	return out.Bytes(), nil
 }
 
-// fill moves properties we can answer from the 404 propstat to the 200 one.
+// fill moves properties we can answer from the 404 propstat to the 200 one, and replaces the ones
+// go-webdav answered itself when we have a better value.
 func fill(resp *node, extra map[xml.Name]*node) {
 	if len(extra) == 0 {
 		return
+	}
+	for _, ps := range resp.Children {
+		status, prop := ps.child("status"), ps.child("prop")
+		if ps.XMLName.Local != "propstat" || status == nil || prop == nil || !strings.Contains(status.Text, " 200 ") {
+			continue
+		}
+		for i, p := range prop.Children {
+			if value, ok := extra[p.XMLName]; ok {
+				prop.Children[i] = value
+			}
+		}
 	}
 	var found []*node
 	kept := resp.Children[:0]

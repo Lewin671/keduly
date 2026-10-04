@@ -85,7 +85,7 @@ func (h *Handler) serve(w http.ResponseWriter, r *http.Request) {
 	}
 	switch r.Method {
 	case "PROPPATCH":
-		h.proppatch(w, r)
+		h.proppatch(w, r, id, t)
 		return
 	case "MKCOL", "MKCALENDAR", "COPY", "MOVE":
 		http.Error(w, "calendars are projects; manage them in the web app", http.StatusForbidden)

@@ -646,30 +646,89 @@ func TestRecurringEventKeepsItsWallClockTimeAcrossDST(t *testing.T) {
 	}
 }
 
-// Apple's Calendar sets the sidebar order of each calendar right after an account is added.
-// Refusing that looks like an account error to it, so client-only properties are accepted,
-// while the name and colour, which belong to the project, are refused.
+// Apple's Calendar writes the sidebar order and the time zone of each calendar right after an
+// account is added, and reads them back. Refusing looks like an account error to it. Client-owned
+// properties are therefore stored and returned; the name, which belongs to the project, is refused.
 func TestPropPatch(t *testing.T) {
 	f := setup(t)
 	path := "/dav/calendars/" + f.userID + "/inbox/"
-	patch := func(props string) (int, string) {
-		body := `<?xml version="1.0" encoding="UTF-8"?><A:propertyupdate xmlns:A="DAV:"><A:set><A:prop>` + props + `</A:prop></A:set></A:propertyupdate>`
+	patch := func(action, props string) (int, string) {
+		body := `<?xml version="1.0" encoding="UTF-8"?><A:propertyupdate xmlns:A="DAV:"><A:` + action + `><A:prop>` + props + `</A:prop></A:` + action + `></A:propertyupdate>`
 		status, _, out := f.raw("PROPPATCH", path, body, map[string]string{"Content-Type": "text/xml"})
 		return status, out
 	}
-
-	status, out := patch(`<D:calendar-order xmlns:D="http://apple.com/ns/ical/">1</D:calendar-order>`)
-	if status != 207 || !strings.Contains(out, "200 OK") || strings.Contains(out, "403") {
-		t.Fatalf("calendar-order: %d %s", status, out)
+	read := func() string {
+		body := `<?xml version="1.0" encoding="UTF-8"?><A:propfind xmlns:A="DAV:"><A:prop>` +
+			`<D:calendar-order xmlns:D="http://apple.com/ns/ical/"/><D:calendar-color xmlns:D="http://apple.com/ns/ical/"/>` +
+			`<C:calendar-timezone xmlns:C="urn:ietf:params:xml:ns:caldav"/><A:displayname/></A:prop></A:propfind>`
+		status, _, out := f.raw("PROPFIND", path, body, map[string]string{"Content-Type": "text/xml", "Depth": "0"})
+		if status != 207 {
+			t.Fatalf("PROPFIND: %d %s", status, out)
+		}
+		return out
 	}
 
-	status, out = patch(`<A:displayname>Renamed</A:displayname><D:calendar-order xmlns:D="http://apple.com/ns/ical/">2</D:calendar-order>`)
+	zone := "BEGIN:VCALENDAR\r\nBEGIN:VTIMEZONE\r\nTZID:Asia/Shanghai\r\nEND:VTIMEZONE\r\nEND:VCALENDAR"
+	status, out := patch("set", `<D:calendar-order xmlns:D="http://apple.com/ns/ical/">3</D:calendar-order>`+
+		`<C:calendar-timezone xmlns:C="urn:ietf:params:xml:ns:caldav">`+zone+`</C:calendar-timezone>`)
+	if status != 207 || !strings.Contains(out, "200 OK") || strings.Contains(out, "403") {
+		t.Fatalf("set: %d %s", status, out)
+	}
+	if got := read(); !strings.Contains(got, ">3<") || !strings.Contains(got, "TZID:Asia/Shanghai") {
+		t.Fatalf("stored properties are not returned: %s", got)
+	}
+
+	// A colour the client picks replaces the project colour for calendar clients.
+	if status, out = patch("set", `<D:calendar-color xmlns:D="http://apple.com/ns/ical/">#112233FF</D:calendar-color>`); status != 207 || !strings.Contains(out, "200 OK") {
+		t.Fatalf("colour: %d %s", status, out)
+	}
+	if got := read(); !strings.Contains(got, "#112233FF") {
+		t.Fatalf("client colour not returned: %s", got)
+	}
+
+	// The name belongs to the project: refused, and nothing in the same request is applied.
+	status, out = patch("set", `<A:displayname>Renamed</A:displayname><D:calendar-order xmlns:D="http://apple.com/ns/ical/">9</D:calendar-order>`)
 	if status != 207 || !strings.Contains(out, "403 Forbidden") || !strings.Contains(out, "424 Failed Dependency") || strings.Contains(out, "200 OK") {
 		t.Fatalf("displayname with calendar-order: %d %s", status, out)
 	}
+	if got := read(); !strings.Contains(got, ">3<") || strings.Contains(got, "Renamed") {
+		t.Fatalf("a refused update changed something: %s", got)
+	}
 
-	status, _, _ = f.raw("PROPPATCH", path, "not xml", map[string]string{"Content-Type": "text/xml"})
-	if status != 400 {
+	if status, out = patch("remove", `<D:calendar-order xmlns:D="http://apple.com/ns/ical/"/>`); status != 207 || !strings.Contains(out, "200 OK") {
+		t.Fatalf("remove: %d %s", status, out)
+	}
+	if got := read(); strings.Contains(got, ">3<") {
+		t.Fatalf("removed property still returned: %s", got)
+	}
+
+	if status, _, _ = f.raw("PROPPATCH", path, "not xml", map[string]string{"Content-Type": "text/xml"}); status != 400 {
 		t.Fatalf("malformed body: %d", status)
+	}
+	if status, _, _ = f.raw("PROPPATCH", "/dav/calendars/"+f.userID+"/", `<?xml version="1.0"?><A:propertyupdate xmlns:A="DAV:"><A:set><A:prop><D:calendar-order xmlns:D="http://apple.com/ns/ical/">1</D:calendar-order></A:prop></A:set></A:propertyupdate>`, nil); status != 403 {
+		t.Fatalf("PROPPATCH on the calendar home: %d", status)
+	}
+}
+
+// Clients decide whether a calendar is writable from current-user-privilege-set, which must list
+// one privilege per element; and a calendar without a colour makes them invent one and write it back.
+func TestCalendarPrivilegesAndColour(t *testing.T) {
+	f := setup(t)
+	body := `<?xml version="1.0" encoding="UTF-8"?><A:propfind xmlns:A="DAV:"><A:prop><A:current-user-privilege-set/>` +
+		`<D:calendar-color xmlns:D="http://apple.com/ns/ical/"/></A:prop></A:propfind>`
+	status, _, out := f.raw("PROPFIND", "/dav/calendars/"+f.userID+"/inbox/", body, map[string]string{"Content-Type": "text/xml", "Depth": "0"})
+	if status != 207 {
+		t.Fatalf("PROPFIND: %d %s", status, out)
+	}
+	if n := strings.Count(out, "<privilege"); n != 7 {
+		t.Fatalf("want 7 separate privileges for a read-write password, got %d: %s", n, out)
+	}
+	for _, want := range []string{"write-properties", "write-content", "bind", "unbind", "#8E8E93FF"} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("missing %s: %s", want, out)
+		}
+	}
+	if strings.Contains(out, "404") {
+		t.Fatalf("a requested property is missing: %s", out)
 	}
 }
