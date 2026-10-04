@@ -74,7 +74,7 @@ export function MonthView({ date, events }: { date: string; events: readonly Cal
                 </button>
               </div>
               {visible.map(entry => <MonthEntry key={eventKey(entry.event)} entry={entry} day={cell.date} />)}
-              {more > 0 && <div class="more">{t('cal.more', { n: more })}</div>}
+              {more > 0 && <button class="more" onClick={() => navigate({ view: 'day', date: cell.date })}>{t('cal.more', { n: more })}</button>}
               <CalPopover day={cell.date} place={`top:calc(100% - 8px);${side}`} />
             </div>
           );

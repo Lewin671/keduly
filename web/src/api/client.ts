@@ -83,7 +83,6 @@ export const register = (body: { email: string; password: string; name: string; 
   post<{ user: User }>('/auth/register', body).then(r => r.user);
 export const login = (body: { email: string; password: string }) => post<{ user: User }>('/auth/login', body).then(r => r.user);
 export const logout = () => post<void>('/auth/logout');
-export const getMe = () => get<{ user: User }>('/me').then(r => r.user);
 export const updateMe = (body: Partial<Pick<User, 'name' | 'timezone' | 'work_start' | 'work_end'>>) =>
   patch<{ user: User }>('/me', body).then(r => r.user);
 export const changePassword = (current: string, next: string) => post<void>('/me/password', { current, new: next });
@@ -119,7 +118,6 @@ export const deleteHeading = (headingId: string) => del(`/headings/${id(headingI
 
 export const listItems = (filters: ItemFilters & { limit?: number; cursor?: string | null }) => get<ItemPage>('/items', { ...filters });
 export const createItem = (body: ItemWrite & { title: string }) => post<{ item: Item }>('/items', body).then(r => r.item);
-export const getItem = (itemId: string) => get<{ item: Item }>(`/items/${id(itemId)}`).then(r => r.item);
 export const updateItem = (itemId: string, body: ItemWrite & { status?: Item['status'] }) =>
   patch<{ item: Item }>(`/items/${id(itemId)}`, body).then(r => r.item);
 export const deleteItem = (itemId: string) => del(`/items/${id(itemId)}`);
@@ -154,7 +152,6 @@ export const getMatrix = () => get<{ quadrants: Record<QuadrantKey, Quadrant> }>
 
 export const listEvents = (from: string, to: string) => get<{ events: CalEvent[] }>('/events', { from, to }).then(r => r.events);
 export const createEvent = (body: EventWrite & { title: string }) => post<{ event: CalEvent }>('/events', body).then(r => r.event);
-export const getEvent = (eventId: string) => get<{ event: CalEvent }>(`/events/${id(eventId)}`).then(r => r.event);
 export const updateEvent = (eventId: string, body: EventWrite) => patch<{ event: CalEvent }>(`/events/${id(eventId)}`, body).then(r => r.event);
 export const deleteEvent = (eventId: string) => del(`/events/${id(eventId)}`);
 export const getHeat = (year: number) => get<{ days: Record<string, number> }>('/calendar/heat', { year }).then(r => r.days);

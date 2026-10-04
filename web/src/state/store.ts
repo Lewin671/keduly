@@ -30,6 +30,9 @@ let revision = -1;
 /** Callbacks run when the data changed somewhere else, before screens refetch. */
 const externalChange = new Set<() => void>();
 export const onExternalChange = (fn: () => void) => { externalChange.add(fn); };
+/** Callbacks run when the session ends, so nothing of one account is shown to the next. */
+const sessionEnd = new Set<() => void>();
+export const onSessionEnd = (fn: () => void) => { sessionEnd.add(fn); };
 
 /* ---------- errors ---------- */
 
@@ -87,6 +90,7 @@ function signOutLocally(): void {
     counts.value = { inbox: 0, today: 0, pending: 0 };
   });
   revision = -1;
+  for (const fn of sessionEnd) fn();
 }
 
 /** First load: is registration open, and is there a session? */

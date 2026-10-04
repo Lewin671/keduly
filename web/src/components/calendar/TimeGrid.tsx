@@ -208,7 +208,9 @@ export function TimeGrid({ days, events }: { days: string[]; events: readonly Ca
       active = true;
       dragging.current = true;
       wasDragged.current = true;
-      el.setPointerCapture(down.pointerId);
+      // Capture keeps the moves coming when the pointer leaves the block; without it the
+      // window listeners below still follow the drag.
+      try { el.setPointerCapture(down.pointerId); } catch { /* the pointer is already gone */ }
     };
     const timer = touch ? setTimeout(activate, TOUCH_HOLD_MS) : undefined;
 

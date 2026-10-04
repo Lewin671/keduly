@@ -6,7 +6,7 @@ import * as api from '../api/client';
 import type { CalEvent } from '../api/types';
 import { utcRange } from '../lib/dates';
 import { track } from './resource';
-import { reportError, version } from './store';
+import { onSessionEnd, reportError, version } from './store';
 
 /** Local days: `from` inclusive, `to` exclusive. */
 export type DayRange = readonly [from: string, to: string];
@@ -19,6 +19,8 @@ interface Entry {
 const cache = signal<Record<string, Entry>>({});
 const pending = new Map<string, Promise<void>>();
 const keyOf = (range: DayRange) => `${range[0]}/${range[1]}`;
+
+onSessionEnd(() => { cache.value = {}; });
 
 function ensure(range: DayRange, v: number, visible: boolean): Promise<void> {
   const key = keyOf(range);

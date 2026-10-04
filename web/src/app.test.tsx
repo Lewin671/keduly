@@ -274,6 +274,58 @@ describe('calendar', () => {
     expect(callsTo('PATCH', '/items/i1')[0]!.body).toEqual({ status: 'done' });
   });
 
+  it('resizes a time block by dragging its bottom edge, snapping to a quarter of an hour', async () => {
+    await open(`#/cal/day/${DAY}`);
+    table['POST /items/i1/schedule'] = { item: caldav };
+    const handle = find('.blk', '实现 CalDAV 同步').querySelector<HTMLElement>('.rz')!;
+    const pointer = (type: string, y: number) => new PointerEvent(type, { bubbles: true, pointerId: 1, button: 0, pointerType: 'mouse', clientX: 10, clientY: y });
+    handle.dispatchEvent(pointer('pointerdown', 100));
+    // 58px is one hour in the day view; 50px is 52 minutes, which snaps to 45.
+    window.dispatchEvent(pointer('pointermove', 150));
+    await settle();
+    expect(find('.blk', '实现 CalDAV 同步').querySelector('.bm')!.textContent).toBe('15:30–17:45');
+    window.dispatchEvent(pointer('pointerup', 150));
+    await settle();
+    expect(callsTo('POST', '/items/i1/schedule')[0]!.body).toEqual({ start: '2026-10-13T19:30:00Z', end: '2026-10-13T21:45:00Z' });
+  });
+
+  it('moves an event by dragging it, and puts it back when the server refuses', async () => {
+    await open(`#/cal/day/${DAY}`);
+    const block = () => find('.blk', '设计评审');
+    const pointer = (type: string, y: number) => new PointerEvent(type, { bubbles: true, pointerId: 1, button: 0, pointerType: 'mouse', clientX: 10, clientY: y });
+    block().dispatchEvent(pointer('pointerdown', 100));
+    window.dispatchEvent(pointer('pointermove', 100 - 58));
+    window.dispatchEvent(pointer('pointerup', 100 - 58));
+    await settle();
+    // No PATCH route is defined: the server answered 404.
+    expect(callsTo('PATCH', '/events/e1')[0]!.body).toEqual({ start: '2026-10-13T13:00:00Z', end: '2026-10-13T14:30:00Z' });
+    expect(block().querySelector('.bm')!.textContent).toBe('10:00–11:30');
+    expect(document.querySelector('.toast')).not.toBeNull();
+  });
+
+  it('does not let a recurring instance or a tentative entry be dragged', async () => {
+    await open(`#/cal/day/${DAY}`);
+    expect(find('.blk', '站会').querySelector('.rz')).toBeNull();
+    expect(find('.blk', '写周报').querySelector('.rz')).toBeNull();
+  });
+
+  it('starts a new event where an empty slot is clicked', async () => {
+    await open(`#/cal/day/${DAY}`);
+    const col = document.querySelector<HTMLElement>('.col')!;
+    // A click right after a popover was dismissed is ignored; an earlier test may have just closed one.
+    await new Promise(resolve => setTimeout(resolve, 400));
+    // The shim lays nothing out, so the column starts at y = 0: 58px per hour puts 493px at 08:30.
+    col.dispatchEvent(new MouseEvent('click', { bubbles: true, clientY: 493 }));
+    await settle();
+    const times = [...document.querySelectorAll<HTMLInputElement>('.pop input[type="time"]')].map(i => i.value);
+    expect(times).toEqual(['08:30', '09:30']);
+    // Dismissing it must not start another one from the same click.
+    document.dispatchEvent(new Event('pointerdown', { bubbles: true }));
+    col.dispatchEvent(new MouseEvent('click', { bubbles: true, clientY: 100 }));
+    await settle();
+    expect(document.querySelector('.pop')).toBeNull();
+  });
+
   it('draws the week view with its ISO week and a spanning all-day bar', async () => {
     await open(`#/cal/week/${DAY}`);
     expect(document.getElementById('title')!.textContent).toBe('2026年10月第 42 周');
@@ -351,6 +403,50 @@ describe('items', () => {
     expect(card.querySelector<HTMLTextAreaElement>('textarea.tt')!.value).toBe('写周报');
     expect(card.querySelector('.sg')!.textContent).toContain('Claude Code 建议：排到今天 14:00。今天 18:00 截止');
     expect([...card.querySelectorAll('.cm .ck')].map(c => c.textContent)).toEqual(['待定 今天 14:00', '1 小时', '截止日期', '!标为重要', '收件箱', '']);
+  });
+
+  it('schedules an item from its card', async () => {
+    await open('#/items/today');
+    find('.todo .tm', '回复 PR 评论').click();
+    await settle();
+    find('.todo.open .ck', '今天').click();
+    await settle();
+    const [date, time] = [...document.querySelectorAll<HTMLInputElement>('.pop input')];
+    // Planned for today, 30 minutes estimated, and the next quarter of an hour after 10:40.
+    expect([date!.value, time!.value]).toEqual([DAY, '10:45']);
+    expect(document.querySelector('.pop .seg .on')!.textContent).toBe('30 分钟');
+    expect(document.querySelector('.pop .slots')!.textContent).toContain('13:00');
+    const scheduled = { ...reply, block: { event_id: 'b2', start: at('10:45'), end: at('11:15') } };
+    table['POST /items/i2/schedule'] = { item: scheduled };
+    table['GET /today'] = { date: DAY, items: [scheduled], overdue: [], events: [], free_minutes: 180, unplanned_minutes: 0 };
+    document.querySelector<HTMLFormElement>('.pop form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await settle();
+    expect(callsTo('POST', '/items/i2/schedule')[0]!.body).toEqual({ start: '2026-10-13T14:45:00Z', end: '2026-10-13T15:15:00Z' });
+    expect(document.querySelector('.todo.open .ck')!.textContent).toBe('今天 10:45–11:15');
+  });
+
+  it('marks an item important at once', async () => {
+    await open('#/items/today');
+    find('.todo .tm', '回复 PR 评论').click();
+    await settle();
+    table['PATCH /items/i2'] = { item: { ...reply, important: true } };
+    find('.todo.open .ck', '标为重要').click();
+    await new Promise(resolve => setTimeout(resolve, 0));
+    expect(find('.todo.open .ck', '重要').className).toContain('hot');
+    await settle();
+    expect(callsTo('PATCH', '/items/i2')[0]!.body).toEqual({ important: true });
+  });
+
+  it('saves an edited title when the card closes', async () => {
+    await open('#/items/today');
+    find('.todo .tm', '回复 PR 评论').click();
+    await settle();
+    table['PATCH /items/i2'] = { item: { ...reply, title: '回复全部 PR 评论' } };
+    await type(document.querySelector<HTMLTextAreaElement>('.todo.open textarea.tt')!, '回复全部 PR 评论');
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await settle();
+    expect(callsTo('PATCH', '/items/i2')[0]!.body).toEqual({ title: '回复全部 PR 评论' });
+    expect(document.querySelector('.todo.open')).toBeNull();
   });
 
   it('adds a new item from the floating button, planned for today', async () => {
@@ -461,6 +557,38 @@ describe('bell and settings', () => {
     await settle();
     expect(document.querySelector('.p-row.undone')).not.toBeNull();
     expect(find('.panel .tb', '恢复')).toBeTruthy();
+  });
+
+  it('accepts the scheduling suggestions one by one while a deletion is waiting, then undoes them together', async () => {
+    const second: Suggestion = { ...suggestion, id: 's3', title: '写招聘 JD' };
+    table['GET /suggestions'] = { suggestions: [suggestion, deletion, second] };
+    await open('#/items/today');
+    find('.rbtn', '动态').click();
+    await settle();
+    table['POST /suggestions/s1/accept'] = { suggestion, activity };
+    table['POST /suggestions/s3/accept'] = { suggestion: second, activity: { ...activity, id: 'act2' } };
+    table['POST /activity/undo'] = { activities: [] };
+    find('.panel .tb', '全部接受').click();
+    await settle();
+    expect(callsTo('POST', '/suggestions/accept-all')).toHaveLength(0);
+    expect(callsTo('POST', '/suggestions/s1/accept')).toHaveLength(1);
+    expect(callsTo('POST', '/suggestions/s3/accept')).toHaveLength(1);
+    expect(document.querySelector('.hud')!.textContent).toContain('已接受 2 项安排');
+    find('.hud button', '撤销').click();
+    await settle();
+    expect(callsTo('POST', '/activity/undo')[0]!.body).toEqual({ ids: ['act1', 'act2'] });
+  });
+
+  it('uses accept-all when no deletion is waiting', async () => {
+    table['GET /suggestions'] = { suggestions: [suggestion, { ...suggestion, id: 's3', title: '写招聘 JD' }] };
+    await open('#/items/today');
+    find('.rbtn', '动态').click();
+    await settle();
+    table['POST /suggestions/accept-all'] = { accepted: 2, activity_ids: ['act1', 'act2'] };
+    find('.panel .tb', '全部接受').click();
+    await settle();
+    expect(callsTo('POST', '/suggestions/accept-all')).toHaveLength(1);
+    expect(document.querySelector('.hud')!.textContent).toContain('已接受 2 项安排');
   });
 
   it('opens settings with the server address and the CLI snippet', async () => {

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'preact/hooks';
 import * as api from '../../api/client';
 import type { FreeSlot, Item, ItemWrite } from '../../api/types';
 import { t } from '../../i18n';
-import { addDays, atLocal, hhmm, snap, toUtc, ymd } from '../../lib/dates';
+import { atLocal, hhmm, snap, toUtc, ymd } from '../../lib/dates';
 import { dayLabel, dueLabel, dur, slotLabel } from '../../lib/format';
 import { removeItem, saveItem, toggleImportant } from '../../state/items';
 import { activeProjects, areas, colorOf, headings, now, projectOf, today } from '../../state/store';
@@ -165,7 +165,6 @@ function WhenPop({ item, apply, onClose }: { item: Item; apply: Apply; onClose: 
         <div class="links">
           <button type="button" class="tb" onClick={() => { if (date) void plan({ planned_date: date, evening: false }); }}>{t('when.dateOnly')}</button>
           <button type="button" class="tb" onClick={() => { void plan({ planned_date: today.value, evening: true }); }}>{t('when.tonight')}</button>
-          <button type="button" class="tb" onClick={() => { void plan({ planned_date: addDays(today.value, 1), evening: false }); }}>{t('day.tomorrow')}</button>
           {(item.block || item.planned_date) && (
             <button type="button" class="tb danger" onClick={() => { void plan({ planned_date: null, evening: false }); }}>{t('when.clear')}</button>
           )}
@@ -228,7 +227,7 @@ function ProjectPop({ item, patch, onClose }: { item: Item; patch: Patch; onClos
           <select class="fld" value={item.project_id ?? ''} onChange={event => { void patch({ project_id: event.currentTarget.value || null, heading_id: null }, true); }}>
             <option value="">{t('nav.inbox')}</option>
             {loose.map(p => <option value={p.id}>{p.name}</option>)}
-            {areas.value.map(a => (
+            {areas.value.filter(a => list.some(p => p.area_id === a.id)).map(a => (
               <optgroup label={a.name}>
                 {list.filter(p => p.area_id === a.id).map(p => <option value={p.id}>{p.name}</option>)}
               </optgroup>

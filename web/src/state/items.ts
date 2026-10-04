@@ -3,7 +3,7 @@ import { signal } from '@preact/signals';
 import * as api from '../api/client';
 import type { Item, ItemWrite } from '../api/types';
 import { onSettled } from './resource';
-import { attempt, onExternalChange, refresh, reportError, version } from './store';
+import { attempt, onExternalChange, onSessionEnd, refresh, reportError, version } from './store';
 
 interface Patch {
   item: Item;
@@ -130,3 +130,9 @@ export function resetListState(): void {
   openCard.value = null;
   held.value = {};
 }
+
+onSessionEnd(() => {
+  resetListState();
+  patches.value = {};
+  removed.value = {};
+});

@@ -3,7 +3,7 @@ import { signal } from '@preact/signals';
 import * as api from '../api/client';
 import type { CalEvent } from '../api/types';
 import { eventKey, patchEvents } from './events';
-import { refresh, reportError } from './store';
+import { onSessionEnd, refresh, reportError } from './store';
 
 /** Fields of the event editor. */
 export interface EventDraft {
@@ -25,15 +25,17 @@ export type CalPop =
 /** The open popover and the day column or cell it hangs from (`null`: the toolbar). */
 export const calPop = signal<CalPop | null>(null);
 
-let closedAt = 0;
+onSessionEnd(() => { calPop.value = null; });
+
+let closedAt = -Infinity;
 
 export function closeCalPop(): void {
-  if (calPop.value) closedAt = Date.now();
+  if (calPop.value) closedAt = performance.now();
   calPop.value = null;
 }
 
 /** A click that just dismissed a popover should not also start a new event. */
-export const justClosed = () => Date.now() - closedAt < 350;
+export const justClosed = () => performance.now() - closedAt < 350;
 
 /** Applies a change to a cached event at once and puts it back if the server refuses. */
 export async function changeEvent(event: CalEvent, change: Partial<CalEvent>, work: () => Promise<unknown>): Promise<void> {

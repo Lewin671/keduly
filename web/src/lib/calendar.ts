@@ -16,8 +16,6 @@ export function allDayOn(event: CalEvent, day: string): boolean {
   return event.start_date <= day && (event.end_date ?? event.start_date) >= day;
 }
 
-export const onDay = (event: CalEvent, day: string) => allDayOn(event, day) || eventSpan(event, day) !== null;
-
 /** Moves the current date one page in a view. */
 export function stepDate(view: CalView, day: string, direction: 1 | -1): string {
   switch (view) {

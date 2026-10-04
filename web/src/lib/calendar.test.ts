@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { CalEvent } from '../api/types';
-import { allDayOn, eventSpan, onDay, stepDate, viewRange, weekTitle } from './calendar';
+import { allDayOn, eventSpan, stepDate, viewRange, weekTitle } from './calendar';
 import { atLocal, toUtc } from './dates';
 
 const event = (fields: Partial<CalEvent>): CalEvent => ({
@@ -13,7 +13,7 @@ describe('events on days', () => {
   it('lays a timed event on its local day', () => {
     const e = event({ start: toUtc(atLocal('2026-10-13', '10:00')), end: toUtc(atLocal('2026-10-13', '11:30')) });
     expect(eventSpan(e, '2026-10-13')).toEqual({ s: 10, e: 11.5 });
-    expect(onDay(e, '2026-10-14')).toBe(false);
+    expect(eventSpan(e, '2026-10-14')).toBeNull();
   });
 
   it('covers every day of an all-day event, both ends inclusive', () => {

@@ -113,6 +113,7 @@ button.wk-head { cursor: pointer; }
 .mcell.out .mday button { color: inherit; }
 @media (min-width: 861px) {
   button.me.ad { width: 100%; text-align: left; }
+  button.more { display: block; }
 }
 @media (pointer: coarse) {
   .rz { height: 12px; }
