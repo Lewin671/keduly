@@ -1,0 +1,6 @@
+# Caddy terminates HTTPS and forwards everything to Keduly, including
+# /dav/ and /.well-known/caldav for calendar apps.
+keduly.example.com {
+	encode zstd gzip
+	reverse_proxy keduly:8080
+}
