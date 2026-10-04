@@ -162,8 +162,8 @@ export function Sidebar(): JSX.Element {
   return (
     <aside class="sidebar glass">
       <div class="seg mode" role="group" aria-label={t('mode.label')}>
-        <button class={mode === 'cal' ? 'on' : ''} aria-pressed={mode === 'cal'} onClick={() => setMode('cal')}>{t('mode.cal')}</button>
         <button class={mode === 'items' ? 'on' : ''} aria-pressed={mode === 'items'} onClick={() => setMode('items')}>{t('mode.items')}</button>
+        <button class={mode === 'cal' ? 'on' : ''} aria-pressed={mode === 'cal'} onClick={() => setMode('cal')}>{t('mode.cal')}</button>
       </div>
       <CalendarSide />
       <ItemsSide />

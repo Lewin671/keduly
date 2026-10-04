@@ -67,14 +67,15 @@ Orange means "important" and nothing else. Red is reserved for deadlines and the
 
 ## Structure
 
-Calendar and items are two modes, switched at the top of the sidebar: in effect Apple's Calendar
-and a task manager in one window. They are linked through projects and time. An item with a time
+Items and calendar are two modes, switched at the top of the sidebar: in effect a task manager and
+Apple's Calendar in one window. Items come first and are what the app opens on (Today): managing
+things to do is the centre of the product, and the calendar is the second view onto the same data. They are linked through projects and time. An item with a time
 shows on the calendar in its project's colour, and a time block can be checked off right there.
 
 | Mode | Sidebar | Main area |
 |---|---|---|
-| Calendar | A mini month; the project list, where a tick decides which projects the calendar shows | Day, week, month and year views |
 | Items | Inbox, Today, Upcoming, Matrix, All, Done; then projects grouped by area, each with a progress ring | The selected list, in one centred column |
+| Calendar | A mini month; the project list, where a tick decides which projects the calendar shows | Day, week, month and year views |
 
 The bell and the gear at the top right are shared by both modes.
 

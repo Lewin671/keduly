@@ -40,7 +40,8 @@ export function formatRoute(route: Route): string {
   return route.list.startsWith('p:') ? `#/items/p/${encodeURIComponent(route.list.slice(2))}` : `#/items/${route.list}`;
 }
 
-const initial: Route = { mode: 'cal', view: 'day', date: ymd(wallNow()), list: 'today' };
+// The app opens on the items of today: managing things to do is the product's centre, the calendar a second view.
+const initial: Route = { mode: 'items', view: 'day', date: ymd(wallNow()), list: 'today' };
 
 export const route = signal<Route>(parseRoute(location.hash, initial));
 

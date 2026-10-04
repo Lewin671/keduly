@@ -131,8 +131,8 @@ export function Shell(): JSX.Element {
         </main>
         {!cal && <NewItemButton />}
         <nav class="tabbar glass" aria-label={t('mode.label')}>
-          <button class={cal ? 'on' : ''} aria-pressed={cal} onClick={() => setMode('cal')}><Icon name="cal" />{t('mode.cal')}</button>
           <button class={cal ? '' : 'on'} aria-pressed={!cal} onClick={() => setMode('items')}><Icon name="checklist" />{t('mode.items')}</button>
+          <button class={cal ? 'on' : ''} aria-pressed={cal} onClick={() => setMode('cal')}><Icon name="cal" />{t('mode.cal')}</button>
         </nav>
       </div>
       {panel === 'settings' && <Settings onClose={() => setPanel(null)} />}

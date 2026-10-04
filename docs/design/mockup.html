@@ -376,7 +376,7 @@ pre.cli .c { color: var(--label-2); }
 }
 </style>
 </head>
-<body data-mode="cal">
+<body data-mode="tasks">
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol>
@@ -406,7 +406,7 @@ pre.cli .c { color: var(--label-2); }
 <div class="app">
   <!-- The sidebar navigates within the current mode: calendar or items. -->
   <aside class="sidebar glass">
-    <div class="seg mode" role="group" aria-label="模式"><button data-mode="cal">日历</button><button data-mode="tasks">事项</button></div>
+    <div class="seg mode" role="group" aria-label="模式"><button data-mode="tasks">事项</button><button data-mode="cal">日历</button></div>
     <div id="side-cal">
       <div class="mini" id="mini"></div>
       <div class="s-label">项目</div>
@@ -435,8 +435,8 @@ pre.cli .c { color: var(--label-2); }
   <button class="fab" aria-label="新事项"><svg class="i"><use href="#i-plus"/></svg></button>
 
   <nav class="tabbar glass" aria-label="切换">
-    <button data-mode="cal"><svg class="i"><use href="#i-cal"/></svg>日历</button>
     <button data-mode="tasks"><svg class="i"><use href="#i-checklist"/></svg>事项</button>
+    <button data-mode="cal"><svg class="i"><use href="#i-cal"/></svg>日历</button>
   </nav>
 </div>
 <div id="sheet-slot"></div>
@@ -1125,7 +1125,7 @@ document.addEventListener('click', ev => {
 });
 
 load('normal');
-setMode('cal');
+setMode('tasks');
 </script>
 </body>
 </html>
