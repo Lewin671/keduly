@@ -16,7 +16,7 @@ and know within a minute what today holds and whether it fits.
 | Event | Something with a fixed time (a meeting, the dentist) | start, end, project |
 | Item | Something to do that has no fixed time yet | project (none = inbox), estimate, deadline, important, status |
 | Time block | The stretch of calendar an item was scheduled into | item, start, end |
-| Focus session | A stretch of time actually spent working, usually on one item | item (none = free focus), start, end |
+| Focus session | A stretch of time actually spent working, usually on one item | item (none = free focus, which may have a title and a project of its own), start, end |
 | Suggestion | A change an agent wants to make. It has no effect until accepted, one by one | change, reason, source |
 | Activity | Every change that happened | who, when, what, why |
 
@@ -71,6 +71,7 @@ blocks say what was planned; tomatoes say what happened.
 | Switching | Starting on another item gives up the running tomato |
 | Ticking the item | Ends its timer and keeps the minutes |
 | Free focus | A tomato may belong to no item. It counts towards the day and the round, not towards any estimate |
+| Filing | What a session was for can be said at any time: while it runs, when it is earned, or later in the records. It goes to a project and then to one of its items, or stays free focus with a title ("做了什么") and a project of its own. The time and the tomato never change, only where they count. 再来一个 after free focus keeps its title and project |
 | CalDAV | Sessions are never exported: they would flood the phone's calendar with 25-minute entries |
 
 ### The timer page
@@ -78,8 +79,8 @@ blocks say what was planned; tomatoes say what happened.
 | State | What it shows |
 |---|---|
 | Idle | The sidebar lists today's open items (important first) with their tomatoes, then free focus; clicking one picks it. The page: "第 N 个番茄", a full dial reading 25:00, the picked item, the round of four tomato marks, 开始专注, and today's total |
-| Working | The page takes the whole window: sidebar and toolbar disappear, the background is tinted with the project's colour, the dial drains. 放弃 and 做完了. 收起 at the top left returns to the app |
-| Tomato earned | The dial closes in tomato red around a large tomato; one more mark in the round fills. 做完了, 再来一个, and the rest (short or long) as the main action |
+| Working | The page takes the whole window: sidebar and toolbar disappear, the background is tinted with the project's colour, the dial drains. 放弃 and 做完了. 收起 at the top left returns to the app. Under free focus a blue 归到… (修改 once it has a title or a project) opens the filing popover |
+| Tomato earned | The dial closes in tomato red around a large tomato; one more mark in the round fills. 做完了, 再来一个, and the rest (short or long) as the main action. Free focus keeps its 归到… here: the moment it is over is when one knows what it was |
 | Resting | The same page in green, counting the rest down. 跳过休息 |
 
 The dial follows Apple's Clock timer: one ring, large light figures, nothing else inside it.
@@ -97,7 +98,7 @@ The dial follows Apple's Clock timer: one ring, large light figures, nothing els
 | Calendar, day and week | Clicking an open time block offers 开始专注. Sessions are drawn as a thin line in the project's colour at the left edge of the day: the plan in blocks, what happened beside it |
 | When time is up elsewhere | A HUD "完成第 N 个番茄" with 开始休息, a browser notification and a sound |
 | Settings | 专注: the length of a tomato, of the rest, of the long rest and how often, the reminder |
-| CLI | `keduly focus start <item>`, `status`, `stop`, and a log and statistics an agent can read to correct estimates |
+| CLI | `keduly focus start <item>`, `status`, `stop`, `edit <session>` to file one, and a log and statistics an agent can read to correct estimates |
 
 ### Statistics
 
@@ -108,7 +109,8 @@ Modelled on Screen Time in System Settings: figures in plain large type, one cha
 | Figures | Today, the last 7 days, the daily average, and the streak of days with at least one tomato |
 | Chart | One bar per day for the last 7 days, stacked by project colour, the count above each bar, a dashed line for the average. Today's label is red |
 | 时间花在哪 | One row per project, most time first: tomatoes, time, and a thin bar relative to the top project |
-| Records | Day by day, newest first: each session with its time, item, and a tomato or "未完成 · N 分钟". Two days up front, then "更早的记录" |
+| Records | Day by day, newest first: each session with its time, item (or the title of free focus), and a tomato or "未完成 · N 分钟". Two days up front, then "更早的记录". Clicking a record opens the filing popover |
+| Filing popover | Three fields that apply at once, as in the item card's popovers: 项目 (未归项目 first), 事项 (不记到事项上 first, then the project's open items; without a project, today's items), and 做了什么, shown only while the session is on no item. Choosing another project takes the session off its item |
 
 Tomato red is used only for tomato marks. Going over an estimate ("7/1") is not coloured.
 
@@ -274,6 +276,10 @@ product feature) that swaps the sample data between ordinary, crowded and empty.
 | A day without tomatoes | An empty column in the chart; the streak ends there |
 | No sessions at all | Statistics say so and what to do; the timer page still works |
 | No items at all | Free focus is the only choice and is picked |
+| Free focus never filed | It stays "自由专注" under 未归项目; nothing asks for it |
+| The project of filed free focus is deleted | The session keeps its title and goes back to 未归项目 |
+| A session's item is done, or not one of the project's open items | The popover still shows it as the choice |
+| No projects, or nothing planned today | The popover's lists hold only 未归项目 and 不记到事项上; the title still works |
 | Only given-up sessions on an item | The row says "已用 12 分钟" instead of a tomato count |
 | The page was closed when time ran out | The tomato was still earned on the server at its planned end; the page shows the "what next" state on the next visit |
 

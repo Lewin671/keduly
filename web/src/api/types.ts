@@ -258,8 +258,11 @@ export type EventWrite = Partial<Pick<CalEvent, 'title' | 'project_id' | 'notes'
 export interface FocusSession {
   id: string;
   kind: 'work' | 'rest';
+  /** `null` is free focus. */
   item_id: string | null;
+  /** The item's project; free focus has its own. */
   project_id: string | null;
+  /** The item's title; for free focus what the user called it, or empty. */
   title: string;
   start: string;
   /** The planned end while running; the moment it was given up otherwise. */
@@ -271,6 +274,11 @@ export interface FocusSession {
 }
 
 /** The state of the user's one timer. */
+/** The title and the project that free focus may have. */
+export type FreeFocus = Partial<Pick<FocusSession, 'title' | 'project_id'>>;
+/** `item_id` puts the session on an item; `title` and `project_id` are for free focus only. */
+export type SessionWrite = Partial<Pick<FocusSession, 'item_id' | 'title' | 'project_id'>>;
+
 export interface Focus {
   state: 'idle' | 'work' | 'over' | 'rest';
   session: FocusSession | null;

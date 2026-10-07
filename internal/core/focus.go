@@ -2,6 +2,7 @@ package core
 
 import (
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/Lewin671/keduly/internal/api"
@@ -66,8 +67,10 @@ func (op *Op) itemFocus() (map[string]api.ItemFocus, error) {
 }
 
 // renderSessions fills in each session's project and current title from its item.
+// Free focus has its own title and project; a project that is gone is left out.
 func (op *Op) renderSessions(rows []*store.FocusSession) ([]api.FocusSession, error) {
 	items := map[string]*store.Item{}
+	projects := map[string]bool{}
 	out := make([]api.FocusSession, 0, len(rows))
 	for _, s := range rows {
 		js := api.FocusSession{
@@ -87,6 +90,19 @@ func (op *Op) renderSessions(rows []*store.FocusSession) ([]api.FocusSession, er
 			}
 			if it != nil {
 				js.ProjectID, js.Title = it.ProjectID, it.Title
+			}
+		} else if s.ProjectID != nil {
+			exists, seen := projects[*s.ProjectID]
+			if !seen {
+				p, err := store.Projects.Get(op.ctx, op.q, op.User.ID, *s.ProjectID)
+				if err != nil {
+					return nil, err
+				}
+				exists = p != nil
+				projects[*s.ProjectID] = exists
+			}
+			if exists {
+				js.ProjectID = s.ProjectID
 			}
 		}
 		out = append(out, js)
@@ -165,7 +181,26 @@ func (op *Op) settleFocus() error {
 	return store.FocusSessions.Put(op.ctx, op.q, latest)
 }
 
-func (op *Op) startSession(kind string, minutes int, item *store.Item) error {
+// freeFocus reads the title and the project that free focus may have into the session.
+func (op *Op) freeFocus(r *reader, s *store.FocusSession) error {
+	r.str("title", &s.Title, maxTitle)
+	r.nullStr("project_id", &s.ProjectID, anyID, "a project ID")
+	if err := r.done(); err != nil {
+		return err
+	}
+	s.Title = strings.TrimSpace(s.Title)
+	if r.has("project_id") && s.ProjectID != nil {
+		if _, err := op.project(*s.ProjectID); err != nil {
+			return Invalid("project_id must name one of your projects")
+		}
+	}
+	return nil
+}
+
+const focusItemOwns = "title and project_id follow the session's item: they can only be given to free focus"
+
+// startSession starts a session on the item; without one, free carries its title and project.
+func (op *Op) startSession(kind string, minutes int, item *store.Item, free store.FocusSession) error {
 	s := &store.FocusSession{
 		ID: NewID(), UserID: op.User.ID, Kind: kind, StartAt: op.now(),
 		EndAt:          store.FormatTime(op.Now.Add(time.Duration(minutes) * time.Minute)),
@@ -174,6 +209,8 @@ func (op *Op) startSession(kind string, minutes int, item *store.Item) error {
 	}
 	if item != nil {
 		s.ItemID, s.Title = &item.ID, item.Title
+	} else {
+		s.Title, s.ProjectID = free.Title, free.ProjectID
 	}
 	return store.FocusSessions.Put(op.ctx, op.q, s)
 }
@@ -183,12 +220,20 @@ func (op *Op) StartFocus(f Fields) (*api.Focus, error) {
 	var itemID *string
 	r := newReader(f)
 	r.nullStr("item_id", &itemID, anyID, "an item ID")
-	if err := r.done(); err != nil {
-		return nil, err
-	}
 	var item *store.Item
-	if itemID != nil {
-		var err error
+	var free store.FocusSession
+	if itemID == nil {
+		if err := op.freeFocus(r, &free); err != nil {
+			return nil, err
+		}
+	} else {
+		if r.has("title") || r.has("project_id") {
+			return nil, Invalid(focusItemOwns)
+		}
+		err := r.done()
+		if err != nil {
+			return nil, err
+		}
 		if item, err = store.Items.Get(op.ctx, op.q, op.User.ID, *itemID); err != nil {
 			return nil, err
 		}
@@ -199,7 +244,7 @@ func (op *Op) StartFocus(f Fields) (*api.Focus, error) {
 	if err := op.settleFocus(); err != nil {
 		return nil, err
 	}
-	if err := op.startSession(focusWork, op.User.FocusMinutes, item); err != nil {
+	if err := op.startSession(focusWork, op.User.FocusMinutes, item, free); err != nil {
 		return nil, err
 	}
 	return op.Focus()
@@ -231,7 +276,7 @@ func (op *Op) RestFocus(f Fields) (*api.Focus, error) {
 	if err := op.settleFocus(); err != nil {
 		return nil, err
 	}
-	if err := op.startSession(focusRest, now.RestMinutes, nil); err != nil {
+	if err := op.startSession(focusRest, now.RestMinutes, nil, store.FocusSession{}); err != nil {
 		return nil, err
 	}
 	return op.Focus()
@@ -265,14 +310,61 @@ func (op *Op) FocusSessions(from, to string) ([]api.FocusSession, error) {
 	return op.renderSessions(rows)
 }
 
-// focusWeekSeconds is the focus time on a project's items since Monday.
+// UpdateFocusSession says what a work session was for: one of the user's items, or free focus
+// with a title and a project of its own.
+func (op *Op) UpdateFocusSession(id string, f Fields) (*api.FocusSession, error) {
+	s, err := store.FocusSessions.Get(op.ctx, op.q, op.User.ID, id)
+	if err != nil {
+		return nil, err
+	}
+	if s == nil || s.Kind != focusWork {
+		return nil, NotFound("focus session")
+	}
+	r := newReader(f)
+	itemID := s.ItemID
+	r.nullStr("item_id", &itemID, anyID, "an item ID")
+	if itemID != nil {
+		if r.has("title") || r.has("project_id") {
+			return nil, Invalid(focusItemOwns)
+		}
+		if err := r.done(); err != nil {
+			return nil, err
+		}
+		item, err := store.Items.Get(op.ctx, op.q, op.User.ID, *itemID)
+		if err != nil {
+			return nil, err
+		}
+		if item == nil {
+			return nil, Invalid("item_id must name one of your items")
+		}
+		s.ItemID, s.ProjectID, s.Title = &item.ID, nil, item.Title
+	} else {
+		if s.ItemID != nil {
+			// Taken off its item, the session starts again as plain free focus.
+			s.ItemID, s.ProjectID, s.Title = nil, nil, ""
+		}
+		if err := op.freeFocus(r, s); err != nil {
+			return nil, err
+		}
+	}
+	if err := store.FocusSessions.Put(op.ctx, op.q, s); err != nil {
+		return nil, err
+	}
+	rendered, err := op.renderSessions([]*store.FocusSession{s})
+	if err != nil {
+		return nil, err
+	}
+	return &rendered[0], nil
+}
+
+// focusWeekSeconds is the focus time since Monday on a project's items and on free focus filed under it.
 func (op *Op) focusWeekSeconds(projectID string) (int64, error) {
 	today := dayStart(op.today(), op.Loc)
 	monday := today.AddDate(0, 0, -((int(today.Weekday()) + 6) % 7))
 	var seconds int64
 	err := op.q.QueryRowContext(op.ctx, `SELECT coalesce(sum(strftime('%s', f.end_at) - strftime('%s', f.start_at)), 0)
-		FROM focus_sessions f JOIN items i ON i.id = f.item_id
-		WHERE f.user_id = ? AND i.project_id = ? AND f.kind = 'work' AND f.start_at >= ? AND f.end_at <= ?`,
+		FROM focus_sessions f LEFT JOIN items i ON i.id = f.item_id
+		WHERE f.user_id = ? AND coalesce(i.project_id, f.project_id) = ? AND f.kind = 'work' AND f.start_at >= ? AND f.end_at <= ?`,
 		op.User.ID, projectID, store.FormatTime(monday), op.now()).Scan(&seconds)
 	return seconds, err
 }

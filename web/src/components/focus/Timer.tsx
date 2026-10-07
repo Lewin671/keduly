@@ -1,5 +1,6 @@
 // The timer page: one large dial, what the tomato is for, the round, and what can be done now.
 import type { JSX } from 'preact';
+import { useState } from 'preact/hooks';
 import type { Focus, Item } from '../../api/types';
 import { t } from '../../i18n';
 import { hhmm, wall } from '../../lib/dates';
@@ -11,6 +12,7 @@ import { colorOf, projectOf, user } from '../../state/store';
 import { Icon } from '../Icons';
 import { Skeleton } from '../items/parts';
 import { Countdown, Tom, TomCount } from './parts';
+import { SessionPop } from './SessionPop';
 
 const DIAL = 879.6;
 
@@ -26,7 +28,7 @@ interface Subject {
 function subjectOf(f: Focus): Subject {
   if (f.state === 'work' || f.state === 'over') {
     const s = f.session!;
-    return { title: s.item_id ? s.title : freeTitle(), projectId: s.project_id, itemId: s.item_id, item: knownItem(s.item_id) };
+    return { title: s.title || freeTitle(), projectId: s.project_id, itemId: s.item_id, item: knownItem(s.item_id) };
   }
   const item = pickedItem();
   return item ? { title: item.title, projectId: item.project_id, itemId: item.id, item } : { title: freeTitle(), projectId: null, itemId: null, item: undefined };
@@ -69,6 +71,9 @@ export function Timer(): JSX.Element {
   if (!f) return <div class="zen"><Skeleton /></div>;
   const me = user.value!;
   const subject = subjectOf(f);
+  // Free focus can be named and filed while it runs and when it has just been earned.
+  const free = (f.state === 'work' || f.state === 'over') && !f.session!.item_id ? f.session! : null;
+  const [filing, setFiling] = useState<string | null>(null);
   const long = f.round_done === f.round_size;
   const label =
     f.state === 'over' ? t('focus.earned', { n: f.tomatoes_today })
@@ -83,7 +88,19 @@ export function Timer(): JSX.Element {
     facts.push(project ? project.name : t('nav.inbox'));
     if (subject.item?.estimate_minutes) facts.push(dur(subject.item.estimate_minutes));
     if (subject.item && subject.item.focus.tomatoes > 0) facts.push(<TomCount item={subject.item} />);
-  } else facts.push(t('focus.freeNote'));
+  } else {
+    facts.push(project ? project.name : t('focus.freeNote'));
+    if (free) {
+      facts.push(
+        <span class="anch">
+          <button class="zlink" aria-expanded={filing === free.id} onClick={() => setFiling(filing === free.id ? null : free.id)}>
+            {t(free.title || free.project_id ? 'focus.refile' : 'focus.file')}
+          </button>
+          {filing === free.id && <SessionPop session={free} onClose={() => setFiling(null)} />}
+        </span>,
+      );
+    }
+  }
 
   return (
     <div class="zen" style={{ '--c': color }}>

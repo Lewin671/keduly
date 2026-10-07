@@ -53,7 +53,7 @@ Reading:
   keduly heading list P
   keduly suggest list [--status pending|accepted|rejected|any]
   keduly focus status                       the pomodoro timer and today's tomatoes
-  keduly focus log [--from D] [--to D]      focus sessions, today's by default
+  keduly focus log [--from D] [--to D]      focus sessions with their IDs, today's by default
   keduly focus stats                        the last 7 days: per day, per project, streak
   keduly activity [--limit N]
 
@@ -82,8 +82,12 @@ Projects, areas and headings:
 
 Focus (a pomodoro timer; one tomato is the account's focus length, 25 minutes by default):
   keduly focus start [ITEM_ID]              start a tomato on the item, or free focus without one
+  keduly focus start --title T --project P  free focus with a title and a project of its own
   keduly focus stop                         give up the tomato, skip the rest, or dismiss one that ran out
   keduly focus rest                         start the rest after a tomato
+  keduly focus edit SESSION_ID [--item ITEM|none] [--project P|none] [--title T]
+                                            say what a session was for: an item, or free focus
+                                            with a title and a project of its own
 
 Suggestions (the user accepts or rejects them):
   keduly suggest schedule ITEM_ID --start T --duration 1h --reason "..."
@@ -215,7 +219,7 @@ func (a *app) dispatch(args []string) error {
 	case "focus":
 		return a.sub(rest, "focus", map[string]func([]string) error{
 			"status": a.focusStatus, "start": a.focusStart, "stop": a.focusStop, "rest": a.focusRest,
-			"log": a.focusLog, "stats": a.focusStats,
+			"log": a.focusLog, "stats": a.focusStats, "edit": a.focusEdit,
 		})
 	case "activity":
 		return a.activity(rest)

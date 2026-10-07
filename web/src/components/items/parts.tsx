@@ -1,13 +1,29 @@
 // Pieces every list is built from.
 import type { ComponentChildren, JSX } from 'preact';
 import { useRef } from 'preact/hooks';
-import type { CalEvent, Item } from '../../api/types';
+import type { CalEvent, Item, Project } from '../../api/types';
 import { t } from '../../i18n';
 import { hhmm, wall } from '../../lib/dates';
 import { keepInPlace } from '../../lib/sticky';
 import { draft, held, isRemoved } from '../../state/items';
-import { colorOf } from '../../state/store';
+import { activeProjects, areas, colorOf } from '../../state/store';
 import { ItemRow, type RowOptions } from './ItemRow';
+
+/** The options of a project picker: projects outside an area first, then area by area. */
+export function ProjectOptions({ also }: { also?: Project | undefined }): JSX.Element {
+  // An archived project is offered only where it is already the choice.
+  const list = also && !activeProjects.value.includes(also) ? [...activeProjects.value, also] : activeProjects.value;
+  return (
+    <>
+      {list.filter(p => !areas.value.some(a => a.id === p.area_id)).map(p => <option value={p.id}>{p.name}</option>)}
+      {areas.value.filter(a => list.some(p => p.area_id === a.id)).map(a => (
+        <optgroup label={a.name}>
+          {list.filter(p => p.area_id === a.id).map(p => <option value={p.id}>{p.name}</option>)}
+        </optgroup>
+      ))}
+    </>
+  );
+}
 
 export function ListHead({ icon, name, color, children }: { icon: JSX.Element; name: ComponentChildren; color: string; children?: ComponentChildren }): JSX.Element {
   return (

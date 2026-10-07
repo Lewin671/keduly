@@ -203,7 +203,7 @@ One stretch of the focus timer: a tomato being worked on, or a rest.
 | Field | Meaning |
 |---|---|
 | `item_id` | The item the time counts towards; `null` is free focus. Always `null` for a rest |
-| `project_id`, `title` | The item's project and title, filled in by the server. A session whose item was deleted keeps the title it had and has no project |
+| `project_id`, `title` | With an item: the item's project and title, filled in by the server; a session whose item was deleted keeps the title it had and has no project. Free focus has its own: a title that says what the time went to (empty when it was not said) and a project it is filed under (`null` for none, or when that project was deleted) |
 | `end` | When the session ends. For one that is running it is the planned end, `start` plus `planned_minutes`; giving it up moves `end` to that moment |
 | `completed` | The session ran its full length and its end has passed. A completed `work` session is one tomato |
 
@@ -370,7 +370,7 @@ web app polls `GET /counts` every 20 seconds and reloads what it shows when `rev
 | `PATCH /areas/{id}` | `name`, `position` | |
 | `DELETE /areas/{id}` | | Its projects stay and lose their area |
 | `POST /projects` | `name`, optional `color`, `area_id`, `notes` | `color` defaults to the least used one |
-| `GET /projects/{id}` | | `{ project, headings, upcoming_events, unplanned_count, focus_week_minutes }`. `upcoming_events` is the project's next 3 events from now, time blocks excluded. `focus_week_minutes` is the focus time on the project's items since Monday |
+| `GET /projects/{id}` | | `{ project, headings, upcoming_events, unplanned_count, focus_week_minutes }`. `upcoming_events` is the project's next 3 events from now, time blocks excluded. `focus_week_minutes` is the focus time since Monday on the project's items and on free focus filed under the project |
 | `PATCH /projects/{id}` | any of `name`, `color`, `area_id`, `notes`, `position`, `archived` | |
 | `DELETE /projects/{id}` | | Also deletes its headings, items and events. `403 forbidden` for a token with `confirm_delete`: no suggestion kind stands in for this delete, so the user does it in the web app |
 | `POST /projects/{id}/headings` | `name` | |
@@ -471,19 +471,21 @@ running for a tomato to complete.
 | Method and path | Body or query | Response |
 |---|---|---|
 | `GET /focus` | | `{ focus }` |
-| `POST /focus/start` | optional `item_id` | `{ focus }`. Starts a tomato of `focus_minutes` on the item, or free focus without one |
+| `POST /focus/start` | optional `item_id`; without it, optional `title` and `project_id` | `{ focus }`. Starts a tomato of `focus_minutes` on the item, or free focus without one |
 | `POST /focus/stop` | | `{ focus }`. Gives up the running tomato, skips the running rest, or answers `over` with "nothing"; the state becomes `idle` |
 | `POST /focus/rest` | | `{ focus }`. Starts a rest of `rest_minutes` as reported by `GET /focus`. `409 conflict` while a tomato is running |
 | `GET /focus/sessions?from=&to=` | two dates (inclusive, at most 62 days apart) | `{ sessions }`: the `work` sessions that started on those days, oldest first, the running one included |
+| `PATCH /focus/sessions/{id}` | any of `item_id`, `title`, `project_id` | `{ session }`. Says what a `work` session was for; see "Filing a session" |
 | `GET /focus/stats` | | see below |
 
 | Rule | Detail |
 |---|---|
 | Giving up | The session's `end` becomes now and it keeps its minutes, but it is not `completed` and earns no tomato. A session given up within its first minute is deleted |
 | Starting while something runs | `POST /focus/start` first gives up the running tomato, or ends the running rest |
-| Item | `item_id` must name an open item. Deleting an item keeps its sessions |
+| Item | `POST /focus/start` takes an `item_id` that names an open item. Deleting an item keeps its sessions |
+| Filing a session | `PATCH /focus/sessions/{id}` works on any `work` session, the running one included; it never changes when the session was or whether it is a tomato. `item_id` puts it on any of the user's items, open or done, and it then counts towards that item. `item_id: null` takes it off its item, leaving free focus with no title and no project; on a session that already is free focus it changes nothing. `title` (at most 500 characters, trimmed, may be empty) and `project_id` (a project or `null`) are for free focus only: together with an item, or on a session that has one, they are `400 invalid_request` |
 | Round | The rest that follows the tomato completing a round (`tomatoes_today` divisible by `round_size`) is the long one |
-| Activity | Starting and stopping the timer is not written to the activity log; the sessions are the record |
+| Activity | Starting and stopping the timer and filing a session are not written to the activity log; the sessions are the record |
 
 `GET /focus/stats` covers the last 7 days in the user's time zone, today included:
 
@@ -498,7 +500,7 @@ running for a tomato to complete.
 ```
 
 `days` always has 7 entries, oldest first. `projects` is ordered by minutes, most first;
-`project_id` `null` gathers free focus, inbox items and deleted items. `streak` is the number of
+`project_id` `null` gathers free focus that is not filed under a project, inbox items and deleted items. `streak` is the number of
 consecutive days up to today with at least one tomato, counted as far back as it goes; a today
 without a tomato yet does not break it.
 

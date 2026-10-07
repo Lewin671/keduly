@@ -67,6 +67,7 @@ func (s *Server) routes() {
 	s.handle("POST /focus/stop", member, s.stopFocus)
 	s.handle("POST /focus/rest", member, s.restFocus)
 	s.handle("GET /focus/sessions", member, s.focusSessions)
+	s.handle("PATCH /focus/sessions/{id}", member, s.updateFocusSession)
 	s.handle("GET /focus/stats", member, s.focusStats)
 
 	s.handle("GET /suggestions", member, s.listSuggestions)
@@ -484,6 +485,13 @@ func (s *Server) focusSessions(c *call) error {
 		return err
 	}
 	return c.ok(obj{"sessions": sessions})
+}
+
+func (s *Server) updateFocusSession(c *call) error {
+	return s.write(c, http.StatusOK, func(op *core.Op) (obj, error) {
+		session, err := op.UpdateFocusSession(c.pathID(), c.fields)
+		return obj{"session": session}, err
+	})
 }
 
 func (s *Server) focusStats(c *call) error {

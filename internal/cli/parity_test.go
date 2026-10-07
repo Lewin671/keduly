@@ -49,7 +49,7 @@ var commands = map[string][]string{
 	"area":    {"list", "add", "rename", "rm"},
 	"heading": {"list", "add", "rename", "rm"},
 	"suggest": {"schedule", "add-item", "add-event", "move", "delete-item", "delete-event", "withdraw", "list"},
-	"focus":   {"status", "start", "stop", "rest", "log", "stats"},
+	"focus":   {"status", "start", "stop", "rest", "edit", "log", "stats"},
 }
 
 func TestHelpCoversEveryCommand(t *testing.T) {

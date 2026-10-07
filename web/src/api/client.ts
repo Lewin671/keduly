@@ -1,7 +1,7 @@
 // Every request the web app makes goes through this module, one function per endpoint of docs/api.md.
 import type {
-  Activity, Area, Bootstrap, CalEvent, Config, Counts, EventWrite, Focus, FocusSession, FocusStats, FreeSlot, Heading, Item, ItemFilters, ItemPage, ItemWrite,
-  LoginRequest, NewToken, OverviewProject, Project, ProjectColor, ProjectDetail, Quadrant, QuadrantKey, Suggestion, TodayView, Token,
+  Activity, Area, Bootstrap, CalEvent, Config, Counts, EventWrite, Focus, FocusSession, FocusStats, FreeFocus, FreeSlot, Heading, Item, ItemFilters, ItemPage, ItemWrite,
+  LoginRequest, NewToken, OverviewProject, Project, ProjectColor, ProjectDetail, Quadrant, QuadrantKey, SessionWrite, Suggestion, TodayView, Token,
   UpcomingDay, User,
 } from './types';
 
@@ -174,8 +174,10 @@ export const getFree = (date: string, duration: number) => get<{ slots: FreeSlot
 /* ---------- focus ---------- */
 
 export const getFocus = () => get<{ focus: Focus }>('/focus').then(r => r.focus);
-/** Starts a tomato on the item, or free focus without one. */
-export const startFocus = (itemId: string | null) => post<{ focus: Focus }>('/focus/start', itemId ? { item_id: itemId } : {}).then(r => r.focus);
+/** Starts a tomato on the item, or free focus without one, which may have a title and a project of its own. */
+export const startFocus = (itemId: string | null, free: FreeFocus = {}) => post<{ focus: Focus }>('/focus/start', itemId ? { item_id: itemId } : free).then(r => r.focus);
+/** Says what a session was for: an item, or free focus with a title and a project of its own. */
+export const updateFocusSession = (sessionId: string, body: SessionWrite) => patch<{ session: FocusSession }>(`/focus/sessions/${sessionId}`, body).then(r => r.session);
 export const stopFocus = () => post<{ focus: Focus }>('/focus/stop').then(r => r.focus);
 export const restFocus = () => post<{ focus: Focus }>('/focus/rest').then(r => r.focus);
 /** Work sessions that started on the days `from` to `to`, both inclusive. */

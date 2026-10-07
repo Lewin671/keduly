@@ -307,11 +307,13 @@ var Suggestions = Table[Suggestion]{
 // FocusSession is one stretch of the focus timer. EndAt is the planned end until the session
 // is given up, which moves it to that moment.
 type FocusSession struct {
-	ID             string
-	UserID         string
-	Kind           string // "work" or "rest"
-	ItemID         *string
-	Title          string // the item's title when the session started
+	ID     string
+	UserID string
+	Kind   string // "work" or "rest"
+	ItemID *string
+	// ProjectID files free focus under a project. It is empty while the session has an item.
+	ProjectID      *string
+	Title          string // the item's title when the session was put on it; for free focus, what the user called it
 	StartAt        string
 	EndAt          string
 	PlannedMinutes int
@@ -322,11 +324,11 @@ type FocusSession struct {
 
 var FocusSessions = Table[FocusSession]{
 	Name: "focus_sessions",
-	Cols: []string{"id", "user_id", "kind", "item_id", "title", "start_at", "end_at", "planned_minutes",
+	Cols: []string{"id", "user_id", "kind", "item_id", "project_id", "title", "start_at", "end_at", "planned_minutes",
 		"answered", "created_by_kind", "created_by_name"},
 	Order: "start_at, rowid",
 	fields: func(s *FocusSession) []any {
-		return []any{&s.ID, &s.UserID, &s.Kind, &s.ItemID, &s.Title, &s.StartAt, &s.EndAt, &s.PlannedMinutes,
+		return []any{&s.ID, &s.UserID, &s.Kind, &s.ItemID, &s.ProjectID, &s.Title, &s.StartAt, &s.EndAt, &s.PlannedMinutes,
 			&s.Answered, &s.CreatedByKind, &s.CreatedByName}
 	},
 }

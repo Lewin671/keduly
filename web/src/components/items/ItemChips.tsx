@@ -8,10 +8,11 @@ import { atLocal, hhmm, snap, toUtc, ymd, wall } from '../../lib/dates';
 import { dayLabel, dueLabel, dur, slotLabel, span } from '../../lib/format';
 import { openTimer, startFocus, workingOn } from '../../state/focus';
 import { removeItem, saveItem, toggleImportant } from '../../state/items';
-import { activeProjects, areas, colorOf, headings, now, projectOf, today } from '../../state/store';
+import { colorOf, headings, now, projectOf, today } from '../../state/store';
 import { decide, describe, timeRange } from '../../state/suggestions';
 import { Icon } from '../Icons';
 import { Popover } from '../Popover';
+import { ProjectOptions } from './parts';
 
 type Chip = 'when' | 'estimate' | 'due' | 'project' | 'delete';
 
@@ -221,21 +222,14 @@ function DuePop({ item, patch, onClose }: { item: Item; patch: Patch; onClose: (
 }
 
 function ProjectPop({ item, patch, onClose }: { item: Item; patch: Patch; onClose: () => void }): JSX.Element {
-  const list = activeProjects.value;
   const mine = headings.value.filter(h => h.project_id === item.project_id);
-  const loose = list.filter(p => !areas.value.some(a => a.id === p.area_id));
   return (
     <Popover onClose={onClose} label={t('project.pick')}>
       <div class="form">
         <label class="lbl">{t('field.project')}
           <select class="fld" value={item.project_id ?? ''} onChange={event => { void patch({ project_id: event.currentTarget.value || null, heading_id: null }, true); }}>
             <option value="">{t('nav.inbox')}</option>
-            {loose.map(p => <option value={p.id}>{p.name}</option>)}
-            {areas.value.filter(a => list.some(p => p.area_id === a.id)).map(a => (
-              <optgroup label={a.name}>
-                {list.filter(p => p.area_id === a.id).map(p => <option value={p.id}>{p.name}</option>)}
-              </optgroup>
-            ))}
+            <ProjectOptions />
           </select>
         </label>
         {mine.length > 0 && (

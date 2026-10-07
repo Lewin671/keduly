@@ -261,3 +261,97 @@ func TestFocusSettingsAndToday(t *testing.T) {
 	c.Call("POST", "/focus/start?dry_run=1", nil, http.StatusOK, nil)
 	wantFocus(t, getFocus(t, c), "idle", 1, 1, 10)
 }
+
+func TestFocusSessionEdit(t *testing.T) {
+	s, c := setup(t)
+	p := mkProject(t, c, "Keduly")
+	item := mkItem(t, c, M{"title": "write the sync", "project_id": p.ID})
+
+	// Free focus that ran out is still what the timer shows, and can be named and filed already.
+	f := focusCall(t, c, "POST", "/focus/start", nil)
+	id := f.Session.ID
+	s.SetNow(s.Now().Add(25 * time.Minute))
+	var resp struct {
+		Session api.FocusSession `json:"session"`
+	}
+	path := "/focus/sessions/" + id
+	c.Call("PATCH", path, M{"title": "  read the CalDAV RFC ", "project_id": p.ID}, http.StatusOK, &resp)
+	if got := resp.Session; got.Title != "read the CalDAV RFC" || got.ProjectID == nil || *got.ProjectID != p.ID || got.ItemID != nil || !got.Completed {
+		t.Fatalf("filed under a project: %+v", got)
+	}
+	f = getFocus(t, c)
+	wantFocus(t, f, "over", 1, 1, 5)
+	if f.Session.Title != "read the CalDAV RFC" || f.Session.ProjectID == nil {
+		t.Fatalf("the timer shows the edit: %+v", f.Session)
+	}
+	var stats api.FocusStats
+	c.Call("GET", "/focus/stats", nil, http.StatusOK, &stats)
+	if len(stats.Projects) != 1 || stats.Projects[0].ProjectID == nil || stats.Projects[0].Tomatoes != 1 {
+		t.Fatalf("stats count it under the project: %+v", stats.Projects)
+	}
+	var detail api.ProjectDetail
+	c.Call("GET", "/projects/"+p.ID, nil, http.StatusOK, &detail)
+	if detail.FocusWeekMinutes != 25 {
+		t.Fatalf("focus_week_minutes %d, want 25", detail.FocusWeekMinutes)
+	}
+
+	// On an item it counts towards the item, and takes its title and project from it.
+	c.Call("PATCH", path, M{"item_id": item.ID}, http.StatusOK, &resp)
+	if got := resp.Session; got.Title != "write the sync" || got.ItemID == nil || *got.ProjectID != p.ID {
+		t.Fatalf("put on an item: %+v", got)
+	}
+	if got := getItem(t, c, item.ID).Focus; got.Tomatoes != 1 || got.Minutes != 25 {
+		t.Fatalf("item focus %+v", got)
+	}
+	wantCode(t, c, "PATCH", path, M{"title": "mine"}, http.StatusBadRequest, "invalid_request")
+	wantCode(t, c, "PATCH", path, M{"item_id": item.ID, "project_id": nil}, http.StatusBadRequest, "invalid_request")
+
+	// Taken off the item it is plain free focus again, unless the same request says otherwise.
+	c.Call("PATCH", path, M{"item_id": nil}, http.StatusOK, &resp)
+	if got := resp.Session; got.Title != "" || got.ItemID != nil || got.ProjectID != nil {
+		t.Fatalf("taken off the item: %+v", got)
+	}
+	if got := getItem(t, c, item.ID).Focus; got.Tomatoes != 0 {
+		t.Fatalf("item focus after taking it off: %+v", got)
+	}
+	c.Call("PATCH", path, M{"item_id": item.ID}, http.StatusOK, &resp)
+	c.Call("PATCH", path, M{"item_id": nil, "title": "review"}, http.StatusOK, &resp)
+	if got := resp.Session; got.Title != "review" || got.ProjectID != nil {
+		t.Fatalf("taken off the item with a title: %+v", got)
+	}
+
+	// A done item can still be given the time; someone else's item, a missing project and a rest cannot.
+	c.Call("PATCH", "/items/"+item.ID, M{"status": "done"}, http.StatusOK, nil)
+	c.Call("PATCH", path, M{"item_id": item.ID}, http.StatusOK, &resp)
+	wantCode(t, c, "PATCH", path, M{"item_id": "nope"}, http.StatusBadRequest, "invalid_request")
+	wantCode(t, c, "PATCH", path, M{"item_id": nil, "project_id": "nope"}, http.StatusBadRequest, "invalid_request")
+	wantCode(t, c, "PATCH", path, M{"start": "2026-10-13T09:00:00Z"}, http.StatusBadRequest, "invalid_request")
+	rest := focusCall(t, c, "POST", "/focus/rest", nil)
+	wantCode(t, c, "PATCH", "/focus/sessions/"+rest.Session.ID, M{"item_id": nil}, http.StatusNotFound, "not_found")
+
+	// Free focus can also start with its title and project, as "one more" of the same does.
+	f = focusCall(t, c, "POST", "/focus/start", M{"title": "read the CalDAV RFC", "project_id": p.ID})
+	if f.Session.Title != "read the CalDAV RFC" || f.Session.ProjectID == nil || f.Session.ItemID != nil {
+		t.Fatalf("free focus started with a title: %+v", f.Session)
+	}
+	focusCall(t, c, "POST", "/focus/stop", nil)
+	wantCode(t, c, "POST", "/focus/start", M{"item_id": item.ID, "title": "mine"}, http.StatusBadRequest, "invalid_request")
+	wantCode(t, c, "POST", "/focus/start", M{"project_id": "nope"}, http.StatusBadRequest, "invalid_request")
+
+	// A dry run changes nothing.
+	c.Call("PATCH", path+"?dry_run=1", M{"item_id": nil}, http.StatusOK, nil)
+	if got := getItem(t, c, item.ID).Focus; got.Tomatoes != 1 {
+		t.Fatalf("after a dry run: %+v", got)
+	}
+
+	// A project that is deleted leaves its free focus without one.
+	c.Call("PATCH", path, M{"item_id": nil, "project_id": p.ID}, http.StatusOK, &resp)
+	c.Call("DELETE", "/projects/"+p.ID, nil, http.StatusNoContent, nil)
+	var list struct {
+		Sessions []api.FocusSession `json:"sessions"`
+	}
+	c.Call("GET", "/focus/sessions?from="+day+"&to="+day, nil, http.StatusOK, &list)
+	if len(list.Sessions) != 1 || list.Sessions[0].ProjectID != nil {
+		t.Fatalf("after deleting the project: %+v", list.Sessions)
+	}
+}

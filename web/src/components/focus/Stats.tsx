@@ -14,6 +14,7 @@ import { colorOf, projectOf, today } from '../../state/store';
 import { Icon } from '../Icons';
 import { Blank, ListHead, LoadFailed, Skeleton } from '../items/parts';
 import { Tom } from './parts';
+import { SessionPop } from './SessionPop';
 
 /** How much of the chart's height the tallest possible bar takes; the rest is room for its number. */
 const BAR = 84;
@@ -49,6 +50,8 @@ export function Stats(): JSX.Element {
   const stats = useResource(`focus-stats:${day}`, api.getFocusStats);
   const log = useResource(`focus-sessions:${from}:${day}`, () => api.listFocusSessions(from, day));
   const [all, setAll] = useState(false);
+  /** The record whose popover is open. */
+  const [filing, setFiling] = useState<string | null>(null);
   const head = <ListHead icon={<Icon name="chart" />} name={t('focus.stats')} color="var(--blue)" />;
   if (stats.failed || log.failed) return <div class="list">{head}<LoadFailed retry={() => { stats.reload(); log.reload(); }} /></div>;
   if (!stats.data || !log.data) return <div class="list">{head}<Skeleton /></div>;
@@ -98,11 +101,14 @@ export function Stats(): JSX.Element {
             <em><Tom />{d.sessions.filter(x => x.completed).length} · {span(d.sessions.reduce((sum, x) => sum + minutesSpent(x, Infinity), 0))}</em>
           </div>
           {d.sessions.map(x => (
-            <div class="rrow" style={{ '--c': colorOf(x.project_id) }}>
-              <time>{hhmm(wall(x.start))}–{hhmm(wall(x.end))}</time>
-              <i class="fdot" />
-              <span title={sessionTitle(x)}>{sessionTitle(x)}</span>
-              <em>{x.completed ? <Tom /> : t('stats.unfinished', { dur: span(minutesSpent(x, Infinity)) })}</em>
+            <div class="ranch" key={x.id}>
+              <button class="rrow" style={{ '--c': colorOf(x.project_id) }} aria-expanded={filing === x.id} onClick={() => setFiling(filing === x.id ? null : x.id)}>
+                <time>{hhmm(wall(x.start))}–{hhmm(wall(x.end))}</time>
+                <i class="fdot" />
+                <span title={sessionTitle(x)}>{sessionTitle(x)}</span>
+                <em>{x.completed ? <Tom /> : t('stats.unfinished', { dur: span(minutesSpent(x, Infinity)) })}</em>
+              </button>
+              {filing === x.id && <SessionPop session={x} onClose={() => setFiling(null)} />}
             </div>
           ))}
         </div>

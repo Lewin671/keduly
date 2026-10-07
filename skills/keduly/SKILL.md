@@ -23,7 +23,9 @@ the server URL and a token (web app, Settings), then `keduly login --server URL 
 - **Focus**: a pomodoro timer, one per account. A **tomato** is one work period run to its end
   (`keduly whoami` shows its length, 25 minutes by default); giving it up keeps the minutes but
   earns no tomato. A rest follows each tomato and a long rest every fourth. Each tomato counts
-  towards one item or is free focus. Tomatoes are what was actually done, next to `--estimate`.
+  towards one item or is free focus, which may carry a title and a project of its own. What a
+  session was for can be corrected afterwards. Tomatoes are what was actually done, next to
+  `--estimate`.
 - **Suggestion**: a change you propose. It shows on the user's calendar as tentative and happens
   only when the user accepts it.
 - **Activity log**: every change, who made it and why. Most entries can be undone and redone.
@@ -58,7 +60,7 @@ the server URL and a token (web app, Settings), then `keduly login --server URL 
 | `keduly area list` · `keduly heading list P` | Areas · the headings of a project |
 | `keduly suggest list [--status pending\|accepted\|rejected\|any]` | Suggestions; see what the user decided |
 | `keduly focus status` | The timer: idle, working (on what, time left), a tomato that ran out and waits for the user, or resting; today's tomatoes and the round |
-| `keduly focus log [--from D] [--to D]` | Focus sessions (default: today's): time, length, tomato or given up (未完成), item |
+| `keduly focus log [--from D] [--to D]` | Focus sessions (default: today's): ID, time, length, tomato or given up (未完成), item or free focus (自由专注, or its title), project |
 | `keduly focus stats` | The last 7 days: tomatoes and time per day and per project, and the streak of days with a tomato |
 | `keduly activity [--limit N]` | Recent changes with their IDs, authors and reasons |
 
@@ -90,13 +92,15 @@ the server URL and a token (web app, Settings), then `keduly login --server URL 
 | `keduly project archive P` · `unarchive P` · `rm P` | Hides, restores, deletes with all its items and events |
 | `keduly area add NAME` · `rename A NAME` · `rm A` | Areas; removing one keeps its projects |
 | `keduly heading add P NAME` · `rename H NAME` · `rm H` | Headings; removing one keeps its items |
-| `keduly focus start [ITEM]` | Starts a tomato on the item, or free focus without one. Gives up a tomato that is running |
+| `keduly focus start [ITEM]` | Starts a tomato on the item, or free focus without one (`--title T --project P` name and file it from the start). Gives up a tomato that is running |
 | `keduly focus stop` | Gives up the running tomato, skips the rest, or dismisses a tomato that ran out |
 | `keduly focus rest` | Starts the rest after a tomato (the long one after every fourth) |
+| `keduly focus edit SESSION [--item ITEM\|none] [--project P\|none] [--title T]` | Says what a session was for. `--item` moves its time and tomato to an item (done items too); `--item none` makes it free focus. `--project` and `--title` are for free focus only. SESSION is an ID or prefix from `focus log` |
 | `keduly undo [ACTIVITY]` · `keduly redo ACTIVITY` | Undo (default: your latest change) and redo |
 
 The timer is the user's attention: start, stop or rest it only when they ask. It is not in the
-activity log and `undo` does not apply to it. `keduly item done ID` also ends a tomato running on
+activity log and `undo` does not apply to it; neither does it apply to `focus edit`, so file a
+session only where the user said what it was, and repeat the command to put it back. `keduly item done ID` also ends a tomato running on
 that item.
 
 ## Only the user can
@@ -144,7 +148,9 @@ summarise what you proposed and that it waits for the user to accept.
 
 ```sh
 keduly focus stats                             # tomatoes and time per day and per project
-keduly focus log --from 2026-10-12 --to today  # each session, with its item
+keduly focus log --from 2026-10-12 --to today  # each session, with its ID and item
+keduly focus edit 3f9a1c2e --project Keduly --title "读 CalDAV 的 RFC"  # "that free tomato was RFC reading"
+keduly focus edit 3f9a1c2e --item 8b21d0aa     # or: it was really work on this item
 keduly item list --status any --query sync     # 预计 1h30m · 番茄 5 · 已用 2h5m: it took longer
 ```
 

@@ -82,7 +82,13 @@ body[data-zen] .zen { min-height: calc(100vh - 64px); }
 .srow em { font-style: normal; color: var(--label-2); font-size: 13px; white-space: nowrap; }
 .srow .sbar { grid-column: 1 / -1; height: 4px; border-radius: 2px; background: var(--fill); overflow: hidden; }
 .srow .sbar i { display: block; height: 100%; border-radius: 2px; background: var(--c); }
-.rrow { display: flex; align-items: center; gap: 10px; padding: 7px 2px; font-size: 14.5px; }
+.rrow { display: flex; align-items: center; gap: 10px; width: calc(100% + 16px); margin: 0 -8px; padding: 7px 10px; border-radius: 8px; font-size: 14.5px; text-align: left; }
+.rrow:hover, .rrow[aria-expanded="true"] { background: var(--fill); }
+/* A record opens a popover that says what the session was for. */
+.ranch { position: relative; }
+.ranch > .pop { top: calc(100% + 2px); left: 94px; }
+.zs .anch > .pop { top: calc(100% + 8px); left: 50%; margin-left: -143px; color: var(--label); }
+.zlink { color: var(--blue); font-size: 14px; }
 .rrow time { flex: none; width: 92px; color: var(--label-2); font-size: 13px; }
 .rrow span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rrow em { font-style: normal; color: var(--label-2); font-size: 13px; white-space: nowrap; }

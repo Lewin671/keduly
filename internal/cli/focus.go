@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/Lewin671/keduly/internal/api"
@@ -78,7 +79,9 @@ func (a *app) focusStatus(args []string) error {
 
 func (a *app) focusStart(args []string) error {
 	fs := a.flags("focus start", true)
-	pos, err := a.parse(fs, args, "[ITEM_ID]")
+	project := fs.String("project", "", "for free focus: project name or ID")
+	title := fs.String("title", "", "for free focus: what the time goes to")
+	pos, err := a.parse(fs, args, "[ITEM_ID | --title T --project P]")
 	if err != nil {
 		return err
 	}
@@ -90,6 +93,14 @@ func (a *app) focusStart(args []string) error {
 		if body["item_id"], err = a.itemID(pos[0]); err != nil {
 			return err
 		}
+	}
+	if given(fs, "project") {
+		if body["project_id"], err = a.projectID(*project); err != nil {
+			return err
+		}
+	}
+	if given(fs, "title") {
+		body["title"] = *title
 	}
 	return a.focusCommand("/focus/start", "已开始一个番茄", body)
 }
@@ -152,12 +163,93 @@ func (a *app) focusLog(args []string) error {
 			// Not given up and not completed: its planned end is still ahead.
 			mark = "进行中"
 		}
-		line := fmt.Sprintf("%s  %-4s %s  %s", span(s.Start, s.End, loc), minutesLabel(int(end.Sub(start).Round(time.Minute).Minutes())), mark, sessionTitle(s))
+		line := fmt.Sprintf("%s  %s  %-4s %s  %s", short(s.ID), span(s.Start, s.End, loc), minutesLabel(int(end.Sub(start).Round(time.Minute).Minutes())), mark, sessionTitle(s))
 		if s.ProjectID != nil && projects[*s.ProjectID] != "" {
 			line += "  (" + projects[*s.ProjectID] + ")"
 		}
 		a.printf("%s\n", line)
 	}
+	return nil
+}
+
+// sessionID resolves a prefix among the sessions of the last 62 days, as far back as the log goes.
+func (a *app) sessionID(prefix string) (string, error) {
+	if len(prefix) == idLength {
+		return prefix, nil
+	}
+	loc, err := a.zone()
+	if err != nil {
+		return "", err
+	}
+	now := a.env.Now().In(loc)
+	var resp struct {
+		Sessions []api.FocusSession `json:"sessions"`
+	}
+	q := url.Values{"from": {now.AddDate(0, 0, -62).Format("2006-01-02")}, "to": {now.Format("2006-01-02")}}
+	if err := a.get("/focus/sessions", q, &resp); err != nil {
+		return "", err
+	}
+	ids := make([]string, 0, len(resp.Sessions))
+	for _, s := range resp.Sessions {
+		ids = append(ids, s.ID)
+	}
+	return pick("focus session", prefix, ids)
+}
+
+func (a *app) focusEdit(args []string) error {
+	fs := a.flags("focus edit", true)
+	item := fs.String("item", "", `the item the time counts towards; "none" makes it free focus`)
+	project := fs.String("project", "", `for free focus: project name or ID; "none" for no project`)
+	title := fs.String("title", "", "for free focus: what the time went to; empty clears it")
+	pos, err := a.parseN(fs, args, 1, "SESSION_ID [--item ITEM|none] [--project P|none] [--title T]")
+	if err != nil {
+		return err
+	}
+	body := map[string]any{}
+	if given(fs, "item") {
+		body["item_id"] = nil
+		if !strings.EqualFold(*item, "none") {
+			if body["item_id"], err = a.itemID(*item); err != nil {
+				return err
+			}
+		}
+	}
+	if given(fs, "project") {
+		body["project_id"] = nil
+		if !strings.EqualFold(*project, "none") {
+			if body["project_id"], err = a.projectID(*project); err != nil {
+				return err
+			}
+		}
+	}
+	if given(fs, "title") {
+		body["title"] = *title
+	}
+	if len(body) == 0 {
+		return usagef("nothing to change: give --item, --project or --title")
+	}
+	id, err := a.sessionID(pos[0])
+	if err != nil {
+		return err
+	}
+	var resp struct {
+		Session api.FocusSession `json:"session"`
+	}
+	if printed, _, err := a.send(http.MethodPatch, "/focus/sessions/"+id, nil, body, &resp); err != nil || printed {
+		return err
+	}
+	loc, err := a.zone()
+	if err != nil {
+		return err
+	}
+	s := resp.Session
+	line := fmt.Sprintf("已修改专注记录%s\n%s  %s  %s", a.dryNote(), short(s.ID), span(s.Start, s.End, loc), sessionTitle(s))
+	if s.ProjectID != nil {
+		if name := a.projectNames()[*s.ProjectID]; name != "" {
+			line += "  (" + name + ")"
+		}
+	}
+	a.printf("%s\n", line)
 	return nil
 }
 

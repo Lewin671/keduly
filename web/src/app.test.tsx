@@ -905,6 +905,62 @@ describe('focus', () => {
     expect([...document.querySelectorAll('.za .zb')].map(b => b.textContent)).toEqual(['跳过休息']);
   });
 
+  it('names free focus and files it under a project or an item, from the timer and from the records', async () => {
+    const free = session('f3', at('10:40'), { item_id: null, project_id: null, title: '', completed: false });
+    const on = (s: FocusSession): Focus => ({ ...working, session: s });
+    const change = async (field: number, value: string) => {
+      const el = document.querySelectorAll<HTMLInputElement | HTMLSelectElement>('.pop .fld')[field]!;
+      el.value = value;
+      el.dispatchEvent(new Event(el.tagName === 'INPUT' ? 'input' : 'change', { bubbles: true }));
+      if (el.tagName === 'INPUT') el.dispatchEvent(new Event('change', { bubbles: true }));
+      await settle();
+    };
+    table['GET /focus'] = { focus: on(free) };
+    await open('#/focus/timer');
+    expect(document.querySelector('.zs')!.textContent).toBe('不记到任何事项上 · 归到…');
+    find('.zlink', '归到…').click();
+    await settle();
+    expect([...document.querySelectorAll('.pop .lbl')].map(l => l.firstChild!.textContent)).toEqual(['项目', '事项', '做了什么']);
+    // Without a project the items offered are today's.
+    expect([...document.querySelectorAll('.pop select')[1]!.querySelectorAll('option')].map(o => o.textContent)).toContain('实现 CalDAV 同步');
+
+    const named = { ...free, title: '读 RFC' };
+    table['PATCH /focus/sessions/f3'] = { session: named };
+    table['GET /focus'] = { focus: on(named) };
+    await change(2, '读 RFC');
+    expect(callsTo('PATCH', '/focus/sessions/f3')[0]!.body).toEqual({ title: '读 RFC' });
+    expect(document.querySelector('.zt')!.textContent).toBe('读 RFC');
+
+    const filed = { ...named, project_id: 'p1' };
+    table['PATCH /focus/sessions/f3'] = { session: filed };
+    table['GET /focus'] = { focus: on(filed) };
+    await change(0, 'p1');
+    expect(callsTo('PATCH', '/focus/sessions/f3')[1]!.body).toEqual({ item_id: null, project_id: 'p1' });
+    expect(document.querySelector('.zs')!.textContent).toContain(`${bootstrap.projects[0]!.name} · 修改`);
+    expect(callsTo('GET', '/items').at(-1)!.query.get('project_id')).toBe('p1');
+
+    // One more of the same keeps the title and the project.
+    table['GET /focus'] = { focus: { ...over(), session: { ...filed, completed: true } } };
+    await open('#/focus/timer');
+    table['POST /focus/start'] = { focus: on(filed) };
+    find('.zb', '再来一个').click();
+    await settle();
+    expect(callsTo('POST', '/focus/start')[0]!.body).toEqual({ title: '读 RFC', project_id: 'p1' });
+
+    // A record in the statistics opens the same popover; on an item it has no title of its own.
+    await open('#/focus/stats');
+    find('.rrow', '自由专注').click();
+    await settle();
+    table['PATCH /focus/sessions/f9'] = { session: { ...log[1]!, item_id: 'i1', project_id: 'p1', title: '实现 CalDAV 同步' } };
+    await change(1, 'i1');
+    expect(callsTo('PATCH', '/focus/sessions/f9')[0]!.body).toEqual({ item_id: 'i1' });
+    find('.rrow', '整理需求文档').click();
+    await settle();
+    expect(document.querySelectorAll('.pop .fld')).toHaveLength(2);
+    // The item it is on is offered even when it is not one of the project's open items.
+    expect(document.querySelectorAll<HTMLSelectElement>('.pop select')[1]!.value).toBe('i6');
+  });
+
   it('offers the long rest when a round is complete', async () => {
     table['GET /focus'] = { focus: { ...over(), tomatoes_today: 4, round_done: 4, rest_minutes: 15 } };
     await open('#/focus/timer');

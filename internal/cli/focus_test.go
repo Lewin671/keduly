@@ -41,6 +41,29 @@ func TestFocus(t *testing.T) {
 	out := h.ok("focus", "log")
 	wantIn(t, out, "25m  番茄  「实现同步」", "10m  未完成  自由专注")
 
+	// The free session is named and filed under a project afterwards, then moved to the item.
+	var log struct {
+		Sessions []api.FocusSession `json:"sessions"`
+	}
+	h.json(&log, "focus", "log")
+	free := log.Sessions[1].ID
+	wantIn(t, out, free[:8])
+	h.ok("project", "add", "Keduly")
+	wantIn(t, h.ok("focus", "edit", free[:8], "--title", "读 RFC", "--project", "Keduly", "--dry-run"), "试运行", "「读 RFC」  (Keduly)")
+	wantIn(t, h.ok("focus", "log"), "未完成  自由专注")
+	wantIn(t, h.ok("focus", "edit", free[:8], "--title", "读 RFC", "--project", "Keduly"), "已修改专注记录", "「读 RFC」  (Keduly)")
+	wantIn(t, h.ok("focus", "log"), "未完成  「读 RFC」  (Keduly)")
+	wantIn(t, h.ok("focus", "stats"), "Keduly")
+	wantIn(t, h.ok("focus", "edit", free, "--item", id[:6]), "「实现同步」")
+	wantIn(t, h.ok("item", "show", id), "番茄 1 · 已用 35m")
+	h.fails(1, []string{"focus", "edit", free, "--title", "x"}, "follow the session's item")
+	wantIn(t, h.ok("focus", "edit", free, "--item", "none"), "自由专注")
+	h.fails(2, []string{"focus", "edit", free}, "nothing to change")
+	h.fails(1, []string{"focus", "edit", "zzzz", "--title", "x"}, "no focus session")
+
+	wantIn(t, h.ok("focus", "start", "--title", "读 RFC", "--project", "Keduly", "--dry-run"), "专注中：「读 RFC」")
+	h.fails(1, []string{"focus", "start", id[:6], "--title", "x"}, "follow the session's item")
+
 	wantIn(t, h.ok("focus", "stats"), "最近 7 天：1 个番茄 · 35m · 连续 1 天", "2026-10-13 周二   1 个番茄  35m", "未归项目")
 	var stats api.FocusStats
 	h.json(&stats, "focus", "stats")

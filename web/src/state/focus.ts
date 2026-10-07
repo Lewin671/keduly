@@ -2,7 +2,7 @@
 // counts down between two answers and asks again when the running session should have ended.
 import { batch, computed, effect, signal } from '@preact/signals';
 import * as api from '../api/client';
-import type { Focus, FocusSession, Item } from '../api/types';
+import type { Focus, FocusSession, FreeFocus, Item, SessionWrite } from '../api/types';
 import { t } from '../i18n';
 import { minutesSpent, secondsLeft } from '../lib/focus';
 import { span } from '../lib/format';
@@ -34,7 +34,7 @@ export const todayItems = signal<Item[] | undefined>(undefined);
 export const zen = computed(() => route.value.mode === 'focus' && route.value.focus === 'timer' && focus.value !== null && focus.value.state !== 'idle');
 
 export const freeTitle = (): string => t('focus.free');
-export const sessionTitle = (s: FocusSession): string => (s.item_id ? s.title : freeTitle());
+export const sessionTitle = (s: FocusSession): string => s.title || freeTitle();
 /** The colour a timer takes: green while resting, otherwise its item's project. */
 export const focusColor = (f: Focus): string => (f.state === 'rest' ? 'var(--green)' : colorOf(f.session?.project_id));
 /** Whether a tomato is running on this item right now. */
@@ -197,13 +197,13 @@ export function openTimer(): void {
   scrollTo(0, 0);
 }
 
-/** Starts a tomato on the item (`null`: free focus) and shows the timer page. */
-export async function startFocus(itemId: string | null, item?: Item): Promise<void> {
+/** Starts a tomato on the item (`null`: free focus, with the title and project it may have) and shows the timer page. */
+export async function startFocus(itemId: string | null, item?: Item, free?: FreeFocus): Promise<void> {
   if (item) remembered.value = { ...remembered.value, [item.id]: item };
   askToNotify();
   const before = focus.value;
   const spent = before?.state === 'work' ? minutesSpent(before.session!, serverTime()) : 0;
-  const next = await attempt(api.startFocus(itemId));
+  const next = await attempt(api.startFocus(itemId, free));
   if (!next) return;
   apply(next);
   pick.value = itemId;
@@ -244,4 +244,20 @@ export async function finishFocus(): Promise<void> {
 }
 
 /** One more tomato on the same thing. */
-export const againFocus = (): Promise<void> => startFocus(focus.value!.session!.item_id);
+export function againFocus(): Promise<void> {
+  const s = focus.value!.session!;
+  return startFocus(s.item_id, undefined, { title: s.title, project_id: s.project_id });
+}
+
+/** Says what a session was for: an item, or free focus with a title and a project of its own. */
+export async function fileSession(id: string, body: SessionWrite, item?: Item): Promise<void> {
+  if (item) remembered.value = { ...remembered.value, [item.id]: item };
+  const saved = await attempt(api.updateFocusSession(id, body));
+  const f = focus.value;
+  if (saved && f?.session?.id === id) {
+    // The timer is on this session: it shows the change before the reload answers.
+    focus.value = { ...f, session: saved };
+    pick.value = saved.item_id;
+  }
+  void refresh();
+}
