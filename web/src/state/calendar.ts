@@ -20,7 +20,9 @@ export interface EventDraft {
 export type CalPop =
   /** An existing entry: the editor, a time block's actions, or a suggestion, depending on the entry. */
   | { kind: 'event'; event: CalEvent; day: string | null }
-  | { kind: 'new'; draft: EventDraft; day: string | null };
+  | { kind: 'new'; draft: EventDraft; day: string | null }
+  /** A focus session drawn as a block: what it was for. */
+  | { kind: 'session'; sessionId: string; day: string };
 
 /** The open popover and the day column or cell it hangs from (`null`: the toolbar). */
 export const calPop = signal<CalPop | null>(null);

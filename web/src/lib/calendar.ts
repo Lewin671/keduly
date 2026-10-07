@@ -1,5 +1,5 @@
 // How events map onto days, and how the calendar pages through time.
-import type { CalEvent } from '../api/types';
+import type { CalEvent, FocusSession } from '../api/types';
 import { addDays, addMonths, isoWeek, monthStart, spanOnDay, startOfWeek, type HourSpan, wall } from './dates';
 
 export type CalView = 'day' | 'week' | 'month' | 'year';
@@ -8,6 +8,20 @@ export type CalView = 'day' | 'week' | 'month' | 'year';
 export function eventSpan(event: CalEvent, day: string): HourSpan | null {
   if (event.all_day || !event.start || !event.end) return null;
   return spanOnDay(wall(event.start), wall(event.end), day);
+}
+
+/** A session shorter than this stays a line: a block is always drawn taller than that. */
+const BLOCK_MS = 10 * 60_000;
+
+/**
+ * Whether a session is drawn as a block of its own. Beside its item's time block a line is
+ * enough; where nothing was planned, the block is all that says what the time went to.
+ */
+export function standsAlone(s: Pick<FocusSession, 'item_id' | 'start'>, endMs: number, events: readonly CalEvent[]): boolean {
+  const startMs = Date.parse(s.start);
+  if (endMs - startMs < BLOCK_MS) return false;
+  return !events.some(e => e.item_id !== null && e.item_id === s.item_id && e.status === 'confirmed' && !!e.start && !!e.end
+    && Date.parse(e.start) < endMs && Date.parse(e.end) > startMs);
 }
 
 /** Whether an all-day event covers a day (its end date is inclusive). */

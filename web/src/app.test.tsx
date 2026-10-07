@@ -363,7 +363,7 @@ describe('calendar', () => {
     expect(document.body.dataset.mode).toBe('cal');
     expect(document.getElementById('title')!.textContent).toBe('10月13日星期二');
     expect(document.querySelector('.allday .ad')!.textContent).toBe('国庆假期');
-    const blocks = [...document.querySelectorAll<HTMLElement>('.blk')];
+    const blocks = [...document.querySelectorAll<HTMLElement>('.blk:not(.ses)')];
     expect(blocks.map(b => b.querySelector('.bt')!.textContent)).toEqual(['站会', '设计评审', '候选人面试', '写周报', '实现 CalDAV 同步']);
     // The two overlapping events share the column.
     expect(blocks[1]!.style.width).toBe('calc(50% - 4px)');
@@ -1043,12 +1043,40 @@ describe('focus', () => {
 
   it('draws the sessions of a day beside the plan, and starts a tomato from a time block', async () => {
     await open(`#/cal/day/${DAY}`);
+    // During its item's time block a session is a line beside it; a slip of a few minutes is a line too.
+    // Where nothing was planned for it, it is a block of its own that says what the time went to.
+    table['GET /focus/sessions'] = { sessions: [
+      session('f1', at('09:32')),
+      session('f5', at('15:40'), { item_id: 'i1', title: '实现 CalDAV 同步' }),
+      session('f6', at('12:00'), { item_id: null, project_id: null, title: '', end: at('12:04'), completed: false }),
+      session('f7', at('20:48'), { item_id: null, project_id: null, title: '等高线学习' }),
+    ] };
+    // Late in the evening, so that none of them is still running.
+    vi.setSystemTime(later(680));
+    table['GET /focus'] = { focus: { ...idle, now: stamp(later(680)) } };
+    await open(`#/cal/day/${DAY}`);
     const strips = [...document.querySelectorAll<HTMLElement>('.col .fs')];
-    expect(strips).toHaveLength(1);
-    expect(parseFloat(strips[0]!.style.top)).toBeCloseTo((9 + 32 / 60) * 58, 3);
-    expect(strips[0]!.title).toBe('专注 09:32–09:57 · 回复 PR 评论');
+    expect(strips.map(s => s.title)).toEqual(['专注 15:40–16:05 · 实现 CalDAV 同步', '专注 12:00–12:04 · 自由专注']);
+    expect(parseFloat(strips[0]!.style.top)).toBeCloseTo((15 + 40 / 60) * 58, 3);
+    const blocks = [...document.querySelectorAll<HTMLElement>('.col .blk.ses')];
+    expect(blocks.map(b => b.textContent)).toEqual(['回复 PR 评论09:32–09:57', '等高线学习20:48–21:13']);
+    expect(parseFloat(blocks[1]!.style.top)).toBeCloseTo((20 + 48 / 60) * 58 + 1, 3);
     const q = callsTo('GET', '/focus/sessions')[0]!.query;
     expect([q.get('from'), q.get('to')]).toEqual([DAY, DAY]);
+
+    // Clicking the block files the session.
+    blocks[1]!.click();
+    await settle();
+    expect([...document.querySelectorAll('.col .pop .lbl')].map(l => l.firstChild!.textContent)).toEqual(['项目', '事项', '做了什么']);
+    table['PATCH /focus/sessions/f7'] = { session: session('f7', at('20:48'), { item_id: null, project_id: 'p1', title: '等高线学习' }) };
+    const project = document.querySelector<HTMLSelectElement>('.col .pop select')!;
+    project.value = 'p1';
+    project.dispatchEvent(new Event('change', { bubbles: true }));
+    await settle();
+    expect(callsTo('PATCH', '/focus/sessions/f7')[0]!.body).toEqual({ item_id: null, project_id: 'p1' });
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await settle();
+    expect(document.querySelector('.col .pop')).toBeNull();
 
     find('.blk', '实现 CalDAV 同步').click();
     await settle();

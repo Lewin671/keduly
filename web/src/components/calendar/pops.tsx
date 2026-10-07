@@ -197,7 +197,7 @@ function BlockPop({ event }: { event: CalEvent }): JSX.Element {
 /** The open popover, when it belongs to `day` (a column or a month cell; `null` is the toolbar). */
 export function CalPopover({ day, place }: { day: string | null; place: string }): JSX.Element | null {
   const pop = calPop.value;
-  if (!pop || pop.day !== day) return null;
+  if (!pop || pop.kind === 'session' || pop.day !== day) return null;
   const event = pop.kind === 'event' ? pop.event : undefined;
   const key = event ? `${event.id}|${event.instance}|${event.status}` : 'new';
   return (

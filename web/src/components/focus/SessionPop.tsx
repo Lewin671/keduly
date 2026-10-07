@@ -14,7 +14,7 @@ import { Popover } from '../Popover';
 const NONE: Item[] = [];
 
 /** Each change applies at once. Without a project the items offered are today's. */
-export function SessionPop({ session: s, onClose }: { session: FocusSession; onClose: () => void }): JSX.Element {
+export function SessionPop({ session: s, onClose, place }: { session: FocusSession; onClose: () => void; /** Where it hangs when it has no anchor of its own. */ place?: string }): JSX.Element {
   const projectId = s.project_id;
   const inProject = useResource(`session-items:${projectId ?? ''}`, () => (projectId ? api.listItems({ project_id: projectId, status: 'open', limit: 200 }).then(page => page.items) : Promise.resolve(NONE)));
   const offered = (projectId ? inProject.data ?? NONE : todayItems.value ?? NONE).map(current);
@@ -37,7 +37,7 @@ export function SessionPop({ session: s, onClose }: { session: FocusSession; onC
   useEffect(() => () => leave.current(), []);
 
   return (
-    <Popover onClose={onClose} label={t('session.pick')}>
+    <Popover onClose={onClose} label={t('session.pick')} {...(place ? { style: place, within: 'self' as const } : {})}>
       <div class="form">
         <label class="lbl">{t('field.project')}
           <select class="fld" value={projectId ?? ''} onChange={event => { void fileSession(s.id, { item_id: null, project_id: event.currentTarget.value || null }); }}>

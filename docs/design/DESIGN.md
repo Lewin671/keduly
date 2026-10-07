@@ -95,7 +95,7 @@ The dial follows Apple's Clock timer: one ring, large light figures, nothing els
 | Item card | The estimate chip adds "已用 …"; a blue 开始专注 / 回到计时 chip |
 | Today | The work still to schedule is the estimate minus the time already spent |
 | Project page | The summary adds "本周已专注 …" |
-| Calendar, day and week | Clicking an open time block offers 开始专注. Sessions are drawn as a thin line in the project's colour at the left edge of the day: the plan in blocks, what happened beside it |
+| Calendar, day and week | Clicking an open time block offers 开始专注. A session during its item's time block is a thin line in the project's colour at the left edge of the day: the plan in blocks, what happened beside it. A session nothing was planned for (free focus, or an item without a time block then) would be invisible that way, so it is a block of its own: outlined and paler than the plan, a tomato mark (an empty one when it was given up), the title and the time. It shares the column with events it overlaps, cannot be dragged, and clicking it opens the filing popover. Sessions under ten minutes stay a line. The month view shows no sessions |
 | When time is up elsewhere | A HUD "完成第 N 个番茄" with 开始休息, a browser notification and a sound |
 | Settings | 专注: the length of a tomato, of the rest, of the long rest and how often, the reminder |
 | CLI | `keduly focus start <item>`, `status`, `stop`, `edit <session>` to file one, and a log and statistics an agent can read to correct estimates |
@@ -276,6 +276,8 @@ product feature) that swaps the sample data between ordinary, crowded and empty.
 | A day without tomatoes | An empty column in the chart; the streak ends there |
 | No sessions at all | Statistics say so and what to do; the timer page still works |
 | No items at all | Free focus is the only choice and is picked |
+| Several tomatoes in a row without a time block | One block each, with the rests as gaps between them |
+| A session only partly inside its item's time block | A line: the block beside it already says what it was |
 | Free focus never filed | It stays "自由专注" under 未归项目; nothing asks for it |
 | The project of filed free focus is deleted | The session keeps its title and goes back to 未归项目 |
 | A session's item is done, or not one of the project's open items | The popover still shows it as the choice |

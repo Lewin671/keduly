@@ -344,6 +344,13 @@ body[data-zen] .zen { min-height: calc(100vh - 64px); }
 /* What was actually done: a thin line in the project's colour beside the plan. */
 .fs { position: absolute; left: -5px; width: 3px; border-radius: 2px; background: var(--c); z-index: 1; }
 .wk .fs { left: 0; width: 2px; }
+/* A session nothing was planned for is a block of its own: an outline, lighter than the plan. */
+.blk.ses { padding-left: 6px; gap: 5px; background: color-mix(in srgb, var(--c) 10%, var(--bg)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 45%, var(--bg)); cursor: pointer; }
+.blk.ses .tom { width: 12px; height: 12px; margin-top: 2px; }
+.blk.ses.short .tom { margin-top: 0; }
+.blk.ses .bt { font-weight: 500; }
+.wk .blk.ses { padding-left: 4px; gap: 4px; }
+.blk.ses.narrow .tom { display: none; }
 .blk[data-fpop] { cursor: pointer; }
 /* Statistics, after Screen Time: a few figures, a week of stacked bars, then where the time went. */
 .figs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin: 10px 0 26px 2px; }
@@ -870,11 +877,11 @@ function timerHTML() {
 }
 // What a session was for: a project, then one of its items, or a title of its own. Without a
 // project the items offered are today's. Each change applies at once.
-function sesPopHTML(x) {
+function sesPopHTML(x, place = '') {
   const t = tasks.find(t => t.id === x.task), p = sessionProject(x);
   const offered = tasks.filter(o => o === t || (p ? o.p === p && !done.has(o.id) : o.g === 'today'));
   const opt = (value, label, on) => `<option value="${value}" ${on ? 'selected' : ''}>${label}</option>`;
-  return `<div class="pop" role="dialog" aria-label="归到项目或事项"><div class="form">
+  return `<div class="pop" style="${place}" role="dialog" aria-label="归到项目或事项"><div class="form">
     <label class="lbl">项目<select class="fld" data-sf="p">${opt('', '未归项目', !p)}${Object.entries(PROJECTS).map(([id, o]) => opt(id, o.name, id === p)).join('')}</select></label>
     <label class="lbl">事项<select class="fld" data-sf="task">${opt('', '不记到事项上', !t)}${offered.map(o => opt(o.id, o.t, o === t)).join('')}</select></label>
     ${t ? '' : `<label class="lbl">做了什么<input class="fld" data-sf="t" value="${x.t || ''}" placeholder="自由专注" maxlength="500"></label>`}</div></div>`;
@@ -1038,15 +1045,23 @@ function popHTML(place) {
 }
 const popSide = right => right ? 'right:3px;transform-origin:calc(100% - 24px) 0' : 'left:2px';
 function colHTML(date, H) {
-  const timed = onDay(date).filter(i => !i.allDay), at = lanes(timed);
-  const blocks = timed.map(i => blockHTML(i, H, at.get(i))).join('');
+  // A session during its item's time block is a line beside it. Where nothing was planned for it
+  // (and it lasted ten minutes or more) it is a block of its own, sharing the column with the plan.
+  const timed = onDay(date).filter(i => !i.allDay), did = sessionsOn(date);
+  const alone = did.filter(x => (x.e - x.s) * 60 >= 10 && !timed.some(i => i.task && i.task === x.task && stateOf(i) !== 'pending' && i.s < x.e && i.e > x.s));
+  const at = lanes([...timed, ...alone]);
+  const sesKey = x => sessions.includes(x) ? sessions.indexOf(x) : 'timer';
+  const blocks = alone.map(x => { const { lane, of } = at.get(x), len = x.e - x.s;
+    return `<button class="blk ses ${len <= 0.5 ? 'short' : ''} ${view === 'week' && of >= 3 ? 'narrow' : ''}" data-ses="${sesKey(x)}" title="专注 ${clockOf(x.s)}–${clockOf(x.e)} · ${sessionTitle(x)}" style="--c:${sessionColour(x)};top:${(x.s - H0) * H + 1}px;height:${Math.max(len * H - 2, 17)}px;left:calc(${lane / of * 100}% + 2px);width:calc(${100 / of}% - 4px)">${tom(x.full)}<span class="bx"><span class="bt">${sessionTitle(x)}</span><span class="bm">${clockOf(x.s)}–${clockOf(x.e)}</span></span></button>`; }).join('')
+    + timed.map(i => blockHTML(i, H, at.get(i))).join('');
+  const filing = mode === 'cal' && openSes !== null ? alone.find(x => sesKey(x) === openSes) : null;
   const now = date === TODAY ? `<div class="now" style="top:${(NOW - H0) * H}px"></div>` : '';
   const o = open !== null && items[open].date === date ? items[open] : null;
   const side = popSide(view === 'week' && mondayIndex(date) >= 4);
   const pop = o ? popHTML(`top:${(o.e - H0) * H + 6}px;${side}`) : '';
   const f = openFocus !== null && items[openFocus].date === date ? items[openFocus] : null;
-  const strips = sessionsOn(date).map(x => `<i class="fs" title="专注 ${clockOf(x.s)}–${clockOf(x.e)} · ${sessionTitle(x)}" style="--c:${sessionColour(x)};top:${(x.s - H0) * H}px;height:${Math.max((x.e - x.s) * H, 3)}px"></i>`).join('');
-  return strips + blocks + now + pop + (f ? focusPopHTML(f, `top:${(f.e - H0) * H + 6}px;${side}`) : '');
+  const strips = did.filter(x => !alone.includes(x)).map(x => `<i class="fs" title="专注 ${clockOf(x.s)}–${clockOf(x.e)} · ${sessionTitle(x)}" style="--c:${sessionColour(x)};top:${(x.s - H0) * H}px;height:${Math.max((x.e - x.s) * H, 3)}px"></i>`).join('');
+  return strips + blocks + now + pop + (filing ? sesPopHTML(openSes === 'timer' ? timer : filing, `top:${(filing.e - H0) * H + 6}px;${side}`) : '') + (f ? focusPopHTML(f, `top:${(f.e - H0) * H + 6}px;${side}`) : '');
 }
 function hoursHTML(H) {
   let h = '';
@@ -1477,7 +1492,7 @@ document.addEventListener('click', ev => {
   // A record, or the free focus on the timer page, opens the popover that files it.
   const ses = on('[data-ses]');
   const nextSes = ses ? (ses.dataset.ses === 'timer' ? 'timer' : Number(ses.dataset.ses)) : null;
-  if (openSes !== null || nextSes !== null) { openSes = nextSes === openSes ? null : nextSes; renderFocus(); if (ses) return; }
+  if (openSes !== null || nextSes !== null) { openSes = nextSes === openSes ? null : nextSes; renderAll(); if (ses) return; }
 
   // A time block opens its focus popover; a click on its checkbox still just ticks it.
   const fp = on('[data-fpop]');

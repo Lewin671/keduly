@@ -3,16 +3,18 @@ import type { CSSProperties, JSX, TargetedMouseEvent } from 'preact';
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import type { CalEvent, FocusSession } from '../../api/types';
 import { t } from '../../i18n';
-import { allDayOn, eventSpan } from '../../lib/calendar';
+import { allDayOn, eventSpan, standsAlone } from '../../lib/calendar';
 import { addDays, atMinutes, hhmm, minutesOfDay, mondayIndex, snap, spanOnDay, toUtc, ymd, type HourSpan, wall } from '../../lib/dates';
 import { weekdayShort } from '../../lib/format';
 import { layoutLanes, type Lane } from '../../lib/lanes';
-import { calPop, justClosed, moveEvent, toggleBlockDone } from '../../state/calendar';
+import { calPop, closeCalPop, justClosed, moveEvent, toggleBlockDone } from '../../state/calendar';
 import { eventKey } from '../../state/events';
 import { serverNow, serverTime, sessionTitle } from '../../state/focus';
 import { navigate } from '../../state/route';
 import { colorOf, now, suggestions, today } from '../../state/store';
 import { timeRange } from '../../state/suggestions';
+import { Tom } from '../focus/parts';
+import { SessionPop } from '../focus/SessionPop';
 import { CalPopover } from './pops';
 
 const DAY_HOUR = 58;
@@ -112,23 +114,54 @@ interface ColumnProps {
   dragged: () => boolean;
 }
 
-/** What was actually done: a thin line in the project's colour beside the plan. A running session reaches to now. */
-function Strips({ day, sessions, hour }: { day: string; sessions: readonly FocusSession[]; hour: number }): JSX.Element {
+/** A focus session on a day. A running one reaches to now. */
+interface Done extends HourSpan {
+  session: FocusSession;
+  /** When it ended, or now while it runs. */
+  end: string;
+}
+
+function sessionsOn(day: string, sessions: readonly FocusSession[]): Done[] {
   // Only a session still running needs the moving clock.
   const nowMs = sessions.some(s => Date.parse(s.end) > serverTime()) ? serverNow() : Infinity;
+  return sessions.flatMap(session => {
+    const end = new Date(Math.min(Date.parse(session.end), Math.max(nowMs, Date.parse(session.start)))).toISOString();
+    const at = spanOnDay(wall(session.start), wall(end), day);
+    return at ? [{ session, end, ...at }] : [];
+  });
+}
+
+const sessionLabel = (x: Done): string => t('focus.session', { range: timeRange(x.session.start, x.end), title: sessionTitle(x.session) });
+
+/** What was done during its own time block: a thin line in the project's colour beside the plan. */
+function Strip({ done, hour }: { done: Done; hour: number }): JSX.Element {
+  return <i class="fs" title={sessionLabel(done)} style={{ '--c': colorOf(done.session.project_id), top: `${done.s * hour}px`, height: `${Math.max((done.e - done.s) * hour, 3)}px` }} />;
+}
+
+/** What was done where nothing was planned: a block of its own, lighter than the plan. Clicking it files the session. */
+function SessionBlock({ done, lane, hour, week, day }: { done: Done; lane: Lane; hour: number; week: boolean; day: string }): JSX.Element {
+  const len = done.e - done.s;
+  const s = done.session;
+  const cls = ['blk', 'ses', len <= 0.5 ? 'short' : ''];
+  if (week && lane.of >= 3) cls.push('narrow');
   return (
-    <>
-      {sessions.map(s => {
-        const end = Math.min(Date.parse(s.end), Math.max(nowMs, Date.parse(s.start)));
-        const at = spanOnDay(wall(s.start), wall(new Date(end).toISOString()), day);
-        return at && (
-          <i
-            key={s.id} class="fs" title={t('focus.session', { range: timeRange(s.start, new Date(end).toISOString()), title: sessionTitle(s) })}
-            style={{ '--c': colorOf(s.project_id), top: `${at.s * hour}px`, height: `${Math.max((at.e - at.s) * hour, 3)}px` }}
-          />
-        );
-      })}
-    </>
+    <button
+      class={cls.join(' ')} title={sessionLabel(done)} aria-expanded={calPop.value?.kind === 'session' && calPop.value.sessionId === s.id}
+      style={{
+        '--c': colorOf(s.project_id),
+        top: `${done.s * hour + 1}px`,
+        height: `${Math.max(len * hour - 2, 17)}px`,
+        left: `calc(${(lane.lane / lane.of) * 100}% + 2px)`,
+        width: `calc(${100 / lane.of}% - 4px)`,
+      }}
+      onClick={() => { calPop.value = { kind: 'session', sessionId: s.id, day }; }}
+    >
+      <Tom on={s.completed} />
+      <span class="bx">
+        <span class="bt">{sessionTitle(s)}</span>
+        <span class="bm">{timeRange(s.start, done.end)}</span>
+      </span>
+    </button>
   );
 }
 
@@ -138,8 +171,12 @@ function Column({ day, index, events, sessions, hour, week, onGrab, dragged }: C
     const span = eventSpan(event, day);
     return span ? [{ event, ...span }] : [];
   }).sort((a, b) => a.s - b.s || b.e - a.e);
-  const lanes = layoutLanes(timed);
+  const done = sessionsOn(day, sessions);
+  const alone = done.filter(x => standsAlone(x.session, Date.parse(x.end), events));
+  // Sessions drawn as blocks share the column with the plan, side by side where they overlap.
+  const lanes = layoutLanes<HourSpan>([...timed, ...alone]);
   const pop = calPop.value;
+  const filing = pop?.kind === 'session' && pop.day === day ? alone.find(x => x.session.id === pop.sessionId) : undefined;
   const right = week && index >= 4;
   const side = right ? 'right:3px;transform-origin:calc(100% - 24px) 0' : 'left:2px';
   let popTop = 0;
@@ -147,7 +184,7 @@ function Column({ day, index, events, sessions, hour, week, onGrab, dragged }: C
     if (pop.kind === 'new') {
       const [h, m] = pop.draft.end.split(':').map(Number);
       popTop = (h! * 60 + m!) / 60 || 24;
-    } else popTop = timed.find(x => eventKey(x.event) === eventKey(pop.event))?.e ?? 0;
+    } else if (pop.kind === 'event') popTop = timed.find(x => eventKey(x.event) === eventKey(pop.event))?.e ?? 0;
   }
 
   const create = (e: TargetedMouseEvent<HTMLDivElement>) => {
@@ -163,12 +200,14 @@ function Column({ day, index, events, sessions, hour, week, onGrab, dragged }: C
 
   return (
     <div class={`col ${week && index >= 5 ? 'we' : ''}`} data-day={day} style={{ height: `${24 * hour}px` }} onClick={create}>
-      <Strips day={day} sessions={sessions} hour={hour} />
+      {done.filter(x => !alone.includes(x)).map(x => <Strip key={x.session.id} done={x} hour={hour} />)}
+      {alone.map(x => <SessionBlock key={x.session.id} done={x} lane={lanes.get(x)!} hour={hour} week={week} day={day} />)}
       {timed.map(x => (
         <Block key={eventKey(x.event)} event={x.event} span={x} lane={lanes.get(x)!} hour={hour} week={week} day={day} onGrab={onGrab} dragged={dragged} />
       ))}
       {day === today.value && <div class="now" style={{ top: `${(minutesOfDay(now.value) / 60) * hour}px` }} />}
       <CalPopover day={day} place={`top:${popTop * hour + 6}px;${side}`} />
+      {filing && <SessionPop key={filing.session.id} session={filing.session} onClose={closeCalPop} place={`top:${filing.e * hour + 6}px;${side}`} />}
     </div>
   );
 }
