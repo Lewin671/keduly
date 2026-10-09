@@ -16,7 +16,7 @@ Keduly is a calendar and task manager with a first-class interface for AI agents
 | `docs/design/` | `DESIGN.md` and `mockup.html`, the approved design. UI work follows the mockup |
 | `deploy/` | Example container and reverse proxy files |
 | `scripts/` | `check.sh` runs every check; `build.sh` builds the release binary; `release.sh` builds the archives of a release |
-| `install.sh` | What users pipe into `sh`: downloads a release, then runs `keduly skill install` |
+| `install.sh` | What users pipe into `sh`: downloads a release and installs the binary; the skill is a separate `keduly skill install` |
 
 ## Rules
 

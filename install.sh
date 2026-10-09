@@ -1,13 +1,14 @@
 #!/bin/sh
-# Installs the keduly command and its agent skill from a GitHub release.
+# Installs the keduly command from a GitHub release.
 #
 #   curl -fsSL https://raw.githubusercontent.com/Lewin671/keduly/main/install.sh | sh
 #
 # KEDULY_VERSION      release to install, e.g. v0.1.0 (default: the latest)
 # KEDULY_BASE_URL     where the archives are, for a mirror of the release files
 # KEDULY_INSTALL_DIR  where the command goes (default: ~/.local/bin)
-# KEDULY_SKILL_DIR    skills directory of your agent (default: Claude Code's)
-# KEDULY_NO_SKILL=1   install the command only
+#
+# The agent skill is a separate step, because where it belongs is yours to
+# choose: `keduly skill install` for every project, or with --dir for one.
 set -eu
 
 repo=Lewin671/keduly
@@ -82,19 +83,17 @@ main() {
   mv -f "$dir/keduly.new" "$dir/keduly"
   echo "Installed $("$dir/keduly" version) to $dir/keduly"
 
-  if [ -z "${KEDULY_NO_SKILL:-}" ]; then
-    if [ -n "${KEDULY_SKILL_DIR:-}" ]; then
-      "$dir/keduly" skill install --dir "$KEDULY_SKILL_DIR"
-    else
-      "$dir/keduly" skill install
-    fi
-  fi
-
   case ":$PATH:" in
     *":$dir:"*) ;;
     *) echo "$dir is not on your PATH. Add it, for example: export PATH=\"$dir:\$PATH\"" ;;
   esac
-  echo "Next: keduly login --server https://your-keduly-server"
+  cat <<'NEXT'
+
+Next:
+  keduly login --server https://your-keduly-server    sign in with a token from Settings
+  keduly skill install                                the agent skill, for Claude Code in every project
+  keduly skill install --dir .claude/skills           or for the project in this directory only
+NEXT
 }
 
 main "$@"

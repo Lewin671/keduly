@@ -29,10 +29,10 @@ curl -fsSL https://raw.githubusercontent.com/Lewin671/keduly/main/install.sh | s
 ```
 
 This downloads the `keduly` binary for macOS or Linux from the
-[latest release](https://github.com/Lewin671/keduly/releases/latest), verifies its checksum, puts
-it in `~/.local/bin`, and installs the agent skill for Claude Code. The one binary is both the
-server and the command line. Run the line again to upgrade. The variables at the top of
-[install.sh](install.sh) choose another version, directory or agent.
+[latest release](https://github.com/Lewin671/keduly/releases/latest), verifies its checksum and
+puts it in `~/.local/bin`. The one binary is both the server and the command line. Run the line
+again to upgrade. The variables at the top of [install.sh](install.sh) choose another version or
+directory.
 
 To build from source instead you need Go 1.25 or later, and Node with `pnpm` for the web app:
 `scripts/build.sh` writes `bin/keduly`.
@@ -63,9 +63,15 @@ Every command takes `--json`; every command that changes something takes `--dry-
 `--reason`. `keduly help` lists them all.
 
 [skills/keduly/SKILL.md](skills/keduly/SKILL.md) teaches an agent when and how to use the CLI. The
-binary carries the skill that matches it: `keduly skill install` writes it into Claude Code's
-skills directory, and `--dir` names the skills directory of another agent. The install script
-already does this.
+binary carries the skill that matches it, and you choose where it goes:
+
+```sh
+keduly skill install                        # Claude Code, every project (~/.claude/skills)
+keduly skill install --dir .claude/skills   # this project only
+keduly skill install --dir DIR              # the skills directory of another agent
+```
+
+Run it again after upgrading the CLI.
 
 ## Use it from a calendar app
 
