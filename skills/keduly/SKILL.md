@@ -8,6 +8,7 @@ description: Operate the user's Keduly calendar and task manager through the `ke
 Everything goes through the `keduly` CLI. Start with `keduly whoami`: it confirms the login and
 shows the account's time zone and working hours. If it reports "not signed in", ask the user for
 the server URL and a token (web app, Settings), then `keduly login --server URL --token TOKEN`.
+After the CLI is upgraded, `keduly skill install` replaces this skill with the one that matches it.
 
 ## Data model
 

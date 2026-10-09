@@ -11,11 +11,12 @@ Keduly is a calendar and task manager with a first-class interface for AI agents
 | `internal/` | Server, storage, CalDAV and CLI packages |
 | `internal/webui/` | Embeds the built web app (`dist/`) into the binary |
 | `web/` | Web app source (TypeScript, Preact, Vite) |
-| `skills/keduly/` | The skill that teaches an agent to use the CLI |
+| `skills/keduly/` | The skill that teaches an agent to use the CLI; embedded in the binary for `keduly skill install` |
 | `docs/api.md` | The HTTP API. It is the contract between server and web app: update it first |
 | `docs/design/` | `DESIGN.md` and `mockup.html`, the approved design. UI work follows the mockup |
 | `deploy/` | Example container and reverse proxy files |
-| `scripts/` | `check.sh` runs every check; `build.sh` builds the release binary |
+| `scripts/` | `check.sh` runs every check; `build.sh` builds the release binary; `release.sh` builds the archives of a release |
+| `install.sh` | What users pipe into `sh`: downloads a release, then runs `keduly skill install` |
 
 ## Rules
 
@@ -43,5 +44,6 @@ Keduly is a calendar and task manager with a first-class interface for AI agents
 |---|---|
 | Run every check | `scripts/check.sh` |
 | Build the release binary (web app embedded) | `scripts/build.sh` |
+| Publish a release | `git tag v0.2.0 && git push origin v0.2.0`; the Release workflow builds and uploads it |
 | Run the server for development | `go run ./cmd/keduly serve --data ./data --addr 127.0.0.1:8080` |
 | Run the web app with hot reload | `cd web && pnpm dev` (proxies `/api` and `/dav` to `127.0.0.1:8080`) |

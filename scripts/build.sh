@@ -1,12 +1,14 @@
 #!/bin/sh
 # Builds the release binary bin/keduly with the web app embedded.
 # GOOS and GOARCH are honoured, e.g. GOOS=linux GOARCH=amd64 scripts/build.sh
+# OUT names another output file; SKIP_WEB=1 reuses the web app already built.
 set -eu
 cd "$(dirname "$0")/.."
 
 version=${VERSION:-$(git describe --tags --always --dirty 2>/dev/null || echo dev)}
+out=${OUT:-bin/keduly}
 
-if [ -f web/package.json ]; then
+if [ -f web/package.json ] && [ -z "${SKIP_WEB:-}" ]; then
   pnpm -C web install --frozen-lockfile
   pnpm -C web run build
   # Copy the build over unless the web app already writes into the embed directory.
@@ -16,6 +18,6 @@ if [ -f web/package.json ]; then
   fi
 fi
 
-mkdir -p bin
-CGO_ENABLED=0 go build -trimpath -ldflags "-s -w -X main.version=${version}" -o bin/keduly ./cmd/keduly
-echo "built bin/keduly ${version}"
+mkdir -p "$(dirname "$out")"
+CGO_ENABLED=0 go build -trimpath -ldflags "-s -w -X main.version=${version}" -o "$out" ./cmd/keduly
+echo "built $out ${version}"

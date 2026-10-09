@@ -4,6 +4,9 @@ Keduly is one static binary and one directory of data. There is nothing else to 
 
 ## Build
 
+Each [release](https://github.com/Lewin671/keduly/releases) has ready-made binaries for macOS and
+Linux, which `install.sh` in the repository root downloads. To build your own:
+
 ```sh
 scripts/build.sh                             # bin/keduly for this machine
 GOOS=linux GOARCH=amd64 scripts/build.sh     # cross-compile for a server

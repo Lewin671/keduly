@@ -22,13 +22,25 @@ A calendar and task manager built for working with AI agents.
 
 The interface is in Chinese for now.
 
-## Run it
-
-You need Go 1.25 or later, and Node with `pnpm` to build the web app.
+## Install
 
 ```sh
-scripts/build.sh
-bin/keduly serve --addr 127.0.0.1:8080 --data ./data
+curl -fsSL https://raw.githubusercontent.com/Lewin671/keduly/main/install.sh | sh
+```
+
+This downloads the `keduly` binary for macOS or Linux from the
+[latest release](https://github.com/Lewin671/keduly/releases/latest), verifies its checksum, puts
+it in `~/.local/bin`, and installs the agent skill for Claude Code. The one binary is both the
+server and the command line. Run the line again to upgrade. The variables at the top of
+[install.sh](install.sh) choose another version, directory or agent.
+
+To build from source instead you need Go 1.25 or later, and Node with `pnpm` for the web app:
+`scripts/build.sh` writes `bin/keduly`.
+
+## Run it
+
+```sh
+keduly serve --addr 127.0.0.1:8080 --data ./data
 ```
 
 Open <http://127.0.0.1:8080> and create an account. [docs/deploy.md](docs/deploy.md) covers running
@@ -50,8 +62,10 @@ keduly undo
 Every command takes `--json`; every command that changes something takes `--dry-run` and
 `--reason`. `keduly help` lists them all.
 
-[skills/keduly/SKILL.md](skills/keduly/SKILL.md) teaches an agent when and how to use the CLI.
-For Claude Code, copy the `skills/keduly` directory into `~/.claude/skills/`.
+[skills/keduly/SKILL.md](skills/keduly/SKILL.md) teaches an agent when and how to use the CLI. The
+binary carries the skill that matches it: `keduly skill install` writes it into Claude Code's
+skills directory, and `--dir` names the skills directory of another agent. The install script
+already does this.
 
 ## Use it from a calendar app
 

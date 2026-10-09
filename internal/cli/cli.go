@@ -37,6 +37,8 @@ Setup:
   keduly serve [--addr 127.0.0.1:8080] [--data ./data]    run the server
   keduly login --server URL [--token TOKEN]               save server and token
   keduly whoami                                           account, time zone, working hours
+  keduly skill install [--dir DIR]                        install the agent skill that matches this
+                                                          version, into Claude Code's skills by default
   keduly version | help
 
 Reading:
@@ -176,6 +178,8 @@ func (a *app) dispatch(args []string) error {
 		return nil
 	case "login":
 		return a.login(rest)
+	case "skill":
+		return a.sub(rest, "skill", map[string]func([]string) error{"install": a.skillInstall})
 	}
 	if err := a.loadConfig(); err != nil {
 		return err

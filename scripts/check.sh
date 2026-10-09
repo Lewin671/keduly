@@ -3,7 +3,7 @@
 set -eu
 cd "$(dirname "$0")/.."
 
-unformatted=$(gofmt -l cmd internal)
+unformatted=$(gofmt -l cmd internal skills)
 if [ -n "$unformatted" ]; then
   echo "gofmt needed on:" >&2
   echo "$unformatted" >&2
