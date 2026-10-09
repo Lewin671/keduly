@@ -70,11 +70,11 @@ function CalendarSide(): JSX.Element {
 }
 
 const NAV: ReadonlyArray<{ id: string; name: MessageKey; icon: IconName; color: string }> = [
-  { id: 'inbox', name: 'nav.inbox', icon: 'tray', color: 'var(--blue)' },
+  { id: 'matrix', name: 'nav.matrix', icon: 'grid', color: 'var(--orange)' },
   { id: 'today', name: 'nav.today', icon: 'star', color: '#f5b400' },
   { id: 'upcoming', name: 'nav.upcoming', icon: 'cal', color: 'var(--red)' },
-  { id: 'matrix', name: 'nav.matrix', icon: 'grid', color: 'var(--orange)' },
   { id: 'all', name: 'nav.all', icon: 'layers', color: 'var(--teal)' },
+  { id: 'inbox', name: 'nav.inbox', icon: 'tray', color: 'var(--blue)' },
   { id: 'done', name: 'nav.done', icon: 'book', color: 'var(--green)' },
 ];
 

@@ -9,7 +9,7 @@ import { ymd, wall } from '../../lib/dates';
 import { dayLabel, span } from '../../lib/format';
 import { current, draft, held, startDraft } from '../../state/items';
 import { useResource } from '../../state/resource';
-import { navigate } from '../../state/route';
+import { HOME_LIST, navigate } from '../../state/route';
 import { colorOf, headings as allHeadings, projectOf, today, write } from '../../state/store';
 import { showHud } from '../../state/ui';
 import { Icon, Pie } from '../Icons';
@@ -35,12 +35,12 @@ function ProjectMenu({ project }: { project: Project }): JSX.Element {
   const archive = async () => {
     close();
     if (!(await write(api.updateProject(project.id, { archived: true })))) return;
-    navigate({ mode: 'items', list: 'today' });
+    navigate({ mode: 'items', list: HOME_LIST });
     showHud(t('project.archived', { name: project.name }), () => { void write(api.updateProject(project.id, { archived: false })); });
   };
   const remove = async () => {
     await write(api.deleteProject(project.id));
-    navigate({ mode: 'items', list: 'today' });
+    navigate({ mode: 'items', list: HOME_LIST });
   };
   return (
     <span class="anch">

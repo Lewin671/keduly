@@ -747,7 +747,7 @@ function busyData() {
   return { ...d, done, history: 14, focus: { task: 'minutes', ago: 380 } };
 }
 
-const NAV = [['inbox', '收件箱', 'tray', 'var(--blue)'], ['today', '今天', 'star', '#f5b400'], ['upcoming', '计划', 'cal', 'var(--red)'], ['matrix', '四象限', 'grid', 'var(--orange)'], ['all', '全部', 'layers', 'var(--teal)'], ['done', '已完成', 'book', 'var(--green)']];
+const NAV = [['matrix', '四象限', 'grid', 'var(--orange)'], ['today', '今天', 'star', '#f5b400'], ['upcoming', '计划', 'cal', 'var(--red)'], ['all', '全部', 'layers', 'var(--teal)'], ['inbox', '收件箱', 'tray', 'var(--blue)'], ['done', '已完成', 'book', 'var(--green)']];
 const OLDER = [
   { id: 'o1', ico: 'term', c: 'var(--indigo)', t: '「周回顾」排到周五 15:00', sub: 'Claude Code · 10月11日 20:30' },
   { id: 'o2', ico: 'phone', t: '新建日程「朋友聚餐」', sub: 'iPhone 日历 · 10月10日 12:41' },
@@ -764,7 +764,7 @@ let openFocus = null;           // index into items of the time block whose focu
 let openSes = null;             // the session whose popover is open: an index into sessions, or 'timer' for the running one
 const undone = new Set(), collapsed = new Set();
 const hidden = new Set();      // projects switched off in the calendar sidebar
-let mode = 'cal', view = 'day', filter = 'today', panel = null, showDone = false, lastView = null;
+let mode = 'cal', view = 'day', filter = 'matrix', panel = null, showDone = false, lastView = null;
 // Loading on demand: how many rows each long list currently shows, which lists are fetching, and how far back the log goes.
 let more = {}, historyDepth = 0, logLoaded = 1;
 let signin = null, linking = false;   // the sign-in screen on show (mockup only), and whether settings shows the sign-in code
@@ -786,7 +786,7 @@ function load(name) {
   fresh = new Set();            // completed during this session: stay in place instead of moving to the logged group
   del = d.del ? 'pending' : 'none';
   [undone, collapsed, hidden].forEach(x => x.clear());
-  filter = 'today'; expanded = open = panel = lastView = null; showDone = false;
+  filter = 'matrix'; expanded = open = panel = lastView = null; showDone = false;
   more = {}; loading.clear(); historyDepth = d.history || 0; logLoaded = 1;
   document.getElementById('hud').classList.remove('on');
 }

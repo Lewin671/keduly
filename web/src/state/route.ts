@@ -17,14 +17,16 @@ export interface Route {
 }
 
 const VIEWS: readonly string[] = ['day', 'week', 'month', 'year'];
-const LISTS: readonly string[] = ['inbox', 'today', 'upcoming', 'matrix', 'all', 'done'];
+const LISTS: readonly string[] = ['matrix', 'today', 'upcoming', 'all', 'inbox', 'done'];
+/** The list the app opens on, and falls back to. */
+export const HOME_LIST = 'matrix';
 
 /** Reads a hash. The mode that is not in the URL keeps the state it had. */
 export function parseRoute(hash: string, previous: Route): Route {
   const [mode, a, b] = hash.replace(/^#\/?/, '').split('/');
   if (mode === 'items') {
     if (a === 'p' && b) return { ...previous, mode: 'items', list: `p:${decodeURIComponent(b)}` };
-    return { ...previous, mode: 'items', list: a && LISTS.includes(a) ? a : 'today' };
+    return { ...previous, mode: 'items', list: a && LISTS.includes(a) ? a : HOME_LIST };
   }
   if (mode === 'cal') {
     return {
@@ -44,8 +46,8 @@ export function formatRoute(route: Route): string {
   return route.list.startsWith('p:') ? `#/items/p/${encodeURIComponent(route.list.slice(2))}` : `#/items/${route.list}`;
 }
 
-// The app opens on the items of today: managing things to do is the product's centre, the calendar a second view.
-const initial: Route = { mode: 'items', view: 'day', date: ymd(wallNow()), list: 'today', focus: 'timer' };
+// The app opens on the matrix, which holds every open item: managing things to do is the product's centre, the calendar a second view.
+const initial: Route = { mode: 'items', view: 'day', date: ymd(wallNow()), list: HOME_LIST, focus: 'timer' };
 
 export const route = signal<Route>(parseRoute(location.hash, initial));
 

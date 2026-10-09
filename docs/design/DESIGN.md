@@ -128,13 +128,14 @@ Tomato red is used only for tomato marks. Going over an estimate ("7/1") is not 
 ## Structure
 
 Items, calendar and focus are three modes, switched at the top of the sidebar. Items and calendar are in effect a task manager and
-Apple's Calendar in one window. Items come first and are what the app opens on (Today): managing
+Apple's Calendar in one window. Items come first and are what the app opens on (Matrix, every open item
+by importance and urgency, so what is left to do shows at a glance): managing
 things to do is the centre of the product, and the calendar is the second view onto the same data. They are linked through projects and time. An item with a time
 shows on the calendar in its project's colour, and a time block can be checked off right there.
 
 | Mode | Sidebar | Main area |
 |---|---|---|
-| Items | Inbox, Today, Upcoming, Matrix, All, Done; then projects grouped by area, each with a progress ring | The selected list, in one centred column |
+| Items | Matrix, Today, Upcoming, All, Inbox, Done; then projects grouped by area, each with a progress ring | The selected list, in one centred column |
 | Focus | Timer, Statistics; then today's open items to pick from | The timer page or statistics. See "Focus" |
 | Calendar | A mini month; the project list, where a tick decides which projects the calendar shows | Day, week, month and year views |
 
