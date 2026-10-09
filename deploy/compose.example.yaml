@@ -12,6 +12,9 @@ services:
       KEDULY_REGISTRATION: open # set to "closed" once your account exists
     volumes:
       - keduly-data:/data
+    read_only: true # the server writes only to /data
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
 
   caddy:
     image: caddy:2
@@ -22,7 +25,13 @@ services:
     volumes:
       - ./Caddyfile.example:/etc/caddy/Caddyfile:ro
       - caddy-data:/data
+      - caddy-config:/config
+    read_only: true # Caddy writes only to /data and /config
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]
+    security_opt: ["no-new-privileges:true"]
 
 volumes:
   keduly-data:
   caddy-data:
+  caddy-config:

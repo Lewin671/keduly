@@ -62,7 +62,11 @@ docker build -f deploy/Dockerfile -t keduly .
 docker run -d -p 127.0.0.1:8080:8080 -v keduly-data:/data keduly
 ```
 
-`deploy/compose.example.yaml` runs it together with Caddy. Keep your own copies under
+The server runs as user 65534 and writes only to `/data`. A named volume gets the right owner by
+itself; a host directory mounted there must be owned by 65534 (`chown 65534:65534 <dir>`).
+
+`deploy/compose.example.yaml` runs it together with Caddy, both with a read-only root file system
+and no capabilities beyond what Caddy needs to bind ports 80 and 443. Keep your own copies under
 `deploy/local/`, which git ignores.
 
 ## Calendar apps
