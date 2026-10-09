@@ -44,6 +44,6 @@ Keduly is a calendar and task manager with a first-class interface for AI agents
 |---|---|
 | Run every check | `scripts/check.sh` |
 | Build the release binary (web app embedded) | `scripts/build.sh` |
-| Publish a release | `git tag v0.2.0 && git push origin v0.2.0`; the Release workflow builds and uploads it |
+| Publish a release | `git tag v0.2.0 && git push origin v0.2.0`; the workflow in `.github/workflows/release.yml` builds and uploads it |
 | Run the server for development | `go run ./cmd/keduly serve --data ./data --addr 127.0.0.1:8080` |
 | Run the web app with hot reload | `cd web && pnpm dev` (proxies `/api` and `/dav` to `127.0.0.1:8080`) |

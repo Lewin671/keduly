@@ -1,32 +1,35 @@
-name: Release
+name: Build and release
 
-# Pushing a tag such as v0.1.0 checks the tree, builds every platform and
-# publishes a GitHub release that install.sh downloads from.
+# Every push to main checks the tree and builds every platform. Pushing a tag
+# such as v0.1.0 also publishes the build as a GitHub release, which
+# install.sh downloads from.
 on:
   push:
+    branches: [main]
     tags: ["v*"]
 
 permissions:
   contents: write
 
 jobs:
-  release:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           version: 10
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 24
           cache: pnpm
           cache-dependency-path: web/pnpm-lock.yaml
       - run: scripts/check.sh
       - run: VERSION="$GITHUB_REF_NAME" scripts/release.sh
-      - run: gh release create "$GITHUB_REF_NAME" dist/* --verify-tag --generate-notes
+      - if: github.ref_type == 'tag'
+        run: gh release create "$GITHUB_REF_NAME" dist/* --verify-tag --generate-notes
         env:
           GH_TOKEN: ${{ github.token }}
