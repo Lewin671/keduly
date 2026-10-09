@@ -66,9 +66,10 @@ Every command takes `--json`; every command that changes something takes `--dry-
 binary carries the skill that matches it, and you choose where it goes:
 
 ```sh
-keduly skill install                        # Claude Code, every project (~/.claude/skills)
-keduly skill install --dir .claude/skills   # this project only
-keduly skill install --dir DIR              # the skills directory of another agent
+keduly skill install              # ~/.agents/skills, the directory most agents read
+keduly skill install --claude     # ~/.claude/skills, for Claude Code, which reads only its own
+keduly skill install --project    # add to either: the current project instead of your home
+keduly skill install --dir DIR    # any other skills directory
 ```
 
 Run it again after upgrading the CLI.

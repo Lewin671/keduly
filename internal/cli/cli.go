@@ -37,8 +37,10 @@ Setup:
   keduly serve [--addr 127.0.0.1:8080] [--data ./data]    run the server
   keduly login --server URL [--token TOKEN]               save server and token
   keduly whoami                                           account, time zone, working hours
-  keduly skill install [--dir DIR]                        install the agent skill that matches this
-                                                          version, into Claude Code's skills by default
+  keduly skill install [--claude] [--project]             install the agent skill that matches this version:
+                                                          ~/.agents/skills, or ~/.claude/skills with --claude;
+                                                          --project uses the current directory, not the home
+  keduly skill install --dir DIR                          install it into another skills directory
   keduly version | help
 
 Reading:

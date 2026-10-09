@@ -8,7 +8,7 @@
 # KEDULY_INSTALL_DIR  where the command goes (default: ~/.local/bin)
 #
 # The agent skill is a separate step, because where it belongs is yours to
-# choose: `keduly skill install` for every project, or with --dir for one.
+# choose: your home directory or one project, .agents/skills or Claude Code's.
 set -eu
 
 repo=Lewin671/keduly
@@ -91,8 +91,9 @@ main() {
 
 Next:
   keduly login --server https://your-keduly-server    sign in with a token from Settings
-  keduly skill install                                the agent skill, for Claude Code in every project
-  keduly skill install --dir .claude/skills           or for the project in this directory only
+  keduly skill install                                the agent skill, into ~/.agents/skills
+  keduly skill install --claude                       or into ~/.claude/skills, where Claude Code looks
+                                                      add --project to install into the current project
 NEXT
 }
 

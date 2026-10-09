@@ -12,16 +12,21 @@ import (
 
 const skillName = "keduly"
 
-// skillInstall writes the skill built into this binary into an agent's skills
+// skillInstall writes the skill built into this binary into a skills
 // directory, so the skill always describes the CLI that installed it.
 func (a *app) skillInstall(args []string) error {
 	fs := a.flags("skill install", false)
-	dir := fs.String("dir", "", "skills directory of the agent; Claude Code's when omitted")
-	if _, err := a.parseN(fs, args, 0, "[--dir DIR]"); err != nil {
+	claude := fs.Bool("claude", false, "install for Claude Code, which reads .claude/skills instead of .agents/skills")
+	project := fs.Bool("project", false, "install into the current directory's project instead of the home directory")
+	dir := fs.String("dir", "", "install into this skills directory instead")
+	if _, err := a.parseN(fs, args, 0, "[--claude] [--project] | --dir DIR"); err != nil {
 		return err
 	}
+	if *dir != "" && (*claude || *project) {
+		return usagef("--dir cannot be combined with --claude or --project")
+	}
 	if *dir == "" {
-		root, err := a.claudeDir()
+		root, err := a.agentDir(*claude, *project)
 		if err != nil {
 			return err
 		}
@@ -51,9 +56,17 @@ func (a *app) skillResult(path string, installed bool, format string) error {
 	return nil
 }
 
-// claudeDir is where Claude Code keeps its configuration.
-func (a *app) claudeDir() (string, error) {
-	if dir := a.env.Getenv("CLAUDE_CONFIG_DIR"); dir != "" {
+// agentDir is the directory that holds an agent's skills directory: .agents,
+// the convention agents share, or .claude, in the project or the home directory.
+func (a *app) agentDir(claude, project bool) (string, error) {
+	name := ".agents"
+	if claude {
+		name = ".claude"
+	}
+	if project {
+		return name, nil
+	}
+	if dir := a.env.Getenv("CLAUDE_CONFIG_DIR"); claude && dir != "" {
 		return dir, nil
 	}
 	home := a.env.Getenv("HOME")
@@ -63,7 +76,7 @@ func (a *app) claudeDir() (string, error) {
 			return "", fmt.Errorf("cannot find the home directory; pass --dir: %v", err)
 		}
 	}
-	return filepath.Join(home, ".claude"), nil
+	return filepath.Join(home, name), nil
 }
 
 func mustSub(fsys fs.FS, dir string) fs.FS {
