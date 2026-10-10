@@ -142,7 +142,7 @@ function notify(text: string): void {
   if (!remind.value) return;
   beep();
   try {
-    if (canNotify() && Notification.permission === 'granted') new Notification('Keduly', { body: text });
+    if (canNotify() && Notification.permission === 'granted') new Notification('Keduly', { body: text, icon: '/icon-192.png' });
   } catch {
     // Some browsers only allow notifications from a service worker.
   }

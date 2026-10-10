@@ -3,6 +3,15 @@
 The clickable mockup is [mockup.html](mockup.html): one file, open it in a browser. Its data is
 static sample data, and its interface text is Chinese, like the product's.
 
+## App icon
+
+The app uses a white K on cobalt blue (`#2867D6`). The two diagonal strokes meet at
+the vertical center; rounded stroke ends remain legible at favicon sizes. The mark is a
+letter, not a checkmark. `web/public/icon.svg` is the source for browser icons. PNG
+exports serve browsers and home-screen bookmarks; the touch icon has a full-bleed
+background so the operating system can apply its own corner mask. Focus notifications
+use the same mark.
+
 ## Goal
 
 Help one person manage their time and the things they have to do. The test: open it once a day
