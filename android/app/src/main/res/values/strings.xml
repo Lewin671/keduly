@@ -1,1 +1,306 @@
-<resources><string name="app_name" translatable="false">Keduly</string></resources>
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The interface is in Chinese, the default and only locale. The wording follows the mockup
+     (docs/design/mobile.html) and the web app (web/src/i18n/zh.ts). -->
+<resources>
+    <string name="app_name" translatable="false">Keduly</string>
+    <string name="account_email">邮箱</string>
+    <string name="account_hours">工作时段</string>
+    <string name="account_name">名字</string>
+    <string name="account_sign_out">退出登录</string>
+    <string name="account_sign_out_ask">退出登录？</string>
+    <string name="account_timezone">时区</string>
+    <string name="account_timezone_note">日期和时间都按账号的时区显示，和这台手机所在的时区无关。时区在网页端修改。</string>
+    <string name="account_title">账号</string>
+    <string name="account_work_end">工作结束时间</string>
+    <string name="account_work_start">工作开始时间</string>
+    <string name="activity_accept_all">全部接受</string>
+    <string name="activity_allow">允许</string>
+    <string name="activity_empty">暂时没有动态</string>
+    <string name="activity_empty_tip">AI 和其他设备做的改动会出现在这里</string>
+    <string name="activity_older">更早的动态</string>
+    <string name="activity_recent">最近</string>
+    <string name="activity_redo">恢复</string>
+    <string name="activity_title">动态</string>
+    <string name="activity_todo">待处理</string>
+    <string name="activity_undo">撤销</string>
+    <string name="activity_wants_delete">想删除「%1$s」</string>
+    <string name="activity_you">你</string>
+    <string name="add">添加</string>
+    <string name="all_empty">还没有事项</string>
+    <string name="all_empty_tip">先建一个项目，或者把想到的事记进收件箱</string>
+    <string name="auth_email">邮箱</string>
+    <string name="auth_login">登录</string>
+    <string name="auth_login_lead">登录你的账号</string>
+    <string name="auth_name">名字</string>
+    <string name="auth_password">密码</string>
+    <string name="auth_password_tip">密码至少 8 位</string>
+    <string name="auth_register">注册</string>
+    <string name="auth_register_lead">创建一个账号</string>
+    <string name="auth_server">服务器地址</string>
+    <string name="auth_taken">这个邮箱已经注册过了</string>
+    <string name="auth_to_login">已有账号？登录</string>
+    <string name="auth_to_register">还没有账号？注册</string>
+    <string name="auth_wrong">邮箱或密码不对</string>
+    <string name="back">返回</string>
+    <string name="cal_all_day">全天</string>
+    <string name="cal_count">%1$d 项</string>
+    <string name="cal_next_day">次日</string>
+    <string name="cal_next_month">下个月</string>
+    <string name="cal_next_week">下一周</string>
+    <string name="cal_none">没有日程</string>
+    <string name="cal_pending">待定</string>
+    <string name="cal_plus">+%1$d 项</string>
+    <string name="cal_prev_month">上个月</string>
+    <string name="cal_prev_week">上一周</string>
+    <string name="cal_until_next_day">到次日 %1$s</string>
+    <string name="cancel">取消</string>
+    <string name="clear">清除</string>
+    <string name="create">创建</string>
+    <string name="date_m">%1$d月</string>
+    <string name="date_md">%1$d月%2$d日</string>
+    <string name="date_y">%1$d年</string>
+    <string name="date_ym">%1$d年%2$d月</string>
+    <string name="date_ymd">%1$d年%2$d月%3$d日</string>
+    <string name="day_today">今天</string>
+    <string name="day_tomorrow">明天</string>
+    <string name="day_yesterday">昨天</string>
+    <string name="delete">删除</string>
+    <string name="done">完成</string>
+    <string name="done_empty">还没有完成的事项</string>
+    <string name="done_empty_tip">完成的事项会收在这里</string>
+    <string name="done_end">已经到最早的一件了</string>
+    <string name="done_summary">共 %1$d 件，按完成时间从近到远</string>
+    <string name="done_this_month">本月</string>
+    <string name="due_date">截止日期</string>
+    <string name="due_label">%1$s截止</string>
+    <string name="due_no_time">不设时间</string>
+    <string name="due_time">截止时间（可不填）</string>
+    <string name="due_title">截止时间</string>
+    <string name="dur_hours">%1$s 小时</string>
+    <string name="dur_hours_minutes">%1$d 小时 %2$d 分钟</string>
+    <string name="dur_minutes">%1$d 分钟</string>
+    <string name="error_bad_response">服务器的回应无法识别</string>
+    <string name="error_conflict">内容已经变了，已重新加载</string>
+    <string name="error_forbidden">没有权限进行这个操作</string>
+    <string name="error_http">服务器暂时不可用，请稍后再试</string>
+    <string name="error_invalid_request">提交的内容有误，没有保存</string>
+    <string name="error_network">连不上服务器，请检查网络</string>
+    <string name="error_not_found">找不到这项内容，可能已被删除</string>
+    <string name="error_rate_limited">操作太频繁，请稍等一会儿再试</string>
+    <string name="error_registration_closed">这个服务器没有开放注册</string>
+    <string name="error_timeout">服务器没有及时回应，已重新加载，请确认后再试</string>
+    <string name="error_unauthenticated">登录已失效，请重新登录</string>
+    <string name="estimate_custom">自定分钟数</string>
+    <string name="estimate_title">预计用时</string>
+    <string name="event_delete">删除日程</string>
+    <string name="event_delete_ask">删除这个日程？</string>
+    <string name="event_edit">编辑日程</string>
+    <string name="event_end_before_start">结束时间要晚于开始时间</string>
+    <string name="event_location">地点</string>
+    <string name="event_new">新建日程</string>
+    <string name="event_recurring_note">在系统日历里修改重复日程</string>
+    <string name="event_title">标题</string>
+    <string name="field_date">日期</string>
+    <string name="field_due">截止</string>
+    <string name="field_end">结束时间</string>
+    <string name="field_end_date">结束日期</string>
+    <string name="field_estimate">预计</string>
+    <string name="field_project">项目</string>
+    <string name="field_start">开始时间</string>
+    <string name="field_start_date">开始日期</string>
+    <string name="field_time">时间</string>
+    <string name="focus_again">再来一个</string>
+    <string name="focus_back">回到计时</string>
+    <string name="focus_collapse">收起</string>
+    <string name="focus_earned">完成第 %1$d 个番茄</string>
+    <string name="focus_earned_count">已得 %1$s</string>
+    <string name="focus_file">归到…</string>
+    <string name="focus_finish">做完了</string>
+    <string name="focus_free">自由专注</string>
+    <string name="focus_free_note">不记到任何事项上</string>
+    <string name="focus_give_up">放弃</string>
+    <string name="focus_long_rest">长休息</string>
+    <string name="focus_no_pause">没有暂停 · 放弃会记下已经专注的时间</string>
+    <string name="focus_nth">第 %1$d 个番茄</string>
+    <string name="focus_over_note">到点了</string>
+    <string name="focus_pick">选择事项</string>
+    <string name="focus_refile">修改</string>
+    <string name="focus_rest">休息</string>
+    <string name="focus_resting">休息一下</string>
+    <string name="focus_round_done">完成一轮，该长休息了</string>
+    <string name="focus_round_left">再 %1$d 个后长休息</string>
+    <string name="focus_round_size">%1$d 个一轮</string>
+    <string name="focus_settings_footer">计时记在服务器上，换一台设备看到的是同一个计时。手机锁屏后不会响铃。</string>
+    <string name="focus_settings_long_rest">长休息</string>
+    <string name="focus_settings_minutes">分钟</string>
+    <string name="focus_settings_rest">休息时长</string>
+    <string name="focus_settings_round">每几个番茄后长休息</string>
+    <string name="focus_settings_tomato">一个番茄</string>
+    <string name="focus_skip_rest">跳过休息</string>
+    <string name="focus_start">开始专注</string>
+    <string name="focus_stats">统计</string>
+    <string name="focus_take_long_rest">长休息 %1$d 分钟</string>
+    <string name="focus_take_rest">休息 %1$d 分钟</string>
+    <string name="focus_today_none">今天还没有番茄</string>
+    <string name="focus_today_total">今天 %1$d 个番茄 · %2$s</string>
+    <string name="focus_took">用了 %1$s</string>
+    <string name="focus_until">到 %1$s</string>
+    <string name="focus_used">已用 %1$s</string>
+    <string name="heading_none">无分组</string>
+    <string name="inbox_empty">收件箱是空的</string>
+    <string name="inbox_empty_tip">随手记下的事会先放在这里，之后再归到项目</string>
+    <string name="inbox_summary">还没归到项目里的事项</string>
+    <string name="item_added_to_inbox">已放进收件箱</string>
+    <string name="item_complete">完成 %1$s</string>
+    <string name="item_delete_ask">删除这个事项？</string>
+    <string name="item_important">重要</string>
+    <string name="item_new">新事项</string>
+    <string name="item_notes">备注</string>
+    <string name="item_overdue">逾期 %1$d 天</string>
+    <string name="item_pending">待定 %1$s</string>
+    <string name="item_title">标题</string>
+    <string name="item_what">要做什么？</string>
+    <string name="list_more">再显示 %1$d 件（还有 %2$d 件）</string>
+    <string name="list_more_events">还有 %1$d 个日程，在日历里查看</string>
+    <string name="list_rest">显示其余 %1$d 件</string>
+    <string name="loading">正在加载</string>
+    <string name="matrix_do">马上做</string>
+    <string name="matrix_do_label">重要 · 紧急</string>
+    <string name="matrix_empty_tip">点右下角的加号记下第一件事。\n标成重要、写上截止日期后，它会出现在对应的一格。</string>
+    <string name="matrix_later">有空再说</string>
+    <string name="matrix_later_label">不重要 · 不紧急</string>
+    <string name="matrix_none">没有事项</string>
+    <string name="matrix_plan">安排时间做</string>
+    <string name="matrix_plan_label">重要 · 不紧急</string>
+    <string name="matrix_quick">尽快处理掉</string>
+    <string name="matrix_quick_label">不重要 · 紧急</string>
+    <string name="matrix_unplanned">%1$d 件没排进日历</string>
+    <string name="mode_calendar">日历</string>
+    <string name="mode_focus">专注</string>
+    <string name="mode_items">事项</string>
+    <string name="more">更多</string>
+    <string name="nav_all">全部</string>
+    <string name="nav_done">已完成</string>
+    <string name="nav_inbox">收件箱</string>
+    <string name="nav_matrix">四象限</string>
+    <string name="nav_today">今天</string>
+    <string name="nav_upcoming">计划</string>
+    <string name="none">无</string>
+    <string name="ok">好</string>
+    <string name="pending_create_event">新建日程「%1$s」%2$s</string>
+    <string name="pending_create_item">新建事项「%1$s」</string>
+    <string name="pending_create_item_at">新建事项「%1$s」，排到%2$s</string>
+    <string name="pending_move">「%1$s」改到%2$s</string>
+    <string name="pending_schedule">「%1$s」排到%2$s</string>
+    <string name="project_all_done">事项都做完了</string>
+    <string name="project_area">领域</string>
+    <string name="project_color">颜色</string>
+    <string name="project_edit">编辑项目</string>
+    <string name="project_empty">这个项目还没有事项</string>
+    <string name="project_empty_tip">点右下角的加号，新事项会直接归到这里。</string>
+    <string name="project_focus_week"> · 本周已专注 %1$s</string>
+    <string name="project_menu">项目操作</string>
+    <string name="project_name">项目名称</string>
+    <string name="project_new">新建项目</string>
+    <string name="project_none">不属于项目</string>
+    <string name="project_open">%1$d 件未完成</string>
+    <string name="project_pick">选择项目</string>
+    <string name="project_show_done">显示 %1$d 件已完成</string>
+    <string name="project_unplanned">，%1$d 件没排进日历</string>
+    <string name="retry">重试</string>
+    <string name="save">保存</string>
+    <string name="search">搜索</string>
+    <string name="search_hint">搜索标题和备注</string>
+    <string name="search_more">还有 %1$d 件没有显示，换个更具体的词</string>
+    <string name="search_none">没有找到</string>
+    <string name="search_none_tip">没有标题或备注包含「%1$s」的事项</string>
+    <string name="session_item">事项</string>
+    <string name="session_no_item">不记到事项上</string>
+    <string name="session_pick">归到项目或事项</string>
+    <string name="session_what">做了什么</string>
+    <string name="settings_title">设置</string>
+    <string name="side_projects">项目</string>
+    <string name="stats_average">日均</string>
+    <string name="stats_count">%1$d 个</string>
+    <string name="stats_empty">还没有专注记录</string>
+    <string name="stats_empty_tip">完成第一个番茄后，这里会显示每天的数量\n和时间花在了哪个项目上。</string>
+    <string name="stats_no_project">未归项目</string>
+    <string name="stats_older">更早的记录</string>
+    <string name="stats_streak">连续</string>
+    <string name="stats_today">今天</string>
+    <string name="stats_tomatoes">%1$d 个番茄</string>
+    <string name="stats_unfinished">未完成 · %1$s</string>
+    <string name="stats_unit_count">个</string>
+    <string name="stats_unit_days">天</string>
+    <string name="stats_week">最近 7 天</string>
+    <string name="stats_where">时间花在哪</string>
+    <string name="suggest_accept">接受</string>
+    <string name="suggest_create_event">建议新建日程，%1$s</string>
+    <string name="suggest_delete_event">建议删除这个日程</string>
+    <string name="suggest_move">建议改到%1$s</string>
+    <string name="suggest_move_away">建议把这个日程挪走</string>
+    <string name="suggest_reject">拒绝</string>
+    <string name="suggest_schedule">建议排到%1$s</string>
+    <string name="today_all_planned">，事项都已安排。</string>
+    <string name="today_choose">需要取舍。</string>
+    <string name="today_empty">今天没有安排</string>
+    <string name="today_empty_tip">点右下角的加号记下一件事，\n或者去日历里添加日程。</string>
+    <string name="today_free">%1$s 前还有 %2$s空闲</string>
+    <string name="today_full">%1$s 前已经排满</string>
+    <string name="today_overdue">逾期</string>
+    <string name="today_overflow_word">排不下</string>
+    <string name="today_too_much">，%1$d 件事项要 %2$s，%3$s。</string>
+    <string name="today_triage">先保住 %1$d 件重要的，其余 %2$d 件可以改天。</string>
+    <string name="today_unplanned">，%1$d 件事项没排进日历，约需 %2$s。</string>
+    <string name="upcoming_empty">接下来没有计划</string>
+    <string name="upcoming_empty_tip">给事项定一个日期，它就会出现在这里</string>
+    <string name="upcoming_load">加载 %1$s</string>
+    <string name="view_day">日</string>
+    <string name="view_month">月</string>
+    <string name="when_clear">取消安排</string>
+    <string name="when_custom">自定时间</string>
+    <string name="when_date_only">只定日期</string>
+    <string name="when_no_free">这一天的工作时段里没有够长的空档</string>
+    <string name="when_none">未安排</string>
+    <string name="when_schedule">排进日历（%1$s）</string>
+    <string name="when_title">安排时间</string>
+    <string name="when_tonight">今晚</string>
+
+    <string-array name="weekday_short">
+        <item>周一</item>
+        <item>周二</item>
+        <item>周三</item>
+        <item>周四</item>
+        <item>周五</item>
+        <item>周六</item>
+        <item>周日</item>
+    </string-array>
+    <string-array name="weekday_long">
+        <item>星期一</item>
+        <item>星期二</item>
+        <item>星期三</item>
+        <item>星期四</item>
+        <item>星期五</item>
+        <item>星期六</item>
+        <item>星期日</item>
+    </string-array>
+    <string-array name="weekday_letter">
+        <item>一</item>
+        <item>二</item>
+        <item>三</item>
+        <item>四</item>
+        <item>五</item>
+        <item>六</item>
+        <item>日</item>
+    </string-array>
+    <string-array name="color_names">
+        <item>蓝色</item>
+        <item>靛色</item>
+        <item>橙色</item>
+        <item>青色</item>
+        <item>绿色</item>
+        <item>粉色</item>
+        <item>紫色</item>
+        <item>棕色</item>
+    </string-array>
+</resources>
