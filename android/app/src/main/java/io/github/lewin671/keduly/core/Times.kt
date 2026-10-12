@@ -80,3 +80,25 @@ object Times {
 }
 
 data class DaySpan(val start: Int, val end: Int, val startsEarlier: Boolean = false, val continues: Boolean = false)
+
+/** The start and end of a timed event while its form is being edited, in wall-clock terms. */
+data class EventSpan(val start: LocalDateTime, val end: LocalDateTime) {
+    /** Moving the start keeps the length; an event without a positive length gets one hour. */
+    fun withStart(time: LocalTime): EventSpan {
+        val length = java.time.Duration.between(start, end)
+        val next = start.toLocalDate().atTime(time)
+        return EventSpan(next, next.plus(if (length.isNegative || length.isZero) java.time.Duration.ofHours(1) else length))
+    }
+
+    /** An end at or before the start's time of day means the next day. */
+    fun withEnd(time: LocalTime): EventSpan {
+        val day = start.toLocalDate()
+        return copy(end = (if (time.isAfter(start.toLocalTime())) day else day.plusDays(1)).atTime(time))
+    }
+
+    /** Moving the day keeps the times and the number of days the event spans. */
+    fun withDay(day: LocalDate): EventSpan {
+        val days = ChronoUnit.DAYS.between(start.toLocalDate(), end.toLocalDate()).coerceAtLeast(0)
+        return EventSpan(day.atTime(start.toLocalTime()), day.plusDays(days).atTime(end.toLocalTime()))
+    }
+}

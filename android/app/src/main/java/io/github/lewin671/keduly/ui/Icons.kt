@@ -16,6 +16,21 @@ private fun circle(cx: Float, cy: Float, r: Float) = "M${cx - r} ${cy}a$r $r 0 1
 private fun rrect(x: Float, y: Float, w: Float, h: Float, r: Float) =
     "M${x + r} ${y}h${w - 2 * r}a$r $r 0 0 1 $r ${r}v${h - 2 * r}a$r $r 0 0 1 ${-r} ${r}h${-(w - 2 * r)}a$r $r 0 0 1 ${-r} ${-r}v${-(h - 2 * r)}a$r $r 0 0 1 $r ${-r}z"
 
+/** The outline of a cog wheel with eight teeth, centred in the 24-unit grid. */
+private fun cog(): String {
+    val teeth = 8
+    val points = ArrayList<String>()
+    for (k in 0 until teeth) {
+        val centre = 2 * Math.PI * k / teeth
+        // Each tooth: up its flank, across its top, down again, then along the rim to the next.
+        for ((offset, radius) in listOf(-0.24 to 7.0, -0.15 to 9.3, 0.15 to 9.3, 0.24 to 7.0)) {
+            val angle = centre + offset
+            points += "%.2f %.2f".format(java.util.Locale.US, 12 + radius * Math.sin(angle), 12 - radius * Math.cos(angle))
+        }
+    }
+    return "M" + points.joinToString("L") + "z"
+}
+
 private fun icon(name: String, vararg parts: Part): ImageVector {
     val builder = ImageVector.Builder(name, 24.dp, 24.dp, 24f, 24f)
     for (part in parts) {
@@ -38,7 +53,7 @@ object KIcons {
     val Tray = stroke("tray", "M4 13.5l2.4 -7.2A2 2 0 0 1 8.3 5h7.4a2 2 0 0 1 1.9 1.3l2.4 7.2v4a2 2 0 0 1 -2 2H6a2 2 0 0 1 -2 -2zM4 13.5h4.5a3.5 3.5 0 0 0 7 0H20")
     val Checklist = stroke("checklist", circle(12f, 12f, 8.5f), "M8.3 12.3l2.6 2.6 4.8 -5.2")
     val Bell = stroke("bell", "M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15zM10 20.5a2.2 2.2 0 0 0 4 0")
-    val Gear = stroke("gear", circle(12f, 12f, 3f), "M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M18.4 5.6l-1.8 1.8M7.4 16.6l-1.8 1.8")
+    val Gear = stroke("gear", cog(), circle(12f, 12f, 3f))
     val Search = stroke("search", circle(10.5f, 10.5f, 6.5f), "M15.5 15.5L20 20", width = 2f)
     val Plus = stroke("plus", "M12 5v14M5 12h14", width = 2.2f)
     val Back = stroke("back", "M11 5.5L4.5 12l6.5 6.5M5 12h14.5", width = 2f)

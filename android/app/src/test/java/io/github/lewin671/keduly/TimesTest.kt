@@ -1,6 +1,7 @@
 package io.github.lewin671.keduly
 
 import io.github.lewin671.keduly.core.DaySpan
+import io.github.lewin671.keduly.core.EventSpan
 import io.github.lewin671.keduly.core.Times
 import java.time.Instant
 import java.time.LocalDate
@@ -108,5 +109,37 @@ class TimesTest {
         // February 2027 starts on a Monday and fills exactly four weeks.
         assertEquals(28, Times.monthGrid(YearMonth.of(2027, 2)).size)
         assertEquals(42, Times.monthGrid(YearMonth.of(2026, 8)).size)
+    }
+
+    private fun at(day: Int, hour: Int, minute: Int = 0) = LocalDate.of(2026, 10, day).atTime(hour, minute)
+
+    @Test fun movingAnEventsStartKeepsItsLength() {
+        val span = EventSpan(at(13, 10, 30), at(13, 10, 45))
+        assertEquals(EventSpan(at(13, 13, 20), at(13, 13, 35)), span.withStart(LocalTime.of(13, 20)))
+        // Late in the day the end rolls into the next one.
+        assertEquals(EventSpan(at(13, 23, 50), at(14, 0, 5)), span.withStart(LocalTime.of(23, 50)))
+        // An event that ends the next day keeps doing so.
+        assertEquals(EventSpan(at(14, 23, 30), at(15, 11, 10)), EventSpan(at(14, 13, 20), at(15, 1, 0)).withStart(LocalTime.of(23, 30)))
+        assertEquals(EventSpan(at(13, 9, 0), at(13, 10, 0)), EventSpan(at(13, 10, 0), at(13, 10, 0)).withStart(LocalTime.of(9, 0)))
+    }
+
+    @Test fun anEndAtOrBeforeTheStartIsOnTheNextDay() {
+        val span = EventSpan(at(14, 13, 20), at(14, 13, 35))
+        assertEquals(at(14, 14, 5), span.withEnd(LocalTime.of(14, 5)).end)
+        assertEquals(at(15, 1, 0), span.withEnd(LocalTime.of(1, 0)).end)
+        assertEquals(at(15, 13, 20), span.withEnd(LocalTime.of(13, 20)).end)
+        // Choosing a later time again brings the end back to the start's day.
+        assertEquals(at(14, 18, 0), span.withEnd(LocalTime.of(1, 0)).withEnd(LocalTime.of(18, 0)).end)
+    }
+
+    @Test fun movingAnEventsDayKeepsItsTimes() {
+        assertEquals(EventSpan(at(14, 10, 30), at(14, 10, 45)), EventSpan(at(13, 10, 30), at(13, 10, 45)).withDay(LocalDate.of(2026, 10, 14)))
+        assertEquals(EventSpan(at(20, 22, 30), at(21, 0, 30)), EventSpan(at(13, 22, 30), at(14, 0, 30)).withDay(LocalDate.of(2026, 10, 20)))
+    }
+
+    @Test fun anEditedSpanIsWrittenInTheAccountZone() {
+        val span = EventSpan(at(14, 23, 30), at(15, 11, 10))
+        assertEquals("2026-10-14T15:30:00Z", Times.utc(span.start.toLocalDate(), span.start.toLocalTime(), shanghai))
+        assertEquals("2026-10-15T18:10:00Z", Times.utc(span.end.toLocalDate(), span.end.toLocalTime(), la))
     }
 }

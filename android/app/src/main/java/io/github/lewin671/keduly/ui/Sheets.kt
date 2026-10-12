@@ -33,6 +33,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.lewin671.keduly.R
@@ -137,12 +139,26 @@ fun DayPickerDialog(initial: LocalDate, onDismiss: () -> Unit, onPick: (LocalDat
 @Composable
 fun TimeDialog(initial: LocalTime, onDismiss: () -> Unit, onPick: (LocalTime) -> Unit) {
     val state = rememberTimePickerState(initial.hour, initial.minute, is24Hour = true)
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = { TextButton(onClick = { onPick(LocalTime.of(state.hour, state.minute)) }) { Text(stringResource(R.string.ok)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
-        text = { Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { TimePicker(state) } },
-    )
+    // The clock face needs more width than an alert dialog gives its text, so the dialog is built by hand.
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Surface(shape = RoundedCornerShape(28.dp), color = K.sheet, contentColor = K.label, modifier = Modifier.padding(16.dp)) {
+            Column(Modifier.padding(start = 24.dp, top = 24.dp, end = 24.dp, bottom = 12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                TimePicker(
+                    state,
+                    colors = TimePickerDefaults.colors(
+                        clockDialColor = K.wash(K.label, 0.07f, K.sheet), selectorColor = K.tint, containerColor = K.sheet,
+                        clockDialSelectedContentColor = K.onTint, clockDialUnselectedContentColor = K.label,
+                        timeSelectorSelectedContainerColor = K.wash(K.tint, 0.2f, K.sheet), timeSelectorUnselectedContainerColor = K.wash(K.label, 0.07f, K.sheet),
+                        timeSelectorSelectedContentColor = K.label, timeSelectorUnselectedContentColor = K.label,
+                    ),
+                )
+                Row(Modifier.align(Alignment.End)) {
+                    TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
+                    TextButton(onClick = { onPick(LocalTime.of(state.hour, state.minute)) }) { Text(stringResource(R.string.ok)) }
+                }
+            }
+        }
+    }
 }
 
 @OptIn(ExperimentalLayoutApi::class)

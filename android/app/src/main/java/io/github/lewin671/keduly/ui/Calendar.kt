@@ -41,6 +41,7 @@ import io.github.lewin671.keduly.api.Event
 import io.github.lewin671.keduly.api.EventPatch
 import io.github.lewin671.keduly.api.Opt
 import io.github.lewin671.keduly.core.DaySpan
+import io.github.lewin671.keduly.core.EventSpan
 import io.github.lewin671.keduly.core.Placed
 import io.github.lewin671.keduly.core.Times
 import io.github.lewin671.keduly.core.layoutDay
@@ -437,6 +438,13 @@ fun EventFormSheet(sheet: Sheet.EventForm, close: () -> Unit) {
         Unit
     }
 
+    val span = EventSpan(startDay.atTime(startTime), endDay.atTime(endTime))
+    val apply = { next: EventSpan ->
+        startDay = next.start.toLocalDate()
+        startTime = next.start.toLocalTime()
+        endDay = next.end.toLocalDate()
+        endTime = next.end.toLocalTime()
+    }
     SheetBar(
         stringResource(if (event == null) R.string.event_new else R.string.event_edit), stringResource(if (event == null) R.string.add else R.string.save),
         enabled = title.isNotBlank() && !busy, onCancel = close, onAction = submit,
@@ -482,27 +490,18 @@ fun EventFormSheet(sheet: Sheet.EventForm, close: () -> Unit) {
     }
     when (picker) {
         "startDay" -> DayPickerDialog(startDay, { picker = "" }) {
-            // Moving the start keeps the length in days.
-            endDay = it.plusDays(Times.daysBetween(startDay, endDay).toLong().coerceAtLeast(0))
-            startDay = it
+            if (allDay) {
+                // Moving the start keeps the length in days.
+                endDay = it.plusDays(Times.daysBetween(startDay, endDay).toLong().coerceAtLeast(0))
+                startDay = it
+            } else {
+                apply(span.withDay(it))
+            }
             picker = ""
         }
         "endDay" -> DayPickerDialog(endDay, { picker = "" }) { endDay = it; picker = "" }
-        "startTime" -> TimeDialog(startTime, { picker = "" }) {
-            // Moving the start keeps the length, as long as the end stays on the same day.
-            val length = java.time.Duration.between(startDay.atTime(startTime), endDay.atTime(endTime))
-            val end = startDay.atTime(it).plus(if (length.isNegative || length.isZero) java.time.Duration.ofHours(1) else length)
-            startTime = it
-            endDay = end.toLocalDate()
-            endTime = end.toLocalTime()
-            picker = ""
-        }
-        "endTime" -> TimeDialog(endTime, { picker = "" }) {
-            endTime = it
-            // An end at or before the start on the same day means the next day.
-            endDay = if (!it.isAfter(startTime)) startDay.plusDays(1) else startDay
-            picker = ""
-        }
+        "startTime" -> TimeDialog(startTime, { picker = "" }) { apply(span.withStart(it)); picker = "" }
+        "endTime" -> TimeDialog(endTime, { picker = "" }) { apply(span.withEnd(it)); picker = "" }
         "project" -> ProjectDialog(projectId, stringResource(R.string.project_none), { picker = "" }) { projectId = it; picker = "" }
         "delete" -> AlertDialog(
             onDismissRequest = { picker = "" },
