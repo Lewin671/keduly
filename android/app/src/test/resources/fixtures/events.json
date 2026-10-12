@@ -1,0 +1,104 @@
+{
+  "events": [
+    {
+      "id": "ffffffffffffffff",
+      "project_id": "cccccccccccccccc",
+      "item_id": null,
+      "title": "设计评审",
+      "notes": "",
+      "location": "",
+      "all_day": false,
+      "start": "2026-10-13T02:00:00Z",
+      "end": "2026-10-13T03:30:00Z",
+      "start_date": null,
+      "end_date": null,
+      "rrule": null,
+      "recurring": false,
+      "instance": null,
+      "status": "confirmed",
+      "suggestion_id": null,
+      "item_done": null,
+      "readonly": false,
+      "created_by": {
+        "kind": "user",
+        "name": "Me"
+      },
+      "updated_at": "2026-10-02T00:00:00Z"
+    },
+    {
+      "id": "iiiiiiiiiiiiiiii",
+      "project_id": "cccccccccccccccc",
+      "item_id": null,
+      "title": "线下活动",
+      "notes": "",
+      "location": "",
+      "all_day": true,
+      "start": null,
+      "end": null,
+      "start_date": "2026-10-11",
+      "end_date": "2026-10-12",
+      "rrule": null,
+      "recurring": false,
+      "instance": null,
+      "status": "confirmed",
+      "suggestion_id": null,
+      "item_done": null,
+      "readonly": false,
+      "created_by": {
+        "kind": "user",
+        "name": "Me"
+      },
+      "updated_at": "2026-10-02T00:00:00Z"
+    },
+    {
+      "id": "jjjjjjjjjjjjjjjj",
+      "project_id": "cccccccccccccccc",
+      "item_id": null,
+      "title": "周会",
+      "notes": "",
+      "location": "",
+      "all_day": false,
+      "start": "2026-10-13T02:00:00Z",
+      "end": "2026-10-13T03:30:00Z",
+      "start_date": null,
+      "end_date": null,
+      "rrule": "FREQ=WEEKLY;BYDAY=MO",
+      "recurring": true,
+      "instance": "2026-10-12T02:00:00Z",
+      "status": "confirmed",
+      "suggestion_id": null,
+      "item_done": null,
+      "readonly": true,
+      "created_by": {
+        "kind": "caldav",
+        "name": "iPhone"
+      },
+      "updated_at": "2026-10-02T00:00:00Z"
+    },
+    {
+      "id": "kkkkkkkkkkkkkkkk",
+      "project_id": "cccccccccccccccc",
+      "item_id": "eeeeeeeeeeeeeeee",
+      "title": "设计评审",
+      "notes": "",
+      "location": "",
+      "all_day": false,
+      "start": "2026-10-13T02:00:00Z",
+      "end": "2026-10-13T03:30:00Z",
+      "start_date": null,
+      "end_date": null,
+      "rrule": null,
+      "recurring": false,
+      "instance": null,
+      "status": "tentative",
+      "suggestion_id": "gggggggggggggggg",
+      "item_done": false,
+      "readonly": false,
+      "created_by": {
+        "kind": "user",
+        "name": "Me"
+      },
+      "updated_at": "2026-10-02T00:00:00Z"
+    }
+  ]
+}

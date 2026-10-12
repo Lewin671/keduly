@@ -1,0 +1,130 @@
+{
+  "date": "2026-10-13",
+  "items": [
+    {
+      "id": "eeeeeeeeeeeeeeee",
+      "project_id": "cccccccccccccccc",
+      "heading_id": null,
+      "title": "实现 CalDAV 同步",
+      "notes": "",
+      "estimate_minutes": 90,
+      "planned_date": "2026-10-13",
+      "evening": false,
+      "due_date": "2026-10-13",
+      "due_time": "18:00",
+      "important": true,
+      "status": "open",
+      "completed_at": null,
+      "position": 0,
+      "block": {
+        "event_id": "ffffffffffffffff",
+        "start": "2026-10-13T02:00:00Z",
+        "end": "2026-10-13T03:30:00Z"
+      },
+      "suggestion": {
+        "id": "gggggggggggggggg",
+        "start": "2026-10-13T06:00:00Z",
+        "end": "2026-10-13T07:30:00Z",
+        "reason": "下午第一个空档。",
+        "actor": {
+          "kind": "agent",
+          "name": "Claude Code · MacBook"
+        }
+      },
+      "focus": {
+        "tomatoes": 2,
+        "minutes": 50
+      },
+      "created_by": {
+        "kind": "user",
+        "name": "Me"
+      },
+      "created_at": "2026-10-01T00:00:00Z",
+      "updated_at": "2026-10-02T00:00:00Z"
+    }
+  ],
+  "overdue": [
+    {
+      "id": "hhhhhhhhhhhhhhhh",
+      "project_id": null,
+      "heading_id": null,
+      "title": "实现 CalDAV 同步",
+      "notes": "",
+      "estimate_minutes": null,
+      "planned_date": null,
+      "evening": false,
+      "due_date": null,
+      "due_time": null,
+      "important": false,
+      "status": "open",
+      "completed_at": null,
+      "position": 0,
+      "block": null,
+      "suggestion": null,
+      "focus": {
+        "tomatoes": 0,
+        "minutes": 0
+      },
+      "created_by": {
+        "kind": "user",
+        "name": "Me"
+      },
+      "created_at": "2026-10-01T00:00:00Z",
+      "updated_at": "2026-10-02T00:00:00Z"
+    }
+  ],
+  "events": [
+    {
+      "id": "iiiiiiiiiiiiiiii",
+      "project_id": "cccccccccccccccc",
+      "item_id": null,
+      "title": "线下活动",
+      "notes": "",
+      "location": "",
+      "all_day": true,
+      "start": null,
+      "end": null,
+      "start_date": "2026-10-11",
+      "end_date": "2026-10-12",
+      "rrule": null,
+      "recurring": false,
+      "instance": null,
+      "status": "confirmed",
+      "suggestion_id": null,
+      "item_done": null,
+      "readonly": false,
+      "created_by": {
+        "kind": "user",
+        "name": "Me"
+      },
+      "updated_at": "2026-10-02T00:00:00Z"
+    },
+    {
+      "id": "ffffffffffffffff",
+      "project_id": "cccccccccccccccc",
+      "item_id": null,
+      "title": "设计评审",
+      "notes": "",
+      "location": "",
+      "all_day": false,
+      "start": "2026-10-13T02:00:00Z",
+      "end": "2026-10-13T03:30:00Z",
+      "start_date": null,
+      "end_date": null,
+      "rrule": null,
+      "recurring": false,
+      "instance": null,
+      "status": "confirmed",
+      "suggestion_id": null,
+      "item_done": null,
+      "readonly": false,
+      "created_by": {
+        "kind": "user",
+        "name": "Me"
+      },
+      "updated_at": "2026-10-02T00:00:00Z"
+    }
+  ],
+  "free_minutes": 320,
+  "unplanned_minutes": 95
+}

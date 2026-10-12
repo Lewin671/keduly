@@ -1,0 +1,52 @@
+{
+  "project": {
+    "id": "cccccccccccccccc",
+    "area_id": "bbbbbbbbbbbbbbbb",
+    "name": "Keduly 开发",
+    "color": "blue",
+    "notes": "",
+    "position": 0,
+    "archived": false,
+    "open_count": 7,
+    "done_count": 3,
+    "created_at": "2026-10-01T00:00:00Z",
+    "updated_at": "2026-10-02T00:00:00Z"
+  },
+  "headings": [
+    {
+      "id": "dddddddddddddddd",
+      "project_id": "cccccccccccccccc",
+      "name": "同步",
+      "position": 0
+    }
+  ],
+  "upcoming_events": [
+    {
+      "id": "ffffffffffffffff",
+      "project_id": "cccccccccccccccc",
+      "item_id": null,
+      "title": "设计评审",
+      "notes": "",
+      "location": "",
+      "all_day": false,
+      "start": "2026-10-13T02:00:00Z",
+      "end": "2026-10-13T03:30:00Z",
+      "start_date": null,
+      "end_date": null,
+      "rrule": null,
+      "recurring": false,
+      "instance": null,
+      "status": "confirmed",
+      "suggestion_id": null,
+      "item_done": null,
+      "readonly": false,
+      "created_by": {
+        "kind": "user",
+        "name": "Me"
+      },
+      "updated_at": "2026-10-02T00:00:00Z"
+    }
+  ],
+  "unplanned_count": 4,
+  "focus_week_minutes": 300
+}

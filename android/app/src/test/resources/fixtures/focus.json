@@ -1,0 +1,26 @@
+{
+  "focus": {
+    "state": "work",
+    "session": {
+      "id": "llllllllllllllll",
+      "kind": "work",
+      "item_id": "eeeeeeeeeeeeeeee",
+      "project_id": "cccccccccccccccc",
+      "title": "实现 CalDAV 同步",
+      "start": "2026-10-13T01:00:00Z",
+      "end": "2026-10-13T01:25:00Z",
+      "planned_minutes": 25,
+      "completed": false,
+      "created_by": {
+        "kind": "user",
+        "name": "Me"
+      }
+    },
+    "tomatoes_today": 3,
+    "minutes_today": 80,
+    "round_size": 4,
+    "round_done": 3,
+    "rest_minutes": 5,
+    "now": "2026-10-13T01:06:18Z"
+  }
+}

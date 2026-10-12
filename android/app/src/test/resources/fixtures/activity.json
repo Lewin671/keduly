@@ -1,0 +1,31 @@
+{
+  "activities": [
+    {
+      "id": "nnnnnnnnnnnnnnnn",
+      "actor": {
+        "kind": "agent",
+        "name": "Claude Code · MacBook"
+      },
+      "action": "item.create",
+      "summary": "新建事项「调研 FullCalendar 授权」",
+      "reason": null,
+      "undoable": true,
+      "undone": false,
+      "created_at": "2026-10-13T00:12:00Z"
+    },
+    {
+      "id": "pppppppppppppppp",
+      "actor": {
+        "kind": "user",
+        "name": "Me"
+      },
+      "action": "item.create",
+      "summary": "新建事项「调研 FullCalendar 授权」",
+      "reason": "挪到下午",
+      "undoable": true,
+      "undone": true,
+      "created_at": "2026-10-13T00:12:00Z"
+    }
+  ],
+  "next_cursor": null
+}

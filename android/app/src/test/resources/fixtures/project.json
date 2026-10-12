@@ -1,0 +1,15 @@
+{
+  "project": {
+    "id": "cccccccccccccccc",
+    "area_id": "bbbbbbbbbbbbbbbb",
+    "name": "Keduly 开发",
+    "color": "blue",
+    "notes": "",
+    "position": 0,
+    "archived": false,
+    "open_count": 7,
+    "done_count": 3,
+    "created_at": "2026-10-01T00:00:00Z",
+    "updated_at": "2026-10-02T00:00:00Z"
+  }
+}

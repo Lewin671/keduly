@@ -1,0 +1,16 @@
+{
+  "user": {
+    "id": "aaaaaaaaaaaaaaaa",
+    "email": "me@example.com",
+    "name": "Me",
+    "timezone": "Asia/Shanghai",
+    "timezone_auto": false,
+    "work_start": "09:00",
+    "work_end": "18:00",
+    "focus_minutes": 25,
+    "rest_minutes": 5,
+    "long_rest_minutes": 15,
+    "round_size": 4,
+    "created_at": "2026-10-01T00:00:00Z"
+  }
+}

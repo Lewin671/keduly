@@ -1,0 +1,85 @@
+{
+  "days": [
+    {
+      "date": "2026-10-07",
+      "tomatoes": 2,
+      "minutes": 50,
+      "projects": [
+        {
+          "project_id": "cccccccccccccccc",
+          "tomatoes": 2,
+          "minutes": 50
+        }
+      ]
+    },
+    {
+      "date": "2026-10-08",
+      "tomatoes": 0,
+      "minutes": 0,
+      "projects": []
+    },
+    {
+      "date": "2026-10-09",
+      "tomatoes": 2,
+      "minutes": 50,
+      "projects": [
+        {
+          "project_id": "cccccccccccccccc",
+          "tomatoes": 2,
+          "minutes": 50
+        }
+      ]
+    },
+    {
+      "date": "2026-10-10",
+      "tomatoes": 0,
+      "minutes": 0,
+      "projects": []
+    },
+    {
+      "date": "2026-10-11",
+      "tomatoes": 2,
+      "minutes": 50,
+      "projects": [
+        {
+          "project_id": "cccccccccccccccc",
+          "tomatoes": 2,
+          "minutes": 50
+        }
+      ]
+    },
+    {
+      "date": "2026-10-12",
+      "tomatoes": 0,
+      "minutes": 0,
+      "projects": []
+    },
+    {
+      "date": "2026-10-13",
+      "tomatoes": 2,
+      "minutes": 50,
+      "projects": [
+        {
+          "project_id": "cccccccccccccccc",
+          "tomatoes": 2,
+          "minutes": 50
+        }
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "project_id": "cccccccccccccccc",
+      "tomatoes": 6,
+      "minutes": 150
+    },
+    {
+      "project_id": null,
+      "tomatoes": 2,
+      "minutes": 50
+    }
+  ],
+  "tomatoes": 8,
+  "minutes": 200,
+  "streak": 1
+}

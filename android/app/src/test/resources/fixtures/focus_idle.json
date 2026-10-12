@@ -1,0 +1,12 @@
+{
+  "focus": {
+    "state": "idle",
+    "session": null,
+    "tomatoes_today": 3,
+    "minutes_today": 80,
+    "round_size": 4,
+    "round_done": 3,
+    "rest_minutes": 5,
+    "now": "2026-10-13T01:06:18Z"
+  }
+}
