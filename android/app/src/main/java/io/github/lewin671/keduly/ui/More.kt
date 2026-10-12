@@ -8,7 +8,11 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextDecoration
@@ -107,16 +111,20 @@ private fun ValueDialog(title: String, initial: String, number: Boolean, suffix:
     val app = LocalApp.current
     val scope = rememberCoroutineScope()
     val busy by app.busy.collectAsStateWithLifecycle()
-    var text by remember { mutableStateOf(initial) }
+    // The value starts selected, so typing replaces it.
+    var field by remember { mutableStateOf(TextFieldValue(initial, TextRange(0, initial.length))) }
     var error by remember { mutableStateOf<String?>(null) }
-    val body = patch(text.trim())
+    val body = patch(field.text.trim())
+    val focus = remember { FocusRequester() }
+    LaunchedEffect(Unit) { focus.requestFocus() }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = {
             Column {
                 OutlinedTextField(
-                    text, { value -> text = if (number) value.filter(Char::isDigit).take(3) else value; error = null }, Modifier.fillMaxWidth(), singleLine = true, colors = fieldColors(),
+                    field, { value -> field = if (number) value.copy(text = value.text.filter(Char::isDigit).take(3)) else value; error = null },
+                    Modifier.fillMaxWidth().focusRequester(focus), singleLine = true, colors = fieldColors(),
                     suffix = if (suffix.isEmpty()) null else ({ Text(suffix) }),
                     keyboardOptions = KeyboardOptions(keyboardType = if (number) KeyboardType.Number else KeyboardType.Text),
                 )

@@ -4,6 +4,7 @@ import android.content.Context
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
+import androidx.core.content.edit
 import java.security.KeyStore
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
@@ -53,13 +54,13 @@ class KeystoreSessionStore(context: Context) : SessionStore {
     @Synchronized
     private fun write(name: String, value: String?) {
         if (value == null) {
-            prefs.edit().remove(name).apply()
+            prefs.edit { remove(name) }
             return
         }
         val cipher = Cipher.getInstance(TRANSFORMATION)
         cipher.init(Cipher.ENCRYPT_MODE, key())
         val bytes = cipher.iv + cipher.doFinal(value.toByteArray(Charsets.UTF_8))
-        prefs.edit().putString(name, Base64.encodeToString(bytes, Base64.NO_WRAP)).apply()
+        prefs.edit { putString(name, Base64.encodeToString(bytes, Base64.NO_WRAP)) }
     }
 
     private companion object {

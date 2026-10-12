@@ -97,6 +97,9 @@ class AppModel(application: Application) : AndroidViewModel(application) {
     /** Items ticked on the page that is showing: they stay where they are until the page is left. */
     val sticky = mutableStateMapOf<String, Item>()
 
+    /** Counts the sessions of this process, so that nothing of one session's screens carries over into the next. */
+    val generation = MutableStateFlow(0)
+
     private var clock: ServerClock? = null
     private var revision = -1L
     private var poll: Job? = null
@@ -140,6 +143,7 @@ class AppModel(application: Application) : AndroidViewModel(application) {
         calendarMode.value = 1
         sticky.clear()
         bootError.value = null
+        generation.update { it + 1 }
         phase.value = Phase.SignedOut
     }
 
@@ -371,7 +375,7 @@ class PageModel : ViewModel() {
                 state.value = PageState(fetch(app.api), loading = false)
             } catch (e: ApiException) {
                 // What was loaded stays on screen, with a line that offers to retry.
-                state.update { it.copy(loading = false, error = app.describe(e)) }
+                state.update { it.copy(loading = false, error = if (e.offline) app.text(R.string.error_network) else app.describe(e)) }
             }
         }
     }

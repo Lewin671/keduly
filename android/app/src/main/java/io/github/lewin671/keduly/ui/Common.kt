@@ -432,8 +432,11 @@ fun ItemRows(items: List<Item>, showProject: Boolean = true, showPlan: Boolean =
     val shown = remember { arrayOf(emptyList<Item>()) }
     val list = ArrayList(items)
     shown[0].forEachIndexed { index, old ->
-        val kept = app.sticky[old.id]
-        if (kept != null && kept.done && list.none { it.id == old.id }) list.add(minOf(index, list.size), kept)
+        val kept = app.sticky[old.id] ?: return@forEachIndexed
+        // The server may still list it (Today keeps what was completed today), but elsewhere in the list.
+        val at = list.indexOfFirst { it.id == old.id }
+        val current = if (at >= 0) list.removeAt(at) else kept.takeIf { it.done }
+        if (current != null) list.add(minOf(index, list.size), current)
     }
     shown[0] = list
     // The rows bleed to the screen edge so the whole width is one touch target.

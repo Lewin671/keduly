@@ -152,7 +152,7 @@ fun FocusScreen() {
     // Today's open items, important first; without any, free focus is the only choice.
     val candidates = today.data?.let { view -> (view.items + view.overdue).filter { !it.done }.sortedByDescending { it.important } }.orEmpty()
     val chosen = pick
-    val item = if (chosen == null) candidates.firstOrNull() else chosen.item?.let { picked -> candidates.firstOrNull { it.id == picked.id } ?: picked.takeIf { !it.done } }
+    val item = if (chosen == null) candidates.firstOrNull() else chosen.item?.let { picked -> candidates.firstOrNull { it.id == picked.id } ?: if (today.data == null) picked else candidates.firstOrNull() }
     val session = state.session?.takeIf { state.state != "idle" }
     Screen(
         stringResource(R.string.mode_focus), back = false, bell = true,
@@ -269,9 +269,16 @@ fun ZenScreen(f: Focus) {
                 }
                 Round(f)
             }
+            // A tomato on an item can end with the item being done; free focus has nothing to tick.
+            val canFinish = session.itemId != null && item?.done != true
+            if (f.state == "over") {
+                // The rest is the main action and has a row of its own, so every label fits.
+                PillButton(
+                    stringResource(if (f.roundDone == f.roundSize) R.string.focus_take_long_rest else R.string.focus_take_rest, f.restMinutes),
+                    Modifier.fillMaxWidth().padding(bottom = 10.dp), primary = true, enabled = !busy,
+                ) { app.restFocus() }
+            }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                // A tomato on an item can end with the item being done; free focus has nothing to tick.
-                val canFinish = session.itemId != null && item?.done != true
                 when (f.state) {
                     "work" -> {
                         PillButton(stringResource(R.string.focus_give_up), Modifier.weight(1f), enabled = !busy) { app.stopFocus() }
@@ -280,10 +287,6 @@ fun ZenScreen(f: Focus) {
                     "over" -> {
                         if (canFinish) PillButton(stringResource(R.string.focus_finish), Modifier.weight(1f), enabled = !busy) { app.finishFocus() }
                         PillButton(stringResource(R.string.focus_again), Modifier.weight(1f), enabled = !busy) { app.focusAgain() }
-                        PillButton(
-                            stringResource(if (f.roundDone == f.roundSize) R.string.focus_take_long_rest else R.string.focus_take_rest, f.restMinutes),
-                            Modifier.weight(1.5f), primary = true, enabled = !busy,
-                        ) { app.restFocus() }
                     }
                     "rest" -> PillButton(stringResource(R.string.focus_skip_rest), Modifier.weight(1f), enabled = !busy) { app.stopFocus() }
                 }
@@ -344,16 +347,11 @@ fun StatsScreen() {
             val now = app.serverNow()
             // Sessions that have ended, newest day and newest session first.
             val ended = data.sessions.filter { Times.instant(it.end).toEpochMilli() <= now }.sortedByDescending { it.start }
-            if (stats.minutes == 0 && ended.isEmpty() && days >= 62) {
+            if (stats.minutes == 0 && ended.isEmpty()) {
                 Blank(stringResource(R.string.stats_empty), stringResource(R.string.stats_empty_tip))
                 return@PageBody
             }
             Scroll {
-                if (stats.minutes == 0 && ended.isEmpty()) {
-                    Blank(stringResource(R.string.stats_empty), stringResource(R.string.stats_empty_tip))
-                    MoreLink(stringResource(R.string.stats_older), inset = false) { days = 62 }
-                    return@Scroll
-                }
                 Row(Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 22.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                     Figure(stats.days.lastOrNull()?.tomatoes?.toString() ?: "0", stringResource(R.string.stats_unit_count), stringResource(R.string.stats_today))
                     Figure(stats.tomatoes.toString(), stringResource(R.string.stats_unit_count), stringResource(R.string.stats_week))

@@ -52,6 +52,7 @@ private val TABS = listOf(
 fun App(launch: Launch?) {
     val app: AppModel = viewModel()
     val phase by app.phase.collectAsStateWithLifecycle()
+    val generation by app.generation.collectAsStateWithLifecycle()
     LifecycleStartEffect(Unit) {
         app.setForeground(true)
         onStopOrDispose { app.setForeground(false) }
@@ -65,7 +66,7 @@ fun App(launch: Launch?) {
             when (phase) {
                 Phase.Starting -> Starting()
                 Phase.SignedOut -> SignIn()
-                Phase.SignedIn -> Shell(launch?.route)
+                Phase.SignedIn -> key(generation) { Shell(launch?.route) }
             }
         }
     }

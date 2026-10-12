@@ -24,6 +24,8 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -562,7 +564,7 @@ fun ProjectFormSheet(project: Project?, close: () -> Unit) {
     val colorNames = androidx.compose.ui.res.stringArrayResource(R.array.color_names)
     FlowRow {
         PROJECT_COLORS.forEachIndexed { k, key ->
-            Box(Modifier.size(48.dp).clip(CircleShape).clickable(role = Role.RadioButton, onClickLabel = colorNames[k]) { color = key }, contentAlignment = Alignment.Center) {
+            Box(Modifier.size(48.dp).clip(CircleShape).clickable(role = Role.RadioButton) { color = key }.semantics { contentDescription = colorNames[k] }, contentAlignment = Alignment.Center) {
                 Box(Modifier.size(30.dp).background(K.project(key), CircleShape).then(if (color == key) Modifier.border(3.dp, K.sheet, CircleShape) else Modifier))
                 if (color == key) Box(Modifier.size(38.dp).border(2.dp, K.project(key), CircleShape))
             }
