@@ -63,10 +63,10 @@ func TestToday(t *testing.T) {
 	if !equal(events, []string{"holiday", "early call", "review", "sync"}) {
 		t.Fatalf("events %v", events)
 	}
-	// 540 working minutes minus 30 (early call inside the window), 120 (review
-	// and sync merged), 60 (block) and 60 (pending suggestion).
-	if today.FreeMinutes != 270 {
-		t.Fatalf("free_minutes %d, want 270", today.FreeMinutes)
+	// It is 10:00, so 480 working minutes are left; minus 120 (review and sync
+	// merged), 60 (block) and 60 (pending suggestion). The early call is over.
+	if today.FreeMinutes != 240 {
+		t.Fatalf("free_minutes %d, want 240", today.FreeMinutes)
 	}
 	// "important today" 30 + "carried over" 20; the others have a block, a
 	// suggestion, are for the evening or are done.

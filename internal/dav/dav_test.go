@@ -539,7 +539,7 @@ func TestRecurringEvents(t *testing.T) {
 	var today api.Today
 	f.s.SetNow(time.Date(2026, 10, 12, 2, 0, 0, 0, time.UTC))
 	f.me.Call("GET", "/today", nil, http.StatusOK, &today)
-	if len(today.Events) != 1 || today.Events[0].Title != "周会" || today.FreeMinutes != 540-30 {
+	if len(today.Events) != 1 || today.Events[0].Title != "周会" || today.FreeMinutes != 480 { // 10:00 to 18:00; the meeting is already over
 		t.Fatalf("today %+v", today)
 	}
 	var heat struct {

@@ -132,7 +132,7 @@ func TestItemsAndProjects(t *testing.T) {
 		t.Fatalf("created %+v", created.Item)
 	}
 
-	wantIn(t, h.ok("item", "list"), "实现 CalDAV 同步", "空闲 9h")
+	wantIn(t, h.ok("item", "list"), "实现 CalDAV 同步", "空闲 8h")
 	wantIn(t, h.ok("item", "list", "--view", "all"), "实现 CalDAV 同步", "写周报")
 	wantIn(t, h.ok("item", "list", "--view", "inbox"), "写周报")
 	wantIn(t, h.ok("item", "list", "--view", "upcoming"), "2026-10-14 周三", "写周报")

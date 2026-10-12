@@ -21,9 +21,13 @@ the backend and the frontend: change it here first, then in the code.
 
 | Client | Mechanism |
 |---|---|
-| Web app | Session cookie `keduly_session` (HttpOnly, SameSite=Lax, Secure over HTTPS). Every request that is not `GET` must also send the header `X-Keduly-Request: 1`; requests without it are rejected with `403 csrf` |
+| Web app and phone apps | Session cookie `keduly_session` (HttpOnly, SameSite=Lax, Secure over HTTPS). Every request that is not `GET` must also send the header `X-Keduly-Request: 1`; requests without it are rejected with `403 csrf` |
 | CLI and agents | `Authorization: Bearer <token>`. Tokens are created in Settings and start with `kdl_` |
 | CalDAV clients | HTTP Basic with the account email and an app password (a token of kind `caldav`). See [CalDAV](#caldav) |
+
+A session lasts 30 days from its last use; the server sends the cookie again when it pushes the
+expiry out. The phone apps keep the cookie in the system's secure storage, send the same
+`X-Keduly-Request` header, and act as the user, exactly like the web app.
 
 A token has a `scope`: `read` may only call `GET` endpoints, `write` may call everything except
 account, token and session management, which always require a session cookie.
@@ -423,8 +427,8 @@ These endpoints assemble what one screen needs in a single request.
 | `items` | Open items with `planned_date` today or earlier, plus items completed today. Important items first |
 | `overdue` | Open items whose `due_date` is before today and that are not already in `items` |
 | `events` | Today's events, time blocks excluded, all-day ones first |
-| `free_minutes` | Minutes between `work_start` and `work_end` not covered by any event or time block (pending suggestions count as covered). Overlapping events are counted once |
-| `unplanned_minutes` | Work left on items in `items` that are open, not `evening`, and have neither a time block nor a pending suggestion: each item's `estimate_minutes` less its `focus.minutes`, never below zero |
+| `free_minutes` | Minutes from now (or from `work_start`, when the working day has not begun) to `work_end` not covered by any event or time block (pending suggestions count as covered). Overlapping events are counted once. Zero once `work_end` has passed |
+| `unplanned_minutes` | Work left on items in `items` and `overdue` that are open, not `evening`, and have neither a time block nor a pending suggestion: each item's `estimate_minutes` less its `focus.minutes`, never below zero |
 
 `GET /upcoming` takes two dates (inclusive, at most 62 days apart) and returns only days that have
 something. `items` are open items planned for that day, or due that day when they have no planned

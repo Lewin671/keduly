@@ -128,7 +128,7 @@ Tomato red is used only for tomato marks. Going over an estimate ("7/1") is not 
 | Principle | In the interface |
 |---|---|
 | One timeline | Events and time blocks share the time axis and take their project's colour |
-| Time is a budget | Items carry an estimate; Today states in one sentence how much free time is left and how much unscheduled work there is |
+| Time is a budget | Items carry an estimate; Today states in one sentence how much free time is left before the working day ends, counted from now, and how much unscheduled work there is |
 | Agents stay quiet | A suggestion only appears as a tentative entry on the calendar. There is no separate prompt area. Click it to read the reason, then accept or reject |
 | Changes are traceable and reversible | The activity panel records the source and reason of every change, and each can be undone |
 | Dangerous operations need consent | An agent's delete does not run; it waits in the activity panel for the user to allow or refuse |
@@ -278,11 +278,28 @@ to the same server and account as the web app. The web app at phone width keeps 
 | Touch targets | At least 44 pt | At least 48 dp |
 | Type | SF, Dynamic Type | The system font, font scale |
 
-### Not in the first version
+### Signing in
 
-Offline writes, push notifications, the lock-screen timer and home-screen widgets. Without a
-connection the apps show what they last loaded and say when it was loaded; they do not queue
-changes.
+The first screen asks for the server address, the email and the password; registering is offered
+when the server allows it. The app is a session like the web app's (see `docs/api.md`,
+"Authentication") and keeps it in the system's secure storage. A `401` on any request clears it
+and returns to this screen.
+
+### First version
+
+In: the ten screens with every action on them; Upcoming, All, Inbox, Done and search; creating,
+editing, completing, scheduling and deleting items; creating, editing and deleting events;
+creating and editing projects; accepting and rejecting suggestions; the activity page with undo;
+the focus timer in all its states, its statistics and filing a session; settings for the name,
+working hours, the focus lengths and signing out.
+
+Not in the first version: offline writes, a saved copy of the data for starting without a
+connection, push notifications, the lock-screen timer, home-screen widgets, signing in with a QR
+code, the year view, focus sessions drawn on the calendar, dragging to reschedule, reordering,
+areas and headings management, tokens and CalDAV set-up (done in the web app), and editing
+recurring events (they are read-only, as in the web app). Without a connection the apps keep what
+is on screen, say that the server cannot be reached and offer to retry; they do not queue changes.
+The timer is the server's: a phone that is asleep does not ring when a tomato ends.
 
 ## Edge cases
 
@@ -358,10 +375,9 @@ product feature) that swaps the sample data between ordinary, crowded and empty.
 
 | Case | Intended handling |
 |---|---|
-| Sync failure or offline | A status and a retry entry at the bottom of the sidebar; local changes are kept |
+| Sync failure or offline (web app) | A status and a retry entry at the bottom of the sidebar; local changes are kept. The phone apps follow "Phone apps" |
 | A stale suggestion (its time has passed or the slot was taken) | Marked invalid and no longer directly acceptable |
 | Multi-day events in month view | Drawn as one segment per day today; ideally one continuous bar |
-| Overlapping events on a phone | The lanes get very narrow; needs its own design |
 | Time up on a phone | A web page cannot ring once it is closed; a reliable reminder needs push notifications |
 | Correcting a session | Deleting or shortening a wrong record (forgot to stop before leaving) |
 | Statistics beyond 7 days | Weeks, months, and a comparison with the previous period |
@@ -410,7 +426,7 @@ Apple's own apps.
 | Items | Things 3 | See "Items mode". The sidebar is a quiet text list, not coloured tiles |
 | Activity, Settings | Calendar's inbox, System Settings | Activity is a translucent popover under its toolbar button. Settings are rounded grouped lists with a coloured square icon on each row and a line of small print under each group |
 | Popovers | System popovers | Translucent, 14 px radius, a springy scale-in, capsule buttons |
-| Phone | iOS | A floating translucent capsule tab bar with two entries |
+| Web app at phone width | iOS | A floating translucent capsule tab bar with three entries |
 
 | Topic | Rule |
 |---|---|

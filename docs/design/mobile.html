@@ -504,12 +504,14 @@ function today(o = {}) {
 function project() {
   if (D.empty) return { nav: nav({ back: '事项', right: ['more'] }), tab: 'items', body: `<h2 class="lt">${ring('var(--blue)', 0)}<span>新项目</span></h2>${blank('这个项目还没有事项', '点右下角的加号，新事项会直接归到这里。').replace('150px', '120px')}` };
   const p = P('dev'), l = D.items.filter(t => t.p === 'dev' && !t.done), heads = [...new Set(l.map(t => t.h))];
-  return { nav: nav({ back: '事项', right: ['more'] }), tab: 'items', body: `<h2 class="lt" style="align-items:flex-start">${ring(p.c, .4, 'margin-top:8px')}<span class="pt">${esc(p.name)}</span></h2><p class="pnote">${p}
+  return { nav: nav({ back: '事项', right: ['more'] }), tab: 'items', body: `<h2 class="lt" style="align-items:flex-start">${ring(p.c, .4, 'margin-top:8px')}<span class="pt">${esc(p.name)}</span></h2><p class="pnote">${p.notes}</p><p class="summary" style="margin-bottom:6px">${l.length} 件未完成，${l.filter(t => t.at == null).length} 件没排进日历 · 本周已专注 5 小时</p><div class="evs" style="margin-top:10px">${D.events.filter(e => e.p === 'dev' && !e.all).slice(0, 2).map(evLine).join('')}</div>${heads.map(h => { const hl = l.filter(t => t.h === h); return sec(h, hl.length) + rows(hl, { noProject: 1 }); }).join('')}<button class="more">显示 12 件已完成</button>` };
+}
 function detailSheet() {
   if (D.empty) return `<div class="dim"></div><div class="sheet"><div class="grab"></div><div class="sh"><button>取消</button><b>新事项</b><button class="b" style="opacity:.4">添加</button></div><div class="inp">要做什么？</div><div class="chips"><span class="chip set">${icon('star')}今天</span><span class="chip">${icon('flag')}截止</span><span class="chip">${icon('clock')}预计</span><span class="chip">${icon('tray')}收件箱</span><span class="chip">${icon('bang')}重要</span></div><div class="kb">键盘</div></div>`;
   const t = D.items[0], p = P(t.p);
   return `<div class="dim"></div><div class="sheet"><div class="grab"></div><div class="sh"><span></span><button class="b">完成</button></div>
-    <div class="st"><span class="chk"></span><div><h3>${esc(t.t)}</h3><p>${t    <div class="sug"><b>建议排到今天 14:00–15:30</b><p>上午有产品讨论，下午是今天最长的一段空档。</p><p>Claude · 今天 08:12</p><div><button>拒绝</button><button class="go">接受</button></div></div>
+    <div class="st"><span class="chk"></span><div><h3>${esc(t.t)}</h3><p>${t.notes}</p></div></div>
+    <div class="sug"><b>建议排到今天 14:00–15:30</b><p>上午有产品讨论，下午是今天最长的一段空档。</p><p>Claude · 今天 08:12</p><div><button>拒绝</button><button class="go">接受</button></div></div>
     <div class="grp">
       <button class="gr">${icon('cal')}<span class="gr-b"><b>时间</b><em>待定 14:00</em>${icon('right', 'chev')}</span></button>
       <button class="gr">${icon('flag')}<span class="gr-b"><b>截止</b><em class="hot">今天</em>${icon('right', 'chev')}</span></button>

@@ -53,7 +53,7 @@ After the CLI is upgraded, `keduly skill install` (with the flags it was first i
 |---|---|
 | `keduly agenda [--date D] [--days N]` | Per day: events, time blocks, pending suggestions (待定 = would be created, 待调整 = would move or go), planned items |
 | `keduly free --date D --duration 60m` | Free slots within working hours |
-| `keduly item list` | Today: planned and overdue items, free and unplanned minutes |
+| `keduly item list` | Today: planned and overdue items, the free minutes left before the working day ends, and unplanned minutes |
 | `keduly item list --view inbox\|upcoming\|matrix\|done\|all` | `matrix` = the four quadrants; `upcoming` = the next 14 days |
 | `keduly item list [--project P] [--heading H] [--query TEXT] [--status open\|done\|any] [--quadrant do\|plan\|quick\|later]` | Filtered items (open ones unless `--status`); filters combine |
 | `keduly item show ID` | One item: notes, heading, time block, tomatoes and time spent (番茄 2 · 已用 50m) |

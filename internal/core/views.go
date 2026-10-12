@@ -105,10 +105,12 @@ func (op *Op) Today() (*api.Today, error) {
 	if out.Overdue, err = op.renderItems(overdue); err != nil {
 		return nil, err
 	}
-	for _, it := range out.Items {
-		if it.Status == "open" && !it.Evening && it.Block == nil && it.Suggestion == nil && it.EstimateMinutes != nil {
-			// What is left to do: the estimate less the time already spent focusing on it.
-			out.UnplannedMinutes += max(*it.EstimateMinutes-it.Focus.Minutes, 0)
+	for _, list := range [][]api.Item{out.Items, out.Overdue} {
+		for _, it := range list {
+			if it.Status == "open" && !it.Evening && it.Block == nil && it.Suggestion == nil && it.EstimateMinutes != nil {
+				// What is left to do: the estimate less the time already spent focusing on it.
+				out.UnplannedMinutes += max(*it.EstimateMinutes-it.Focus.Minutes, 0)
+			}
 		}
 	}
 	entries, err := op.entries(from, to, true)
@@ -117,8 +119,15 @@ func (op *Op) Today() (*api.Today, error) {
 	}
 	out.Events = eventsOf(entries, realEvents)
 	sort.SliceStable(out.Events, func(i, j int) bool { return out.Events[i].AllDay && !out.Events[j].AllDay })
+	// Only what is left of the day counts: the time before now is gone.
 	for _, gap := range op.gaps(today, entries) {
-		out.FreeMinutes += int(gap[1].Sub(gap[0]).Minutes())
+		from := gap[0]
+		if op.Now.After(from) {
+			from = op.Now
+		}
+		if from.Before(gap[1]) {
+			out.FreeMinutes += int(gap[1].Sub(from).Minutes())
+		}
 	}
 	return out, nil
 }

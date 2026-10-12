@@ -546,7 +546,7 @@ describe('items', () => {
   it('lists today with its summary, overdue and evening sections', async () => {
     await open('#/items/today');
     expect(document.body.dataset.mode).toBe('tasks');
-    expect(document.querySelector('.summary')!.textContent).toBe('18:00 前还有 3.5 小时空闲，1 件事项未安排（30 分钟）');
+    expect(document.querySelector('.summary')!.textContent).toBe('18:00 前还有 3.5 小时空闲，2 件事项未安排（30 分钟）');
     expect([...document.querySelectorAll('.sec')].map(s => s.textContent)).toEqual(['逾期1', '今天3', '今晚']);
     // Important items lead the day.
     expect([...document.querySelectorAll('.todo .tt')].map(e => e.textContent)).toEqual(['提交个税专项附加扣除', '!实现 CalDAV 同步', '回复 PR 评论', '写周报', '预约体检']);

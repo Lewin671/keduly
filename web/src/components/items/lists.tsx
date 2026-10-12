@@ -50,7 +50,8 @@ export function Today(): JSX.Element {
   if (!items.length && !data.overdue.length && !data.events.length && !draft.value) {
     return <>{head}<Blank title={t('today.empty')} tip={t('today.emptyTip')} /></>;
   }
-  const gaps = day.filter(i => open(i) && !i.block && !i.suggestion);
+  // Overdue items are part of the day's work too, as in the server's unplanned_minutes.
+  const gaps = [...data.overdue.map(current), ...day].filter(i => open(i) && !i.evening && !i.block && !i.suggestion);
   const summary = todaySummary({
     freeMinutes: data.free_minutes,
     unplannedMinutes: data.unplanned_minutes,
