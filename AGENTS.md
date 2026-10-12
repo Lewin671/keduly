@@ -13,7 +13,7 @@ Keduly is a calendar and task manager with a first-class interface for AI agents
 | `web/` | Web app source (TypeScript, Preact, Vite) |
 | `skills/keduly/` | The skill that teaches an agent to use the CLI; embedded in the binary for `keduly skill install` |
 | `docs/api.md` | The HTTP API. It is the contract between server and web app: update it first |
-| `docs/design/` | `DESIGN.md` and `mockup.html`, the approved design. UI work follows the mockup |
+| `docs/design/` | `DESIGN.md`, `mockup.html` (web app) and `mobile.html` (phone apps), the approved design. UI work follows the mockups |
 | `deploy/` | Example container and reverse proxy files |
 | `scripts/` | `check.sh` runs every check; `build.sh` builds the release binary; `release.sh` builds the archives of a release |
 | `install.sh` | What users pipe into `sh`: downloads a release and installs the binary; the skill is a separate `keduly skill install` |

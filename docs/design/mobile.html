@@ -1,0 +1,610 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Keduly 手机端设计稿</title>
+<style>
+:root { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Helvetica Neue", sans-serif; color: #1c1c1e; background: #ececea; font-synthesis: none; -webkit-font-smoothing: antialiased; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+button { font: inherit; color: inherit; border: 0; background: none; padding: 0; cursor: pointer; text-align: inherit; }
+h1, h2, h3, p { margin: 0; }
+svg.i { width: 22px; height: 22px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ---------- the page around the phones (not part of the product) ---------- */
+.page { max-width: 1340px; margin: 0 auto; padding: 30px 36px 80px; }
+.mast { display: flex; align-items: center; gap: 11px; }
+.mast svg { width: 30px; height: 30px; }
+.mast strong { font-size: 20px; letter-spacing: -.5px; }
+.mast span { margin-left: auto; font-size: 11px; letter-spacing: 1px; color: #76777a; }
+.intro { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin: 26px 0 20px; }
+.intro h1 { font-size: 30px; letter-spacing: -1px; }
+.intro p { font-size: 13px; color: #76777a; }
+.ctl { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; gap: 22px; flex-wrap: wrap; padding: 14px 0; background: #ececea; border-top: 1px solid #d5d6d3; border-bottom: 1px solid #d5d6d3; font-size: 12px; color: #6f7174; }
+.ctl > div { display: flex; align-items: center; gap: 9px; }
+.dseg { display: flex; background: #dddeda; border-radius: 8px; padding: 3px; }
+.dseg button { padding: 6px 13px; border-radius: 6px; font-size: 12px; color: #55575a; }
+.dseg button.on { background: #fff; color: #1c1c1e; box-shadow: 0 1px 3px #0002; }
+.board { display: grid; grid-template-columns: repeat(auto-fill, 390px); justify-content: center; gap: 44px 38px; padding: 30px 0 10px; }
+.cap { margin: 0 6px 12px; min-height: 56px; }
+.cap b { display: block; font-size: 14px; }
+.cap span { display: block; font-size: 12px; line-height: 1.55; color: #6f7174; margin-top: 3px; }
+
+/* ---------- phone ---------- */
+.phone { width: 390px; height: 844px; border-radius: 54px; background: #000; box-shadow: 0 0 0 9px #1d1d1f, 0 0 0 10px #0003, 0 26px 50px #1c253a22; position: relative; }
+.screen {
+  --bg: #fff; --grouped: #f2f2f7; --cell: #fff; --label: #1c1c1e; --label2: rgba(60, 60, 67, .62); --label3: rgba(60, 60, 67, .3);
+  --sep: rgba(60, 60, 67, .16); --fill: rgba(120, 120, 128, .12); --fill2: rgba(120, 120, 128, .2);
+  --tint: #2867d6; --red: #ff3b30; --orange: #f08c00; --green: #34c759; --blue: #007aff; --indigo: #5856d6; --purple: #af52de; --teal: #30b0c7; --tomato: #f25c45;
+  --glass: rgba(255, 255, 255, .78); --glass-edge: rgba(0, 0, 0, .06); --mix: #000; --seg-on: #fff;
+  position: absolute; inset: 0; border-radius: 54px; overflow: hidden; display: flex; flex-direction: column;
+  background: var(--bg); color: var(--label); font-size: 17px; line-height: 22px; letter-spacing: -.2px; font-variant-numeric: tabular-nums;
+}
+.screen.dark {
+  --bg: #000; --grouped: #000; --cell: #1c1c1e; --label: #fff; --label2: rgba(235, 235, 245, .62); --label3: rgba(235, 235, 245, .3);
+  --sep: rgba(84, 84, 88, .6); --fill: rgba(120, 120, 128, .24); --fill2: rgba(120, 120, 128, .36);
+  --tint: #6c9dff; --red: #ff453a; --orange: #ff9f0a; --green: #30d158; --blue: #0a84ff; --indigo: #7d7aff; --purple: #bf5af2; --teal: #40c8e0; --tomato: #ff6b55;
+  --glass: rgba(40, 40, 43, .78); --glass-edge: rgba(255, 255, 255, .1); --mix: #fff; --seg-on: #636366;
+}
+.screen.grouped { background: var(--grouped); }
+.sb { height: 54px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 14px 30px 0 38px; font-size: 16px; font-weight: 600; position: relative; z-index: 5; }
+.sb i { position: absolute; left: 50%; top: 11px; width: 122px; height: 35px; margin-left: -61px; border-radius: 20px; background: #000; }
+.sb span { display: flex; align-items: center; gap: 6px; }
+.sb svg { width: 17px; height: 17px; fill: currentColor; stroke: none; }
+.home { position: absolute; left: 50%; bottom: 8px; width: 138px; height: 5px; margin-left: -69px; border-radius: 3px; background: var(--label); z-index: 30; }
+
+/* navigation bar: back to the parent on the left, at most two actions on the right */
+.nav { height: 44px; flex: none; display: flex; align-items: center; padding: 0 8px; }
+.nav .back { display: flex; align-items: center; height: 44px; padding: 0 8px 0 2px; color: var(--tint); font-size: 17px; }
+.nav .back svg { width: 26px; height: 26px; stroke-width: 2.2; margin-right: -3px; }
+.nav .sp { flex: 1; }
+.nav .nb { width: 44px; height: 44px; display: grid; place-items: center; color: var(--tint); position: relative; }
+.nav .nb svg { width: 24px; height: 24px; }
+.nav .txt { height: 44px; padding: 0 10px; font-size: 17px; color: var(--red); }
+.badge { position: absolute; top: 5px; right: 3px; min-width: 17px; height: 17px; padding: 0 5px; border-radius: 9px; background: var(--red); color: #fff; font-size: 11px; font-weight: 600; line-height: 17px; text-align: center; letter-spacing: 0; box-shadow: 0 0 0 2px var(--bg); }
+.grouped .badge { box-shadow: 0 0 0 2px var(--grouped); }
+.body { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; padding: 0 20px 118px; position: relative; }
+.body::-webkit-scrollbar { display: none; }
+.lt { font-size: 34px; line-height: 41px; font-weight: 700; letter-spacing: -.6px; margin: 2px 0 6px; display: flex; align-items: center; gap: 10px; }
+.lt small { font-size: 17px; font-weight: 400; color: var(--label2); letter-spacing: -.2px; align-self: flex-end; padding-bottom: 5px; }
+.lt .ring { width: 26px; height: 26px; }
+.sub { font-size: 15px; line-height: 20px; color: var(--label2); }
+.summary { font-size: 15px; line-height: 21px; color: var(--label2); margin: 2px 0 14px; }
+.summary b { color: var(--label); font-weight: 600; }
+.summary .warn { color: var(--red); font-weight: 600; }
+.link { color: var(--tint); font-size: 15px; padding: 10px 0; display: block; }
+
+/* ---------- item row ---------- */
+.sec { display: flex; align-items: baseline; gap: 8px; padding: 22px 0 7px; border-bottom: .5px solid var(--sep); }
+.sec:first-child { padding-top: 10px; }
+.sec b { font-size: 20px; line-height: 25px; font-weight: 700; letter-spacing: -.4px; }
+.sec b svg { width: 17px; height: 17px; vertical-align: -2px; margin-right: 5px; color: var(--indigo); fill: currentColor; stroke: none; }
+.sec em { font-style: normal; font-size: 13px; color: var(--label2); }
+.sec span { margin-left: auto; font-size: 13px; color: var(--label2); white-space: nowrap; }
+.sec.over b { color: var(--red); }
+.it { display: flex; gap: 12px; padding-left: 1px; }
+.chk { width: 22px; height: 22px; flex: none; margin-top: 11px; border-radius: 7px; border: 1.6px solid var(--label3); display: grid; place-items: center; }
+.chk.on { background: var(--tint); border-color: var(--tint); }
+.chk.on::after { content: ""; width: 10px; height: 5px; border-left: 2px solid #fff; border-bottom: 2px solid #fff; transform: rotate(-45deg) translate(1px, -1px); }
+.it-b { flex: 1; min-width: 0; padding: 10px 0 10px; border-bottom: .5px solid var(--sep); }
+.it-h { display: flex; gap: 10px; }
+.it:last-child .it-b { border-bottom: 0; }
+.it-t { flex: 1; min-width: 0; font-size: 17px; line-height: 22px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; }
+.imp { color: var(--orange); font-weight: 800; margin-right: 5px; }
+.it-s { display: flex; align-items: center; gap: 0; margin-top: 2px; font-size: 13px; line-height: 18px; color: var(--label2); white-space: nowrap; overflow: hidden; }
+.it-s > * { flex: none; }
+.it-s > * + *::before { content: "·"; margin: 0 5px; color: var(--label3); }
+.it-s .pj { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--c); margin-right: 5px; }
+.tom { width: 13px; height: 13px; vertical-align: -2px; margin-right: 2px; color: var(--tomato); fill: none; }
+.tom.off { color: var(--label3); }
+.due { color: var(--label2); }
+.due.hot { color: var(--red); }
+.it-r { flex: none; padding-top: 2px; font-size: 13px; line-height: 18px; color: var(--label2); white-space: nowrap; text-align: right; }
+.tent { border: 1px dashed var(--label3); border-radius: 6px; padding: 1px 6px; font-size: 12px; }
+.run { color: var(--tint); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+.it.done .it-t { color: var(--label2); text-decoration: line-through; }
+.more { color: var(--tint); font-size: 15px; padding: 10px 0 2px 35px; display: block; }
+.blank { padding: 150px 26px 0; text-align: center; color: var(--label2); font-size: 15px; line-height: 21px; }
+.blank b { display: block; color: var(--label); font-size: 20px; line-height: 25px; font-weight: 600; margin-bottom: 6px; }
+.none { font-size: 15px; color: var(--label3); padding: 12px 0 4px 35px; }
+
+/* today's events: small and quiet, the items are what the page is for */
+.evs { display: grid; gap: 5px; margin: 0 0 4px; }
+.ev { display: flex; align-items: center; gap: 9px; font-size: 15px; line-height: 20px; color: var(--label2); min-width: 0; }
+.ev time { flex: none; width: 43px; font-size: 13px; }
+.ev i { flex: none; width: 3px; height: 16px; border-radius: 2px; background: var(--c); }
+.ev.tentative i { background: repeating-linear-gradient(var(--c) 0 3px, transparent 3px 5px); }
+.ev span { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ev em { flex: none; font-style: normal; font-size: 12px; border: 1px dashed var(--label3); border-radius: 6px; padding: 0 5px; line-height: 17px; }
+
+/* ---------- lists root ---------- */
+.search { display: flex; align-items: center; gap: 6px; height: 36px; padding: 0 9px; margin: 6px 0 18px; border-radius: 10px; background: var(--fill); color: var(--label2); font-size: 17px; }
+.search svg { width: 18px; height: 18px; stroke-width: 2; }
+.grp { background: var(--cell); border-radius: 14px; overflow: hidden; }
+.grp-h { font-size: 13px; line-height: 18px; color: var(--label2); padding: 22px 16px 7px; }
+.gr { display: flex; align-items: center; gap: 13px; padding-left: 16px; min-height: 48px; width: 100%; }
+.gr > svg { color: var(--c, var(--tint)); width: 23px; height: 23px; }
+.gr .ring { width: 21px; height: 21px; margin: 0 1px; }
+.gr-b { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; min-height: 48px; padding-right: 12px; border-bottom: .5px solid var(--sep); }
+.gr:last-child .gr-b { border-bottom: 0; }
+.gr-b b { flex: 1; min-width: 0; font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gr-b em { font-style: normal; color: var(--label2); font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 62%; }
+.gr-b em.hot { color: var(--red); }
+.gr-b .chev { width: 15px; height: 15px; stroke-width: 2.4; color: var(--label3); }
+.gr.act b { color: var(--tint); }
+.sw { width: 51px; height: 31px; border-radius: 16px; background: var(--fill2); position: relative; flex: none; }
+.sw::after { content: ""; position: absolute; left: 2px; top: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; box-shadow: 0 2px 5px #0003; }
+.sw.on { background: var(--green); }
+.sw.on::after { left: 22px; }
+
+/* ---------- project page ---------- */
+.pnote { font-size: 15px; line-height: 21px; color: var(--label2); margin: 0 0 10px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+.pt { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; overflow-wrap: anywhere; }
+
+/* ---------- calendar ---------- */
+.seg { display: flex; background: var(--fill); border-radius: 9px; padding: 2px; margin: 4px 0 12px; }
+.seg button { flex: 1; height: 28px; border-radius: 7px; font-size: 13px; font-weight: 500; text-align: center; }
+.seg button.on { background: var(--seg-on); font-weight: 600; box-shadow: 0 0 0 .5px #0000000a, 0 3px 8px #0000001f; }
+.wd, .mg { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; margin: 0 -8px; }
+.wd { font-size: 11px; line-height: 13px; color: var(--label3); padding-bottom: 4px; font-weight: 600; }
+.mg button { height: 50px; display: grid; justify-items: center; align-content: start; gap: 3px; padding-top: 3px; text-align: center; }
+.mg b { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-size: 19px; font-weight: 400; letter-spacing: -.4px; }
+.mg .we b { color: var(--label2); }
+.mg .today b { color: var(--red); font-weight: 600; }
+.mg .sel b { background: var(--label); color: var(--bg); font-weight: 600; }
+.mg .sel.today b { background: var(--red); color: #fff; }
+.mg u { display: flex; gap: 3px; height: 6px; text-decoration: none; }
+.mg u i { width: 6px; height: 6px; border-radius: 50%; background: var(--c); }
+.mg u i.o { background: none; border: 1.3px solid var(--c); }
+.dayh { display: flex; align-items: baseline; gap: 8px; margin: 6px -20px 0; padding: 11px 20px 9px; border-top: .5px solid var(--sep); font-size: 17px; font-weight: 600; }
+.dayh span { font-size: 15px; font-weight: 400; color: var(--label2); }
+.dayh em { margin-left: auto; font-style: normal; font-size: 13px; font-weight: 400; color: var(--label2); }
+.ag { display: flex; gap: 11px; padding: 0; min-height: 50px; align-items: stretch; }
+.ag time { flex: none; width: 43px; padding-top: 7px; font-size: 13px; line-height: 18px; color: var(--label); }
+.ag time span { display: block; color: var(--label2); }
+.ag > i { flex: none; width: 4px; margin: 7px 0; border-radius: 2px; background: var(--c); }
+.ag.tentative > i { background: repeating-linear-gradient(var(--c) 0 4px, transparent 4px 7px); }
+.ag-b { flex: 1; min-width: 0; padding: 6px 0 7px; border-bottom: .5px solid var(--sep); }
+.ag:last-child .ag-b { border-bottom: 0; }
+.ag-b b { display: block; font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ag-b span { display: block; font-size: 13px; line-height: 18px; color: var(--label2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.strip { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; margin: 0 -8px; }
+.strip button { display: grid; justify-items: center; gap: 3px; text-align: center; font-size: 11px; line-height: 13px; font-weight: 600; color: var(--label3); padding-bottom: 6px; }
+.strip b { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-size: 19px; font-weight: 400; color: var(--label); letter-spacing: -.4px; }
+.strip .sel b { background: var(--red); color: #fff; font-weight: 600; }
+.allday { display: flex; gap: 6px; align-items: center; margin: 0 -20px; padding: 6px 20px 6px 12px; border-top: .5px solid var(--sep); font-size: 11px; color: var(--label2); }
+.allday span { width: 44px; text-align: right; flex: none; }
+.allday b { flex: 1; min-width: 0; height: 24px; line-height: 24px; padding: 0 9px; border-radius: 6px; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: color-mix(in srgb, var(--c) 20%, var(--bg)); color: color-mix(in srgb, var(--c) 62%, var(--mix)); }
+.tlw { margin: 0 -20px; border-top: .5px solid var(--sep); overflow-y: auto; scrollbar-width: none; flex: 1; min-height: 0; }
+.tlw::-webkit-scrollbar { display: none; }
+.tl { position: relative; margin: 10px 12px 130px 0; --h: 58px; }
+.hr { height: var(--h); position: relative; }
+.hr span { position: absolute; left: 0; top: -7px; width: 50px; text-align: right; font-size: 11px; line-height: 13px; font-weight: 500; color: var(--label2); }
+.hr::after { content: ""; position: absolute; left: 58px; right: 0; top: 0; border-top: .5px solid var(--sep); }
+.col { position: absolute; left: 60px; right: 0; top: 0; bottom: 0; }
+.blk { position: absolute; border-radius: 7px; padding: 4px 6px 3px 10px; overflow: hidden; font-size: 13px; line-height: 17px; background: color-mix(in srgb, var(--c) 18%, var(--bg)); color: color-mix(in srgb, var(--c) 64%, var(--mix)); }
+.blk::before { content: ""; position: absolute; left: 3px; top: 3px; bottom: 3px; width: 3px; border-radius: 2px; background: var(--c); }
+.blk b { display: block; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.blk.tall b { white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.blk span { display: block; font-size: 11.5px; line-height: 15px; opacity: .8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.blk.short { display: flex; align-items: center; gap: 6px; padding-top: 0; padding-bottom: 0; }
+.blk.short b { flex: 0 1 auto; }
+.blk.short span { flex: none; }
+.blk.tentative { background: color-mix(in srgb, var(--c) 5%, var(--bg)); border: 1px dashed color-mix(in srgb, var(--c) 62%, var(--bg)); }
+.blk.tentative::before { display: none; }
+.blk.tentative b { font-weight: 500; }
+.blk.task { padding-left: 30px; background: color-mix(in srgb, var(--c) 11%, var(--bg)); }
+.blk.task::before { left: 8px; top: 6px; bottom: auto; width: 15px; height: 15px; border-radius: 5px; background: none; border: 1.4px solid color-mix(in srgb, var(--c) 70%, var(--bg)); }
+.blk.plus { background: var(--fill); color: var(--label2); padding-left: 7px; }
+.blk.plus::before { display: none; }
+.now { position: absolute; left: 0; right: 0; height: 0; z-index: 3; }
+.now::before { content: ""; position: absolute; left: 56px; right: 0; border-top: 1.5px solid var(--red); }
+.now::after { content: ""; position: absolute; left: 52px; top: -3.5px; width: 9px; height: 9px; border-radius: 50%; background: var(--red); }
+.now span { position: absolute; left: 6px; top: -9px; width: 44px; height: 18px; border-radius: 9px; background: var(--red); color: #fff; font-size: 11px; line-height: 18px; font-weight: 600; text-align: center; letter-spacing: 0; }
+.fill { display: flex; flex-direction: column; overflow: hidden; padding-bottom: 0; }
+
+/* ---------- focus ---------- */
+.fz { display: flex; flex-direction: column; align-items: center; height: 100%; text-align: center; }
+.fz .lab { font-size: 15px; line-height: 20px; font-weight: 600; color: var(--label2); margin-top: 6px; }
+.dial { position: relative; width: 272px; height: 272px; margin-top: 18px; flex: none; }
+.dial svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.dial circle { fill: none; stroke-width: 9; }
+.dial .r0 { stroke: var(--fill); }
+.dial .r1 { stroke: var(--c); stroke-linecap: round; }
+.dial div { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 4px; }
+.dial b { font-family: -apple-system, "SF Pro Display", "Helvetica Neue", sans-serif; font-size: 72px; line-height: 1; font-weight: 200; letter-spacing: -2px; }
+.dial span { font-size: 13px; line-height: 18px; color: var(--label2); }
+.dial .big { width: 92px; height: 92px; transform: none; color: var(--tomato); }
+.pick { margin-top: 22px; max-width: 100%; padding: 0 6px; }
+.pick b { font-size: 20px; line-height: 25px; font-weight: 600; letter-spacing: -.4px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; }
+.pick b svg { width: 14px; height: 14px; stroke-width: 2.6; color: var(--label3); vertical-align: 0; margin-left: 5px; }
+.pick span { display: block; font-size: 15px; line-height: 20px; color: var(--label2); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.round { display: flex; align-items: center; gap: 7px; margin-top: 18px; font-size: 13px; color: var(--label2); }
+.round .tom { width: 22px; height: 22px; margin: 0; }
+.round span { margin-left: 5px; }
+.ftop { flex: 1; min-height: 0; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.fa { width: 100%; display: flex; gap: 10px; }
+.btn { flex: 1; height: 50px; border-radius: 25px; background: var(--fill); font-size: 17px; font-weight: 600; text-align: center; color: var(--label); }
+.btn.go { background: var(--tint); color: #fff; }
+.screen.dark .btn.go { color: #06122b; }
+.ff { font-size: 13px; line-height: 18px; color: var(--label2); margin-top: 12px; }
+.zen { background: color-mix(in srgb, var(--c) 9%, var(--bg)); }
+.zen .body { padding-bottom: 40px; }
+.pillb { display: flex; align-items: center; gap: 3px; height: 36px; padding: 0 14px 0 9px; margin-left: 8px; border-radius: 18px; background: var(--fill); font-size: 15px; font-weight: 500; }
+.pillb svg { width: 17px; height: 17px; stroke-width: 2.4; }
+
+/* statistics */
+.figs { display: grid; grid-template-columns: repeat(4, auto); justify-content: space-between; margin: 8px 0 22px; }
+.figs b { display: block; font-size: 28px; line-height: 34px; font-weight: 700; letter-spacing: -.6px; white-space: nowrap; }
+.figs b small { font-size: 15px; font-weight: 600; letter-spacing: 0; margin-left: 1px; }
+.figs span { display: block; font-size: 13px; line-height: 18px; color: var(--label2); }
+.chart { position: relative; display: grid; grid-template-columns: repeat(7, 1fr) 34px; height: 150px; border-bottom: .5px solid var(--sep); }
+.cc { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 3px; position: relative; z-index: 1; }
+.cc em { font-style: normal; font-size: 12px; font-weight: 600; color: var(--label2); }
+.cc div { width: 26px; display: flex; flex-direction: column-reverse; border-radius: 6px 6px 0 0; overflow: hidden; }
+.cc div i { background: var(--c); }
+.avg { position: absolute; left: 0; right: 34px; border-top: 1px dashed var(--label3); }
+.avg span { position: absolute; left: 100%; top: -9px; padding-left: 6px; font-size: 11px; color: var(--label2); white-space: nowrap; }
+.cx { display: grid; grid-template-columns: repeat(7, 1fr) 34px; margin: 6px 0 2px; font-size: 12px; color: var(--label2); text-align: center; }
+.cx .td { color: var(--red); font-weight: 600; }
+.sr { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 6px 12px; padding: 10px 0; }
+.sr b { font-weight: 400; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sr em { font-style: normal; font-size: 15px; color: var(--label2); white-space: nowrap; }
+.sr u { grid-column: 1 / -1; height: 4px; border-radius: 2px; background: var(--fill); overflow: hidden; }
+.sr u i { display: block; height: 100%; border-radius: 2px; background: var(--c); }
+.rr { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: .5px solid var(--sep); }
+.rr:last-child { border-bottom: 0; }
+.rr time { flex: none; width: 96px; font-size: 15px; color: var(--label2); }
+.rr b { flex: 1; min-width: 0; font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rr em { font-style: normal; font-size: 13px; color: var(--label2); white-space: nowrap; }
+
+/* ---------- tab bar, add button, running timer ---------- */
+.tabs { position: absolute; left: 20px; bottom: 26px; z-index: 20; display: flex; padding: 4px; border-radius: 32px; background: var(--glass); -webkit-backdrop-filter: saturate(180%) blur(24px); backdrop-filter: saturate(180%) blur(24px); box-shadow: 0 0 0 .5px var(--glass-edge), 0 8px 28px rgba(0, 0, 0, .14); }
+.tabs button { width: 82px; height: 54px; border-radius: 27px; display: grid; justify-items: center; align-content: center; gap: 2px; font-size: 10px; line-height: 12px; font-weight: 600; letter-spacing: 0; color: var(--label2); text-align: center; }
+.tabs button svg { width: 25px; height: 25px; }
+.tabs button.on { color: var(--tint); background: var(--fill); }
+.add { position: absolute; right: 20px; bottom: 26px; z-index: 20; width: 62px; height: 62px; border-radius: 50%; background: var(--tint); color: #fff; display: grid; place-items: center; box-shadow: 0 8px 22px color-mix(in srgb, var(--tint) 38%, transparent); }
+.screen.dark .add { color: #06122b; }
+.add svg { width: 27px; height: 27px; stroke-width: 2.4; }
+.acc { position: absolute; left: 20px; right: 20px; bottom: 98px; z-index: 20; height: 48px; border-radius: 24px; display: flex; align-items: center; gap: 9px; padding: 0 14px 0 13px; font-size: 15px; background: var(--glass); -webkit-backdrop-filter: saturate(180%) blur(24px); backdrop-filter: saturate(180%) blur(24px); box-shadow: 0 0 0 .5px var(--glass-edge), 0 8px 28px rgba(0, 0, 0, .14); }
+.acc b { font-weight: 600; }
+.acc span { flex: 1; min-width: 0; color: var(--label2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.acc .chev { width: 15px; height: 15px; stroke-width: 2.4; color: var(--label3); }
+.ringm { width: 20px; height: 20px; flex: none; transform: rotate(-90deg); }
+.ringm circle { fill: none; stroke-width: 2.6; }
+
+/* ---------- sheet ---------- */
+.dim { position: absolute; inset: 0; z-index: 40; background: rgba(0, 0, 0, .3); }
+.sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 41; border-radius: 30px 30px 0 0; background: var(--grouped); padding: 0 16px 34px; }
+.screen.dark .sheet { background: #1c1c1e; --cell: #2c2c2e; }
+.grab { width: 36px; height: 5px; border-radius: 3px; background: var(--label3); margin: 6px auto 0; }
+.sh { display: flex; align-items: center; justify-content: space-between; height: 48px; padding: 0 4px; font-size: 17px; }
+.sh button { color: var(--tint); }
+.sh button.b { font-weight: 600; }
+.sh b { font-weight: 600; }
+.st { display: flex; gap: 12px; padding: 6px 4px 4px; }
+.st .chk { margin-top: 4px; }
+.st h3 { font-size: 22px; line-height: 28px; font-weight: 700; letter-spacing: -.4px; overflow-wrap: anywhere; }
+.st p { font-size: 15px; line-height: 21px; color: var(--label2); margin-top: 4px; }
+.sug { margin: 14px 0 0; border-radius: 14px; padding: 12px 14px 12px; background: var(--cell); border: 1px dashed var(--label3); }
+.sug b { display: block; font-size: 15px; line-height: 20px; font-weight: 600; }
+.sug p { font-size: 13px; line-height: 18px; color: var(--label2); margin-top: 2px; }
+.sug div { display: flex; gap: 8px; margin-top: 10px; }
+.sug button { flex: 1; height: 36px; border-radius: 18px; background: var(--fill); font-size: 15px; font-weight: 600; text-align: center; }
+.sug button.go { background: var(--tint); color: #fff; }
+.sheet .grp { margin-top: 14px; }
+.sheet .gr { min-height: 46px; }
+.sheet .gr-b { min-height: 46px; }
+.sheet .gr > svg { width: 21px; height: 21px; color: var(--label2); }
+.sa { display: flex; gap: 10px; margin-top: 16px; }
+.sa .btn svg { width: 13px; height: 13px; margin-right: 7px; vertical-align: -1px; fill: currentColor; stroke: none; }
+.sa .o { flex: none; width: 50px; color: var(--label); display: grid; place-items: center; }
+.sa .o svg { width: 24px; height: 24px; margin: 0; }
+.inp { font-size: 22px; line-height: 28px; font-weight: 600; letter-spacing: -.4px; color: var(--label3); padding: 8px 4px 2px; }
+.inp::before { content: ""; display: inline-block; width: 2px; height: 24px; background: var(--tint); vertical-align: -4px; margin-right: 1px; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; padding: 14px 4px 10px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border-radius: 17px; background: var(--cell); font-size: 15px; color: var(--label2); }
+.chip svg { width: 16px; height: 16px; }
+.chip.set { color: var(--label); }
+.kb { height: 250px; margin: 6px -16px -34px; background: var(--fill2); display: grid; place-items: center; font-size: 13px; color: var(--label2); }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol>
+  <symbol id="i-tray" viewBox="0 0 24 24"><path d="M4 13.5l2.4-7.2A2 2 0 018.3 5h7.4a2 2 0 011.9 1.3l2.4 7.2v4a2 2 0 01-2 2H6a2 2 0 01-2-2zM4 13.5h4.5a3.5 3.5 0 007 0H20"/></symbol>
+  <symbol id="i-checklist" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M8.3 12.3l2.6 2.6 4.8-5.2"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16.5V11a6 6 0 0112 0v5.5l1.5 2h-15zM10 20.5a2.2 2.2 0 004 0"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M18.4 5.6l-1.8 1.8M7.4 16.6l-1.8 1.8"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L20 20"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><path d="M14.5 5.5L8 12l6.5 6.5"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="M9.5 5.5L16 12l-6.5 6.5"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M5.5 9.5L12 16l6.5-6.5"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3.2l2.7 5.5 6 .9-4.4 4.2 1.1 6L12 17l-5.4 2.8 1.1-6-4.4-4.2 6-.9z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 4l8.5 4.5L12 13 3.5 8.5zM3.5 13L12 17.5 20.5 13"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4.5"/><path d="M8.3 12.3l2.6 2.6 4.8-5.2"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><path d="M6 21V4.5M6 5h11.5l-2.4 3.6L17.5 12H6"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 019.5 4a8.5 8.5 0 1010.5 10.5z"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></symbol>
+  <symbol id="i-tom" viewBox="0 0 24 24"><circle cx="12" cy="14" r="7.6" fill="currentColor"/><path d="M12 7.8V4.2M12 7.6c-1.3-1.5-2.9-1.8-4.3-1.3M12 7.6c1.3-1.5 2.9-1.8 4.3-1.3" fill="none" stroke="#34c759" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-tom-o" viewBox="0 0 24 24"><circle cx="12" cy="14" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 7.2V4.2M12 7c-1.3-1.5-2.9-1.8-4.3-1.3M12 7c1.3-1.5 2.9-1.8 4.3-1.3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M6 19.5v-7M12 19.5v-14M18 19.5v-10" stroke-width="2.6"/></symbol>
+  <symbol id="i-timer" viewBox="0 0 24 24"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 9.5v4M9.5 3h5M12 3v3"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M6 3.5v17l14-8.5z"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="18.5" cy="12" r="1.6" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-bang" viewBox="0 0 24 24"><path d="M12 5v9" stroke-width="2.6"/><circle cx="12" cy="18.6" r="1.5" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.2" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-signal" viewBox="0 0 24 24"><rect x="2" y="15" width="4" height="6" rx="1"/><rect x="8" y="11" width="4" height="10" rx="1"/><rect x="14" y="7" width="4" height="14" rx="1"/><rect x="20" y="3" width="4" height="18" rx="1"/></symbol>
+  <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M12 20.5l3.2-3.9a4.6 4.6 0 00-6.4 0zM5.6 12.9l1.9 2.3a6.8 6.8 0 019 0l1.900-2.3a9.800 9.800 0 00-12.800 0zM1.800 8.300l1.900 2.300a12.800 12.800 0 0116.600 0l1.900-2.300a15.800 15.800 0 00-20.400 0z"/></symbol>
+  <symbol id="i-batt" viewBox="0 0 30 24"><rect x="1" y="6" width="24" height="12" rx="3.6" fill="none" stroke="currentColor" stroke-opacity=".4" stroke-width="1.2"/><rect x="3" y="8" width="20" height="8" rx="2"/><path d="M27 10v4a2 2 0 000-4z" opacity=".5"/></symbol>
+</svg>
+
+<main class="page">
+  <header class="mast"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7.5" fill="#2867D6"/><path d="M9.500 8.500v15M22 8.500L12 16l10 7.500" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><strong>Keduly</strong><span>MOBILE</span></header>
+  <div class="intro"><h1>手机端设计稿</h1><p>十个关键页面 · 全部为虚构数据</p></div>
+  <div class="ctl" aria-label="设计稿控制，不属于产品界面">
+    <div>数据<div class="dseg" id="set"><button data-set="normal">日常</button><button data-set="crowded">拥挤</button><button data-set="empty">空白</button></div></div>
+    <div>外观<div class="dseg" id="theme"><button data-theme="light">浅色</button><button data-theme="dark">深色</button></div></div>
+  </div>
+  <div class="board" id="board"></div>
+
+</main>
+
+<script>
+// Today is Sunday 11 October 2026, 09:41. Day offsets are relative to it.
+const NOW = 9 * 60 + 41, DAY = 11, WORK = 25;
+const icon = (n, c = '') => `<svg class="i ${c}"><use href="#i-${n}"/></svg>`;
+const tom = (on = true) => `<svg class="tom ${on ? '' : 'off'}" viewBox="0 0 24 24"><use href="#i-tom${on ? '' : '-o'}"/></svg>`;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const hm = m => String(Math.floor(m / 60) % 24).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
+const dur = m => m < 60 ? m + ' 分钟' : m % 60 === 0 ? m / 60 + ' 小时' : m % 30 === 0 ? m / 60 + ' 小时' : Math.floor(m / 60) + ' 小时 ' + m % 60 + ' 分钟';
+const day = o => o === 0 ? '今天' : o === 1 ? '明天' : `10月${DAY + o}日`;
+
+const PROJECTS = {
+  dev: { name: 'Keduly 开发', c: 'var(--blue)', area: '工作', notes: '给 AI 用的日历和事项。这个月把手机端做出来，先 iOS。' },
+  team: { name: '团队事务', c: 'var(--indigo)', area: '工作' },
+  read: { name: '阅读与学习', c: 'var(--purple)', area: '个人' },
+  life: { name: '生活', c: 'var(--green)', area: '个人' },
+};
+const ITEMS = [
+  { id: 1, t: '完成移动端交互设计', p: 'dev', est: 90, imp: 1, due: 0, plan: 0, pending: 840, earned: 2, h: '设计', notes: '先把事项、日历、专注三个栏定下来，再补边界场景。' },
+  { id: 2, t: '检查日历同步问题', p: 'dev', est: 50, imp: 1, due: -2, plan: 1, at: 540, earned: 1, h: '开发' },
+  { id: 3, t: '整理下一版的开发计划', p: 'dev', est: 60, imp: 1, due: 7, plan: 2, h: '设计' },
+  { id: 4, t: '读完这一章并整理笔记', p: 'read', est: 50, imp: 1, plan: 0, earned: 1 },
+  { id: 5, t: '预约下周的洗牙', p: 'life', est: 15, due: 1, plan: 0 },
+  { id: 6, t: '给自行车打气' },
+  { id: 7, t: '续订域名', p: 'life', est: 10, plan: 0, eve: 1 },
+];
+const EVENTS = [
+  { t: '晨间散步', p: 'life', s: 480, e: 510 },
+  { t: '产品讨论', p: 'dev', s: 600, e: 660 },
+  { t: '完成移动端交互设计', p: 'dev', s: 840, e: 930, tent: 1 },
+  { t: '阅读', p: 'read', s: 1200, e: 1245 },
+];
+const MORE_ITEMS = [
+  { id: 8, t: '为安卓和 iOS 手机检查多时区、跨天日程以及夏令时切换后实际显示是否一致', p: 'dev', est: 120, imp: 1, due: -12, plan: 0, earned: 7, h: '开发' },
+  { id: 9, t: '回复三封积压的客户邮件', p: 'team', est: 30, imp: 1, due: 0, plan: 0 },
+  { id: 10, t: '整理项目的反馈并更新设计稿', p: 'dev', est: 50, imp: 1, due: 0, plan: 0, at: 960, h: '设计' },
+  { id: 11, t: '准备周一例会的材料', p: 'team', est: 45, imp: 1, due: 1, plan: 0 },
+  { id: 12, t: '修复登录失效后草稿丢失', p: 'dev', est: 60, imp: 1, due: 1, plan: 1, h: '开发' },
+  { id: 13, t: '确认发布说明', p: 'dev', est: 20, imp: 1, due: 0, plan: 0, spent: 12, h: '开发' },
+  { id: 14, t: '核对上个月的报销', p: 'team', imp: 1, due: 1, plan: 0 },
+  { id: 15, t: '写读书笔记：第三部分', p: 'read', est: 90, imp: 1, plan: 3 },
+  { id: 16, t: '给新成员写入门文档', p: 'team', est: 120, imp: 1, due: 9 },
+  { id: 17, t: '交水电费', p: 'life', est: 5, due: 0, plan: 0 },
+  { id: 18, t: '取快递', p: 'life', due: 1, plan: 0, eve: 1 },
+  { id: 19, t: '清理下载文件夹' },
+  { id: 20, t: '看看新出的键盘' },
+];
+const MORE_EVENTS = [
+  { t: '两天的线下活动', p: 'life', all: 1, note: '10月11日–12日' },
+  { t: '凌晨维护', p: 'dev', s: 60, e: 120 },
+  { t: '整理过期建议', p: 'dev', s: 510, e: 555, tent: 1 },
+  { t: '同步故障复现和跨天事件完整检查', p: 'dev', s: 600, e: 690 },
+  { t: '阅读组讨论', p: 'read', s: 615, e: 660 },
+  { t: '快速同步', p: 'team', s: 630, e: 645 },
+  { t: '供应商电话', p: 'team', s: 640, e: 700 },
+  { t: '回复邮件', p: 'team', s: 780, e: 795 },
+  { t: '整理项目的反馈并更新设计稿', p: 'dev', s: 960, e: 1010, task: 1 },
+  { t: '夜间发布', p: 'dev', s: 1350, e: 1470 },
+];
+const DOTS = { 5: ['dev'], 8: ['dev', 'team'], 12: ['dev', 'dev'], 13: ['dev', 'read'], 15: ['life'], 16: ['team', 'dev', 'read'], 18: ['dev'], 20: ['team'], 22: ['dev', 'life'], 24: ['life'], 27: ['team'], 29: ['dev', 'read'] };
+
+let set = 'normal', theme = 'light', D;
+function load() {
+  const empty = set === 'empty', crowded = set === 'crowded';
+  const projects = empty ? {} : JSON.parse(JSON.stringify(PROJECTS));
+  if (crowded) projects.dev.name = 'Keduly 移动端开发与跨平台日历同步体验改进';
+  const items = empty ? [] : crowded ? [...ITEMS, ...MORE_ITEMS] : ITEMS;
+  const events = (empty ? [] : crowded ? [...EVENTS.filter(e => e.t !== '完成移动端交互设计'), ...MORE_EVENTS, EVENTS[2]] : EVENTS).slice().sort((a, b) => (a.all ? -1 : a.s) - (b.all ? -1 : b.s));
+  D = { projects, items, events, empty, crowded, running: empty ? null : { item: 4, left: '18:42', frac: .75 } };
+}
+
+/* ---------- shared pieces ---------- */
+const urgent = t => t.due != null && t.due <= 1;
+const quadrant = t => t.imp ? (urgent(t) ? 0 : 1) : (urgent(t) ? 2 : 3);
+const P = id => D.projects[id];
+function ring(c, frac, st = '') { return `<svg class="ring" viewBox="0 0 20 20" style="color:${c};${st}"><circle cx="10" cy="10" r="8.600" fill="none" stroke="currentColor" stroke-width="1.600"/><circle cx="10" cy="10" r="3" fill="none" stroke="currentColor" stroke-width="6" stroke-dasharray="${(frac * 18.850).toFixed(2)} 18.850" transform="rotate(-90 10 10)"/></svg>`; }
+function ringm(c, frac) { return `<svg class="ringm" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" stroke="var(--fill2)"/><circle cx="10" cy="10" r="8" stroke="${c}" stroke-linecap="round" stroke-dasharray="${(frac * 50.270).toFixed(1)} 50.270"/></svg>`; }
+function dueText(t) {
+  if (t.due == null) return '';
+  const s = t.due < 0 ? `逾期 ${-t.due} 天` : t.due <= 1 ? day(t.due) + '截止' : day(t.due) + '截止';
+  return `<span class="due ${urgent(t) ? 'hot' : ''}">${s}</span>`;
+}
+function tomText(t) {
+  const need = t.est ? Math.ceil(t.est / WORK) : 0;
+  if (t.earned) return `<span>${tom()}${t.earned}${need ? '/' + need : ''}</span>`;
+  if (t.spent) return `<span>已用 ${dur(t.spent)}</span>`;
+  return '';
+}
+// One title line, one line of facts, and on the right only "when".
+function row(t, o = {}) {
+  const p = P(t.p), run = o.run && D.running?.item === t.id;
+  const when = run ? `<span class="run">${ringm('var(--tint)', D.running.frac)}${D.running.left}</span>`
+    : t.pending != null ? `<span class="tent">待定 ${hm(t.pending)}</span>`
+    : t.at != null ? (t.plan ? day(t.plan) + ' ' : '') + hm(t.at)
+    : t.plan && !o.noPlan ? day(t.plan) : '';
+  const facts = [o.noProject ? '' : `<span class="pj">${p ? `<i class="dot" style="--c:${p.c}"></i>${esc(p.name)}` : '收件箱'}</span>`, t.est ? `<span>${dur(t.est)}</span>` : '', tomText(t), dueText(t)].join('');
+  return `<div class="it ${t.done ? 'done' : ''}"><span class="chk ${t.done ? 'on' : ''}"></span><div class="it-b"><div class="it-h"><div class="it-t">${t.imp ? '<span class="imp">!</span>' : ''}${esc(t.t)}</div>${when ? `<div class="it-r">${when}</div>` : ''}</div>${facts ? `<div class="it-s">${facts}</div>` : ''}</div></div>`;
+}
+const rows = (l, o) => `<div>${l.map(t => row(t, o)).join('')}</div>`;
+const sec = (title, right = '', cls = '', sub = '') => `<div class="sec ${cls}"><b>${title}</b>${sub ? `<em>${sub}</em>` : ''}${right !== '' ? `<span>${right}</span>` : ''}</div>`;
+function nav(o = {}) {
+  const pend = D.events.filter(e => e.tent).length;
+  const r = (o.right || []).map(k => k === 'bell' ? `<button class="nb" aria-label="动态">${icon('bell')}${pend ? `<i class="badge">${pend}</i>` : ''}</button>` : k === 'today' ? '<button class="txt">今天</button>' : `<button class="nb" aria-label="${k}">${icon(k)}</button>`).join('');
+  return `<div class="nav">${o.back ? `<button class="back">${icon('left')}${o.back}</button>` : ''}${o.left || ''}<span class="sp"></span>${r}</div>`;
+}
+function tabs(on, o = {}) {
+  const t = [['items', 'checklist', '事项'], ['cal', 'cal', '日历'], ['focus', 'timer', '专注']].map(([k, i, l]) => `<button class="${k === on ? 'on' : ''}">${icon(i)}${l}</button>`).join('');
+  const r = D.running, it = r && D.items.find(x => x.id === r.item);
+  const acc = o.acc ? `<button class="acc">${ringm(it ? P(it.p).c : 'var(--tint)', r ? r.frac : .75)}<b>${r ? r.left : '18:42'}</b><span>${it ? esc(it.t) : '自由专注'}</span>${icon('right', 'chev')}</button>` : '';
+  return `${acc}<nav class="tabs">${t}</nav>${o.noAdd ? '' : `<button class="add" aria-label="新建">${icon('plus')}</button>`}`;
+}
+const statusbar = () => `<div class="sb"><span>9:41</span><i></i><span>${icon('signal')}${icon('wifi')}<svg class="i" style="width:27px;height:17px"><use href="#i-batt"/></svg></span></div>`;
+const blank = (t, s) => `<div class="blank"><b>${t}</b>${s}</div>`;
+
+/* ---------- screens ---------- */
+function lists() {
+  const open = D.items.filter(t => !t.done), today = open.filter(t => t.plan === 0 || t.due < 0).length;
+  const smart = [['grid', '四象限', '', 'var(--orange)'], ['star', '今天', today || '', '#f5b400'], ['cal', '计划', '', 'var(--red)'], ['layers', '全部', '', 'var(--teal)'], ['tray', '收件箱', open.filter(t => !t.p).length || '', 'var(--blue)'], ['book', '已完成', '', 'var(--green)']];
+  const g = smart.map(([i, l, n, c]) => `<button class="gr" style="--c:${c}">${icon(i)}<span class="gr-b"><b>${l}</b><em>${n > 99 ? '99+' : n}</em>${icon('right', 'chev')}</span></button>`).join('');
+  const areas = [...new Set(Object.values(D.projects).map(p => p.area))];
+  const proj = areas.map(a => `<div class="grp-h">${a}</div><div class="grp">${Object.entries(D.projects).filter(([, p]) => p.area === a).map(([id, p]) => { const n = open.filter(t => t.p === id).length; return `<button class="gr">${ring(p.c, id === 'dev' ? .4 : id === 'read' ? .25 : .6)}<span class="gr-b"><b>${esc(p.name)}</b><em>${n || ''}</em>${icon('right', 'chev')}</span></button>`; }).join('')}</div>`).join('');
+  return { cls: 'grouped', nav: nav({ right: ['bell', 'gear'] }), tab: 'items', body: `<h2 class="lt">事项</h2><div class="search">${icon('search')}搜索</div><div class="grp">${g}</div>${proj}<div class="grp" style="margin-top:${areas.length ? 22 : 30}px"><button class="gr act" style="--c:var(--tint)">${icon('plus')}<span class="gr-b"><b>新建项目</b></span></button></div>` };
+}
+function matrix() {
+  const names = ['马上做', '安排时间做', '尽快处理掉', '有空再说'], axes = ['重要 · 紧急', '重要 · 不紧急', '不重要 · 紧急', '不重要 · 不紧急'];
+  const open = D.items.filter(t => !t.done);
+  const body = D.empty ? blank('还没有事项', '点右下角的加号记下第一件事。<br>标成重要、写上截止日期后，它会出现在对应的一格。')
+    : names.map((n, q) => { const l = open.filter(t => quadrant(t) === q).sort((a, b) => (a.due ?? 99) - (b.due ?? 99)), un = l.filter(t => t.at == null).length; return sec(n, q === 1 && un ? `${un} 件没排进日历` : l.length, '', axes[q]) + (l.length ? rows(l.slice(0, 6)) + (l.length > 6 ? `<button class="more">显示其余 ${l.length - 6} 件</button>` : '') : '<div class="none">没有事项</div>'); }).join('');
+  return { nav: nav({ back: '事项', right: ['bell'] }), tab: 'items', body: `<h2 class="lt">四象限</h2>${body}` };
+}
+function budget() {
+  const ev = D.events.filter(e => !e.all && !e.tent && e.e > NOW && e.s < 1080).map(e => [Math.max(e.s, NOW), Math.min(e.e, 1080)]).sort((a, b) => a[0] - b[0]);
+  let busy = 0, end = NOW; ev.forEach(([s, e]) => { if (e > end) { busy += e - Math.max(s, end); end = e; } });
+  const free = 1080 - NOW - busy, todo = D.items.filter(t => !t.done && (t.plan === 0 || t.due < 0) && !t.eve && t.at == null), need = todo.reduce((n, t) => n + (t.est || 0), 0);
+  if (need > free) { const imp = todo.filter(t => t.imp).length; return `18:00 前还有 <b>${dur(free)}</b>空闲，${todo.length} 件事项要 ${dur(need)}，<span class="warn">排不下</span>。先保住 ${imp} 件重要的，其余 ${todo.length - imp} 件可以改天。`; }
+  return `18:00 前还有 <b>${dur(free)}</b>空闲，${todo.length} 件事项没排进日历，约需 ${dur(need)}。`;
+}
+function evLine(e) { const p = P(e.p); return `<div class="ev ${e.tent ? 'tentative' : ''}" style="--c:${p.c}"><time>${e.all ? '全天' : hm(e.s)}</time><i></i><span>${esc(e.t)}</span>${e.tent ? '<em>待定</em>' : ''}</div>`; }
+function today(o = {}) {
+  const list = D.items.filter(t => !t.done && (t.plan === 0 || t.due < 0)), over = list.filter(t => t.due < 0), eve = list.filter(t => t.eve && t.due >= 0 || t.eve && t.due == null), rest = list.filter(t => !over.includes(t) && !eve.includes(t)).sort((a, b) => (b.imp || 0) - (a.imp || 0));
+  const evs = D.events, body = D.empty ? blank('今天没有安排', '点右下角的加号记下一件事，<br>或者去日历里添加日程。')
+    : `<p class="summary">${budget()}</p><div class="evs">${evs.slice(0, 5).map(evLine).join('')}</div>${evs.length > 5 ? `<button class="link" style="padding:6px 0 0 55px">还有 ${evs.length - 5} 个日程，在日历里查看</button>` : ''}`
+    + (over.length ? sec('逾期', over.length, 'over') + rows(over, { noPlan: 1 }) : '')
+    + sec('事项', rest.length) + rows(rest, { noPlan: 1, run: 1 })
+    + (eve.length ? sec(icon('moon') + '今晚', eve.length) + rows(eve, { noPlan: 1 }) : '');
+  return { nav: nav({ back: '事项', right: ['bell'] }), tab: 'items', acc: !D.empty, body: `<h2 class="lt">今天<small>10月11日 星期日</small></h2>${body}`, over: o.over };
+}
+function project() {
+  if (D.empty) return { nav: nav({ back: '事项', right: ['more'] }), tab: 'items', body: `<h2 class="lt">${ring('var(--blue)', 0)}<span>新项目</span></h2>${blank('这个项目还没有事项', '点右下角的加号，新事项会直接归到这里。').replace('150px', '120px')}` };
+  const p = P('dev'), l = D.items.filter(t => t.p === 'dev' && !t.done), heads = [...new Set(l.map(t => t.h))];
+  return { nav: nav({ back: '事项', right: ['more'] }), tab: 'items', body: `<h2 class="lt" style="align-items:flex-start">${ring(p.c, .4, 'margin-top:8px')}<span class="pt">${esc(p.name)}</span></h2><p class="pnote">${p}
+function detailSheet() {
+  if (D.empty) return `<div class="dim"></div><div class="sheet"><div class="grab"></div><div class="sh"><button>取消</button><b>新事项</b><button class="b" style="opacity:.4">添加</button></div><div class="inp">要做什么？</div><div class="chips"><span class="chip set">${icon('star')}今天</span><span class="chip">${icon('flag')}截止</span><span class="chip">${icon('clock')}预计</span><span class="chip">${icon('tray')}收件箱</span><span class="chip">${icon('bang')}重要</span></div><div class="kb">键盘</div></div>`;
+  const t = D.items[0], p = P(t.p);
+  return `<div class="dim"></div><div class="sheet"><div class="grab"></div><div class="sh"><span></span><button class="b">完成</button></div>
+    <div class="st"><span class="chk"></span><div><h3>${esc(t.t)}</h3><p>${t    <div class="sug"><b>建议排到今天 14:00–15:30</b><p>上午有产品讨论，下午是今天最长的一段空档。</p><p>Claude · 今天 08:12</p><div><button>拒绝</button><button class="go">接受</button></div></div>
+    <div class="grp">
+      <button class="gr">${icon('cal')}<span class="gr-b"><b>时间</b><em>待定 14:00</em>${icon('right', 'chev')}</span></button>
+      <button class="gr">${icon('flag')}<span class="gr-b"><b>截止</b><em class="hot">今天</em>${icon('right', 'chev')}</span></button>
+      <button class="gr">${icon('clock')}<span class="gr-b"><b>预计</b><em>1.5 小时 · 已用 50 分钟</em>${icon('right', 'chev')}</span></button>
+      <button class="gr">${icon('folder')}<span class="gr-b"><b>项目</b><em><i class="dot" style="--c:${p.c}"></i>${esc(p.name)}</em>${icon('right', 'chev')}</span></button>
+      <div class="gr">${icon('bang')}<span class="gr-b"><b>重要</b><span class="sw on"></span></span></div>
+    </div>
+    <div class="sa"><button class="btn go">${icon('play')}开始专注</button><button class="btn o" aria-label="更多">${icon('more')}</button></div></div>`;
+}
+function agenda(e) { const p = P(e.p); return `<div class="ag ${e.tent ? 'tentative' : ''}" style="--c:${p.c}"><time>${e.all ? '全天' : hm(e.s) + `<span>${hm(e.e)}</span>`}</time><i></i><div class="ag-b"><b>${esc(e.t)}</b><span>${esc(p.name)}${e.note ? ' · ' + e.note : ''}${e.tent ? ' · 待定' : ''}${e.e > 1440 ? ' · 到次日 ' + hm(e.e) : ''}</span></div></div>`; }
+const segm = on => `<div class="seg">${['日', '周', '月', '年'].map(v => `<button class="${v === on ? 'on' : ''}">${v}</button>`).join('')}</div>`;
+function month() {
+  let cells = '<span></span>'.repeat(3);
+  for (let d = 1; d <= 31; d++) {
+    const dots = d === DAY ? D.events.slice(0, 3).map(e => `<i class="${e.tent ? 'o' : ''}" style="--c:${P(e.p).c}"></i>`).join('') : D.empty ? '' : (DOTS[d] || []).concat(D.crowded && d % 3 ? ['team'] : []).slice(0, 3).map(k => `<i style="--c:${P(k).c}"></i>`).join('');
+    cells += `<button class="${d === DAY ? 'today sel' : ''} ${(d + 3) % 7 === 0 || (d + 3) % 7 === 6 ? 'we' : ''}"><b>${d}</b><u>${dots}</u></button>`;
+  }
+  const ev = D.events;
+  return { nav: nav({ right: ['today', 'bell'] }), tab: 'cal', body: `<h2 class="lt">10月<small>2026年</small></h2>${segm('月')}<div class="wd">${'一二三四五六日'.split('').map(d => `<span>${d}</span>`).join('')}</div><div class="mg">${cells}</div><div class="dayh">10月11日<span>星期日</span><em>${ev.length ? ev.length + ' 项' : ''}</em></div>${ev.length ? ev.map(agenda).join('') : '<p class="sub" style="padding:14px 0">没有日程</p>'}` };
+}
+// Overlaps share the column in up to three lanes; from the fourth on they fold into one "+N" block.
+function layout(evs, hour) {
+  const min = 24 / hour * 60, l = evs.map(e => ({ ...e, s2: e.s, e2: Math.max(Math.min(e.e, 1440), e.s + min) })).sort((a, b) => a.s2 - b.s2 || b.e2 - a.e2);
+  const out = []; let cluster = [], end = -1;
+  const flush = () => {
+    if (!cluster.length) return;
+    const cols = []; cluster.forEach(e => { let c = cols.findIndex(x => x <= e.s2); if (c < 0) c = cols.length; cols[c] = e.e2; e.col = c; });
+    const n = Math.min(cols.length, 3), extra = cluster.filter(e => e.col >= 3 || (cols.length > 3 && e.col === 2));
+    cluster.filter(e => !extra.includes(e)).forEach(e => out.push({ ...e, n }));
+    if (extra.length) out.push({ plus: extra.length, s2: Math.min(...extra.map(e => e.s2)), e2: Math.max(...extra.map(e => e.e2)), col: 2, n });
+    cluster = []; end = -1;
+  };
+  l.forEach(e => { if (e.s2 >= end) flush(); cluster.push(e); end = Math.max(end, e.e2); });
+  flush(); return out;
+}
+function dayView() {
+  const H = 58, timed = D.events.filter(e => !e.all), all = D.events.filter(e => e.all);
+  const blocks = layout(timed, H).map(b => {
+    const top = b.s2 / 60 * H + 1, h = (b.e2 - b.s2) / 60 * H - 2, w = 100 / b.n, pos = `top:${top.toFixed(1)}px;height:${h.toFixed(1)}px;left:calc(${(b.col * w).toFixed(2)}% + 1px);width:calc(${w.toFixed(2)}% - 2px)`;
+    if (b.plus) return `<button class="blk plus" style="${pos}"><b>+${b.plus} 项</b><span>${hm(b.s2)}–${hm(b.e2)}</span></button>`;
+    const short = h < 36, time = `${hm(b.s)}–${b.e > 1440 ? '次日 ' : ''}${hm(b.e)}`;
+    return `<button class="blk ${short ? 'short' : h > 56 ? 'tall' : ''} ${b.tent ? 'tentative' : ''} ${b.task ? 'task' : ''}" style="--c:${P(b.p).c};${pos}"><b>${esc(b.t)}</b><span>${b.n > 2 && !short ? hm(b.s) : time}${b.tent ? ' · 待定' : ''}</span></button>`;
+  }).join('');
+  const hours = Array.from({ length: 24 }, (_, h) => `<div class="hr">${h ? `<span>${String(h).padStart(2, '0')}:00</span>` : ''}</div>`).join('');
+  const strip = `<div class="strip">${'一二三四五六日'.split('').map((d, i) => `<button class="${5 + i === DAY ? 'sel' : ''}">${d}<b>${5 + i}</b></button>`).join('')}</div>`;
+  return { cls: 'fillb', nav: nav({ right: ['today', 'bell'] }), tab: 'cal', acc: !D.empty, scroll: 7.300 * H, body: `<h2 class="lt">10月<small>2026年</small></h2>${segm('日')}${strip}${all.map(e => `<div class="allday" style="--c:${P(e.p).c}"><span>全天</span><b>${esc(e.t)}</b></div>`).join('')}<div class="tlw"><div class="tl">${hours}<div class="col">${blocks}</div><div class="now" style="top:${(NOW / 60 * H).toFixed(1)}px"><span>9:41</span></div></div></div>` };
+}
+const dial = (c, frac, big, small) => `<div class="dial" style="--c:${c}"><svg viewBox="0 0 272 272"><circle class="r0" cx="136" cy="136" r="130"/><circle class="r1" cx="136" cy="136" r="130" stroke-dasharray="${(frac * 816.800).toFixed(1)} 816.800"/></svg><div>${big}<span>${small}</span></div></div>`;
+const round = (n, text) => `<div class="round">${[0, 1, 2, 3].map(i => tom(i < n)).join('')}<span>${text}</span></div>`;
+function focusIdle() {
+  const t = D.items.find(x => x.id === 1), p = t && P(t.p), n = D.empty ? 0 : 2;
+  return { cls: 'fillb', nav: nav({ right: ['chart', 'bell'] }), tab: 'focus', body: `<div class="fz" style="padding-bottom:108px"><div class="ftop"><div class="lab">第 ${n + 1} 个番茄</div>${dial(p ? p.c : 'var(--tint)', 1, '<b>25:00</b>', '25 分钟')}<button class="pick"><b>${t ? esc(t.t) : '自由专注'}${icon('down')}</b><span>${t ? `<i class="dot" style="--c:${p.c}"></i>${esc(p.name)} · 已得 ${t.earned}/${Math.ceil(t.est / WORK)}` : '不记到任何事项上'}</span></button>${round(n, n ? `再 ${4 - n} 个后长休息` : '4 个一轮')}</div><div class="fa"><button class="btn go">开始专注</button></div><p class="ff">${n ? `今天 ${n} 个番茄 · 50 分钟` : '今天还没有番茄'}</p></div>` };
+}
+function focusRun() {
+  const t = D.items.find(x => x.id === 4), p = t && P(t.p), c = p ? p.c : 'var(--tint)';
+  return { cls: 'zen fillb', style: `--c:${c}`, nav: `<div class="nav"><button class="pillb">${icon('down')}收起</button></div>`, body: `<div class="fz"><div class="ftop"><div class="lab">第 ${D.empty ? 1 : 3} 个番茄</div>${dial(c, .750, '<b>18:42</b>', '到 10:06')}<div class="pick"><b>${t ? esc(t.t) : '自由专注'}</b><span>${t ? `<i class="dot" style="--c:${c}"></i>${esc(p.name)} · 已得 ${t.earned}/${Math.ceil(t.est / WORK)}` : '<span style="color:var(--tint);display:inline">归到…</span>'}</span></div>${round(D.empty ? 0 : 2, D.empty ? '4 个一轮' : '再 2 个后长休息')}</div><div class="fa"><button class="btn">放弃</button><button class="btn go">做完了</button></div><p class="ff">没有暂停 · 放弃会记下已经专注的时间</p></div>` };
+}
+function stats() {
+  if (D.empty) return { nav: nav({ back: '专注' }), tab: 'focus', body: `<h2 class="lt">统计</h2>${blank('还没有专注记录', '完成第一个番茄后，这里会显示每天的数量<br>和时间花在了哪个项目上。')}` };
+  const days = [[2, 1, 0], [0, 0, 0], [3, 1, 0], [1, 0, 1], [2, 1, 0], [3, 0, 1], [1, 1, 0]], keys = ['dev', 'read', 'life'], max = 4, unit = 28;
+  const bars = days.map(d => { const n = d[0] + d[1] + d[2]; return `<div class="cc"><em>${n || ''}</em><div>${d.map((v, i) => v ? `<i style="--c:${P(keys[i]).c};height:${v * unit}px"></i>` : '').join('')}</div></div>`; }).join('');
+  const rows = [['dev', 12, '5 小时'], ['read', 4, '1 小时 40 分钟'], ['life', 2, '50 分钟']].map(([k, n, t]) => `<div class="sr" style="--c:${P(k).c}"><b><i class="dot"></i>${esc(P(k).name)}</b><em>${tom()}${n} · ${t}</em><u><i style="width:${n / 12 * 100}%"></i></u></div>`).join('');
+  const recs = [['09:05–09:30', '读完这一章并整理笔记', 1], ['08:32–08:57', '完成移动端交互设计', 1], ['08:10–08:22', '自由专注', 0]].map(([t, n, ok]) => `<div class="rr"><time>${t}</time><b>${n}</b><em>${ok ? tom() : '未完成 · 12 分钟'}</em></div>`).join('');
+  return { nav: nav({ back: '专注' }), tab: 'focus', body: `<h2 class="lt">统计</h2><div class="figs"><div><b>2<small>个</small></b><span>今天</span></div><div><b>18<small>个</small></b><span>最近 7 天</span></div><div><b>2.6<small>个</small></b><span>日均</span></div><div><b>5<small>天</small></b><span>连续</span></div></div><div class="chart">${bars}<span></span><div class="avg" style="bottom:${2.600 * unit}px"><span>日均</span></div></div><div class="cx">${'一二三四五六'.split('').map(d => `<span>${d}</span>`).join('')}<span class="td">日</span><span></span></div>${sec('时间花在哪')}${rows}${sec('今天', '2 个番茄')}${recs}<button class="link">更早的记录</button>` };
+}
+
+const SCREENS = [
+  ['Items root', 'The top of the items tab: the lists, then projects grouped by area. The gear is only here.', lists],
+  ['Matrix, the page the app opens on', 'The four quadrants stacked. A row is a title, one line of facts, and only the time on the right.', matrix],
+  ['Today', 'One sentence on whether the day fits; events are a few quiet lines so the items stay on the first screen.', today],
+  ['Project', 'Progress ring, notes, next events, then items under headings. Rows do not repeat the project name.', project],
+  ['Item sheet (new item in the empty data set)', 'Tapping a row raises it. A suggestion gives its reason in place, with accept and reject.', () => today({ over: detailSheet() })],
+  ['Calendar, month', 'Today is red, dots take the project colour, a hollow dot is tentative. The selected day is listed below.', month],
+  ['Calendar, day (a timer is running)', 'Overlaps share up to three lanes. The strip above the tab bar leads back to the timer.', dayView],
+  ['Focus, idle', 'The main button sits above the tab bar. Tapping the item picks another; statistics are at the top right.', focusIdle],
+  ['Focus, working', 'Full screen, tinted with the project colour, no tab bar. 收起 returns to the page it came from.', focusRun],
+  ['Focus, statistics', 'Four figures, a week of bars stacked by project colour, where the time went, the records.', stats],
+];
+
+function render() {
+  load();
+  document.getElementById('board').innerHTML = SCREENS.map(([title, note, fn], i) => {
+    const s = fn();
+    return `<section><div class="cap"><b>${i + 1}　${title}</b><span>${note}</span></div><div class="phone"><div class="screen ${theme === 'dark' ? 'dark' : ''} ${(s.cls || '').replace('fillb', '')}" style="${s.style || ''}">${statusbar()}${s.nav}<div class="body ${(s.cls || '').includes('fillb') ? 'fill' : ''}" data-scroll="${s.scroll || 0}">${s.body}</div>${s.tab ? tabs(s.tab, s) : ''}${s.over || ''}<i class="home"></i></div></div></section>`;
+  }).join('');
+  document.querySelectorAll('[data-scroll]').forEach(b => { const y = Number(b.dataset.scroll), t = b.querySelector('.tlw'); if (y && t) t.scrollTop = y; });
+  document.querySelectorAll('[data-set]').forEach(b => b.classList.toggle('on', b.dataset.set === set));
+  document.querySelectorAll('[data-theme]').forEach(b => b.classList.toggle('on', b.dataset.theme === theme));
+}
+document.addEventListener('click', e => {
+  const s = e.target.closest('[data-set]'), t = e.target.closest('[data-theme]');
+  if (s) { set = s.dataset.set; render(); }
+  if (t) { theme = t.dataset.theme; render(); }
+});
+render();
+</script>
+</body>
+</html>

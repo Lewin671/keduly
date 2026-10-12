@@ -225,6 +225,65 @@ Rules that the design must keep:
 
 The mockup's demo switch has a "换设备登录" row that shows each of these screens.
 
+## Phone apps
+
+The iOS and Android apps are native and share one design: [mobile.html](mobile.html) shows its ten
+key screens with the same three data sets as the desktop mockup, in light and dark. The apps talk
+to the same server and account as the web app. The web app at phone width keeps its own layout
+(see "Structure"); it is not what the apps copy.
+
+### Navigation
+
+| Part | Rule |
+|---|---|
+| Tabs | Three: items, calendar, focus. Tapping the current tab returns to its first page |
+| Items tab | A navigation stack whose root is the list of lists (Matrix, Today, Upcoming, All, Inbox, Done, then projects by area). The app opens with Matrix already pushed, so the back button reads "事项" |
+| Bell | On the first page of each tab, with the number of things waiting. Not inside activity or settings |
+| Gear | Only on the items root |
+| Add | One round button beside the tab bar, on every page that has the tab bar. It never floats over the list. In the calendar it creates an event, elsewhere an item |
+| Running timer | Away from the timer page, a strip above the tab bar shows the ring, the time left and the item; tapping it returns to the timer |
+| Sheets | Item detail, new item, new event, scheduling and filing rise from the bottom. Activity and settings are pushed pages |
+
+### Item row
+
+| Element | Rule |
+|---|---|
+| Title | 17 pt, two lines at most, an orange "!" first when important |
+| Facts | One line of 13 pt grey: project (with its colour dot; left out on the project page), estimate, tomatoes or time spent, deadline. The deadline is red when overdue or due today or tomorrow. The project name gives way first when the line is too long |
+| Right side | Only when it will be done: the scheduled time, the planned day, or "待定 14:00" in a dashed box. The countdown while it is the item being worked on |
+| No play button | A tomato is started from the item sheet or the focus tab, not from the row |
+| Checkbox | A rounded square, 44 pt of touch area |
+
+### Pages
+
+| Page | Rule |
+|---|---|
+| Matrix | The four quadrants stacked, each a heading with its axis in small grey type and a count; six items, then "显示其余 N 件". 安排时间做 says how many are not on the calendar |
+| Today | The date beside the title; the budget sentence (it says "排不下" in red and what to protect when the day does not fit); the first five events as single grey lines; then 逾期, 事项, 今晚 |
+| Project | Ring and name (three lines at most), notes, the summary line, the next two events, items under headings, "显示 N 件已完成" |
+| Item sheet | Checkbox and title, notes, the suggestion with its reason and 拒绝 / 接受, then one grouped list: 时间, 截止, 预计, 项目, 重要. 开始专注 is the main button; delete is under "···" |
+| New item | Only the title is required. 今天, 截止, 预计, the project and 重要 are optional chips. Without a project it goes to the inbox; created inside a project or Today it starts there |
+| Calendar, month | Month grid over the selected day's agenda. Today is red; the selected day is a filled circle. Up to three dots per day in project colours, hollow when tentative |
+| Calendar, day and week | A strip of the week's seven days over one day's time axis; the week view is the same page. All-day events sit in their own row above the axis |
+| Overlaps | Up to three lanes side by side; from the fourth event on, the third lane becomes one "+N 项" block that opens the list. A short event keeps a readable minimum height, and that height counts for collisions |
+| Focus | Idle: the dial, the picked item (tap to pick another), the round, and 开始专注 fixed above the tab bar. Working: full screen, tinted with the project's colour, no tab bar, 收起 at the top left. Statistics are a pushed page from the top right |
+| Empty pages | A heading and one or two lines of text. No illustration and no second button: the add button is already there |
+
+### Platform differences
+
+| Part | iOS | Android |
+|---|---|---|
+| Chrome | Large titles, a floating capsule tab bar, the add button beside it | Top app bar, Material navigation bar, the add button as a FAB above it |
+| Sheets | Sheets with detents | Modal bottom sheets; the system back gesture closes the sheet first |
+| Touch targets | At least 44 pt | At least 48 dp |
+| Type | SF, Dynamic Type | The system font, font scale |
+
+### Not in the first version
+
+Offline writes, push notifications, the lock-screen timer and home-screen widgets. Without a
+connection the apps show what they last loaded and say when it was loaded; they do not queue
+changes.
+
 ## Edge cases
 
 The mockup has a "设计稿演示数据" switch at the bottom of the sidebar (for the mockup only, not a
