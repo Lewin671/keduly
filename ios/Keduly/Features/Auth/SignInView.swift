@@ -76,7 +76,7 @@ struct SignInView: View {
             }
             .padding(.horizontal, Metrics.pageMargin)
         }
-        .background(Palette.grouped)
+        .background(Palette.grouped.ignoresSafeArea())
         .onAppear { if server.isEmpty { server = savedServer } }
         .task(id: server) {
             // Whether to offer registering depends on the server, once its address looks complete.

@@ -42,7 +42,28 @@ targets:
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES
+  # Flows that drive the real app against a development server filled by scripts/seed-demo.py.
+  # They are not part of scripts/check-ios.sh; see KedulyUITests/FlowTests.swift for how to run them.
+  KedulyUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - KedulyUITests
+    dependencies:
+      - target: Keduly
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
 schemes:
+  KedulyUITests:
+    build:
+      targets:
+        Keduly: all
+        KedulyUITests: [test]
+    test:
+      config: Debug
+      targets:
+        - KedulyUITests
   Keduly:
     build:
       targets:

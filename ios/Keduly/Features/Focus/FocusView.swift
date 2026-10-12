@@ -79,8 +79,8 @@ struct FocusView: View {
                 Button { router.sheet = .focusPicker } label: {
                     if let item {
                         let project = model.project(item.projectId)
-                        subject(title: item.title,
-                                detail: [project?.name ?? L("nav.inbox"), item.focus.tomatoes > 0 || item.estimateMinutes != nil ? ItemText.earned(item, tomatoMinutes: minutes) : nil].compactMap { $0 }.joined(separator: " · "),
+                        subject(title: item.title, detail: project?.name ?? L("nav.inbox"),
+                                suffix: item.focus.tomatoes > 0 || item.estimateMinutes != nil ? ItemText.earned(item, tomatoMinutes: minutes) : nil,
                                 color: project.map { Palette.project($0.color) }, chevron: true)
                     } else {
                         subject(title: L("focus.free"), detail: L("focus.freeNote"), color: nil, chevron: true)
@@ -114,7 +114,8 @@ struct FocusView: View {
         .padding(.horizontal, Metrics.pageMargin)
     }
 
-    private func subject(title: String, detail: String?, color: Color?, chevron: Bool) -> some View {
+    /// The detail names the project, which gives way first, and then what must stay readable.
+    private func subject(title: String, detail: String?, suffix: String? = nil, color: Color?, chevron: Bool) -> some View {
         VStack(spacing: 3) {
             (Text(title) + (chevron ? Text("  ") + Text(Image(systemName: "chevron.down")).font(.system(size: 12, weight: .bold)).foregroundStyle(Palette.label3) : Text("")))
                 .font(.system(size: 20, weight: .semibold)).tracking(-0.4)
@@ -122,8 +123,10 @@ struct FocusView: View {
             if let detail, !detail.isEmpty {
                 HStack(spacing: 5) {
                     if let color { ColorDot(color: color) }
-                    Text(detail).font(.system(size: 15)).foregroundStyle(Palette.label2).lineLimit(1)
+                    Text(detail).lineLimit(1)
+                    if let suffix { Text("· \(suffix)").lineLimit(1).fixedSize() }
                 }
+                .font(.system(size: 15)).foregroundStyle(Palette.label2)
             }
         }
         .padding(.horizontal, 6)
@@ -225,9 +228,10 @@ struct TimerPage: View {
                 HStack(spacing: 5) {
                     if let project { ColorDot(color: Palette.project(project.color)) }
                     if session.itemId != nil {
-                        let earned = item.value.map { ItemText.earned($0, tomatoMinutes: model.user?.focusMinutes ?? 25) }
-                        Text([project?.name ?? L("nav.inbox"), earned].compactMap { $0 }.joined(separator: " · "))
-                            .foregroundStyle(Palette.label2).lineLimit(1)
+                        Text(project?.name ?? L("nav.inbox")).foregroundStyle(Palette.label2).lineLimit(1)
+                        if let item = item.value {
+                            Text("· \(ItemText.earned(item, tomatoMinutes: model.user?.focusMinutes ?? 25))").foregroundStyle(Palette.label2).lineLimit(1).fixedSize()
+                        }
                     } else {
                         Text(project?.name ?? L("focus.freeNote")).foregroundStyle(Palette.label2).lineLimit(1)
                     }

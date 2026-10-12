@@ -162,6 +162,7 @@ struct ItemSheet: View {
                     set: { value in Task { await update(ItemPatch(important: .set(value))) } }
                 ))
                 .labelsHidden()
+                .tint(Palette.green)
                 .accessibilityIdentifier("item-important")
             }
         }

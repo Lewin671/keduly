@@ -12,19 +12,19 @@ struct MainView: View {
                 switch router.tab {
                 case .items:
                     NavigationStack(path: $router.itemsPath) {
-                        ListsRootView().navigationDestination(for: Route.self) { RouteView(route: $0) }
+                        ListsRootView().tabBarInset().navigationDestination(for: Route.self) { RouteView(route: $0).tabBarInset() }
                     }
                 case .calendar:
                     NavigationStack(path: $router.calendarPath) {
-                        CalendarView().navigationDestination(for: Route.self) { RouteView(route: $0) }
+                        CalendarView().tabBarInset().navigationDestination(for: Route.self) { RouteView(route: $0).tabBarInset() }
                     }
                 case .focus:
                     NavigationStack(path: $router.focusPath) {
-                        FocusView().navigationDestination(for: Route.self) { RouteView(route: $0) }
+                        FocusView().tabBarInset().navigationDestination(for: Route.self) { RouteView(route: $0).tabBarInset() }
                     }
                 }
             }
-            .safeAreaInset(edge: .bottom, spacing: 0) { BottomBar() }
+            .overlay(alignment: .bottom) { BottomBar() }
 
             if router.timerExpanded, let focus = model.focus, focus.state != .idle, let session = focus.session {
                 TimerPage(focus: focus, session: session)
@@ -82,6 +82,23 @@ private struct SheetView: View {
         }
         .tint(Palette.tint)
     }
+}
+
+/// Keeps a page's content clear of the floating bar, and of the timer strip when it shows.
+private struct TabBarInset: ViewModifier {
+    @Environment(AppModel.self) private var model
+    @Environment(Router.self) private var router
+
+    func body(content: Content) -> some View {
+        let strip = model.focus.map { $0.state != .idle } == true && !router.timerExpanded
+        content.safeAreaInset(edge: .bottom, spacing: 0) {
+            Color.clear.frame(height: Metrics.tabBarHeight + 8 + (strip ? 58 : 0))
+        }
+    }
+}
+
+private extension View {
+    func tabBarInset() -> some View { modifier(TabBarInset()) }
 }
 
 /// The floating capsule tab bar with the round add button beside it, and above them the running timer.

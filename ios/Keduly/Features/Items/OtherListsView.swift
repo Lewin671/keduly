@@ -15,7 +15,7 @@ struct UpcomingView: View {
                     Blank(title: L("upcoming.empty"), text: L("upcoming.emptyTip"))
                 }
                 ForEach(days, id: \.date) { day in
-                    SectionHeader(String(day.date.day), note: "\(Format.dayLabel(day.date, today: model.today)) · \(Format.weekdayLong(day.date))",
+                    SectionHeader(String(day.date.day), note: day.date == firstDay ? "\(L("day.tomorrow")) · \(Format.weekdayLong(day.date))" : Format.weekdayLong(day.date),
                                   trailing: day.date.month != model.today.month ? L("date.m", day.date.month) : nil)
                     VStack(spacing: 0) {
                         ForEach(day.events, id: \.entryKey) { EventLine(event: $0) }

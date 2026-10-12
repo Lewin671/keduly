@@ -292,11 +292,11 @@ struct GroupRow<Icon: View, Accessory: View>: View {
         HStack(spacing: 13) {
             icon.frame(width: 25)
             HStack(spacing: 8) {
-                Text(title).font(.system(size: 17)).foregroundStyle(titleColor).lineLimit(1).layoutPriority(1)
+                Text(title).font(.system(size: 17)).foregroundStyle(titleColor).lineLimit(1)
                 Spacer(minLength: 4)
                 accessory
                 if let value {
-                    Text(value).font(.system(size: 17)).foregroundStyle(valueColor).lineLimit(1)
+                    Text(value).font(.system(size: 17)).foregroundStyle(valueColor).lineLimit(1).layoutPriority(1)
                 }
                 if chevron {
                     Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold)).foregroundStyle(Palette.label3)
@@ -416,7 +416,7 @@ struct EventLine: View {
         let color = Palette.project(model.project(event.projectId)?.color)
         Button { router.open(event) } label: {
             HStack(spacing: 9) {
-                Text(time).font(.system(size: 13)).frame(width: showDay ? 92 : 43, alignment: .leading)
+                Text(time).font(.system(size: 13)).monospacedDigit().fixedSize().frame(minWidth: 43, alignment: .leading)
                 if event.status == .tentative {
                     DashedBar(color: color).frame(width: 3, height: 16)
                 } else {

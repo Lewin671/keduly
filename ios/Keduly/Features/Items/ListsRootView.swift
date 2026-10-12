@@ -63,7 +63,7 @@ struct ListsRootView: View {
                 .font(.system(size: 17))
                 .submitLabel(.search)
                 .autocorrectionDisabled()
-                .accessibilityIdentifier("search")
+                .accessibilityIdentifier("search-field")
             if !query.isEmpty {
                 Button { query = "" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(Palette.label3) }
                     .buttonStyle(.plain)
