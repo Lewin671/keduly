@@ -154,12 +154,12 @@
 "today.full" = "%@ 前已经排满";
 "today.freeBefore" = "%@ 前还有 ";
 "today.freeAfter" = "空闲";
-"today.allPlanned" = "，事项都已安排";
-"today.unplanned" = "，%ld 件事项未安排（%@）";
-"today.comma" = "，";
+"today.allPlanned" = "，事项都已安排。";
+"today.unplanned" = "，%ld 件事项没排进日历，约需 %@。";
+"today.needs" = "，%ld 件事项要 %@，";
 "today.noFit" = "排不下";
-"today.triage" = "：先保住 %ld 件重要的，其余 %ld 件可以往后放";
-"today.overflow" = "，需要取舍";
+"today.triage" = "。先保住 %ld 件重要的，其余 %ld 件可以改天。";
+"today.overflow" = "。需要取舍。";
 "upcoming.empty" = "接下来没有计划";
 "upcoming.emptyTip" = "给事项定一个日期，它就会出现在这里";
 "upcoming.load" = "加载 %@";
@@ -213,6 +213,8 @@
 "activity.recent" = "最近";
 "activity.undo" = "撤销";
 "activity.undone" = "已撤销";
+"activity.redo" = "恢复";
+"activity.acceptAll" = "全部接受";
 "activity.older" = "更早的动态";
 "activity.you" = "你";
 "activity.empty" = "暂时没有动态";

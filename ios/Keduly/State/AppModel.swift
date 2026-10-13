@@ -29,6 +29,8 @@ final class AppModel {
     private(set) var dataVersion = 0
     /// Items changed in place by ticking them: a ticked item stays where it is until the next reload.
     private(set) var itemOverrides: [String: Item] = [:]
+    /// The last request got no answer: pages keep what they show and offer to retry.
+    private(set) var unreachable = false
     /// A line shown briefly over the page: a write that failed, or data that changed underneath.
     var notice: String?
 
@@ -119,6 +121,7 @@ final class AppModel {
         revision = nil
         itemOverrides = [:]
         notice = nil
+        unreachable = false
         phase = .signedOut
     }
 
@@ -168,11 +171,25 @@ final class AppModel {
         }
     }
 
-    private func poll() async {
-        async let counts = try? api.counts()
-        async let focus = try? api.focus()
-        if let focus = await focus { setFocus(focus) }
-        guard let answer = await counts else { return }
+    /// Records whether the server answered the last request.
+    func noteReach(_ reached: Bool) {
+        if unreachable == reached { unreachable = !reached }
+    }
+
+    /// Asks the server whether anything changed. Also what 重试 does after the page's own reload.
+    func poll() async {
+        let counts: CountsResponse
+        do {
+            counts = try await api.counts()
+            noteReach(true)
+        } catch let error as APIError where error == .network || error == .timeout {
+            noteReach(false)
+            return
+        } catch {
+            return
+        }
+        if let focus = try? await api.focus() { setFocus(focus) }
+        let answer = counts
         self.counts = answer.counts
         guard answer.revision != revision else { return }
         await refreshShared()
@@ -194,6 +211,7 @@ final class AppModel {
         } catch let error as APIError {
             if error == .unauthenticated { return .failure(error) }
             if !(inline && error.status == 400) { notice = error.message }
+            if error == .network || error == .timeout { noteReach(false) }
             if error.status != 400 {
                 await refreshShared()
                 reloadAll()

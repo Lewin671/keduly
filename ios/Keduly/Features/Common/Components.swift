@@ -11,16 +11,20 @@ final class Loader<Value: Sendable> {
         do {
             value = try await operation(model.api)
             failed = false
+            model.noteReach(true)
         } catch is CancellationError {
         } catch APIError.unauthenticated {
         } catch {
-            if !Task.isCancelled { failed = true }
+            guard !Task.isCancelled else { return }
+            failed = true
+            if let error = error as? APIError, error == .network || error == .timeout { model.noteReach(false) }
         }
     }
 }
 
 /// A scrolling page: the large title is part of the content, as in the design.
 struct Screen<Content: View>: View {
+    @Environment(AppModel.self) private var model
     var failed = false
     var grouped = false
     var retry: (() async -> Void)?
@@ -29,7 +33,12 @@ struct Screen<Content: View>: View {
     var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 0) {
-                if failed, let retry { ErrorLine(retry: retry) }
+                if failed || model.unreachable, let retry {
+                    ErrorLine {
+                        await retry()
+                        await model.poll()
+                    }
+                }
                 content
             }
             .frame(maxWidth: .infinity, alignment: .leading)

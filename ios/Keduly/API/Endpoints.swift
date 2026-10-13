@@ -205,4 +205,13 @@ extension APIClient {
     func undoActivity(_ id: String) async throws -> Activity {
         try await send("POST", "/activity/\(id)/undo", key: "activity")
     }
+
+    func redoActivity(_ id: String) async throws -> Activity {
+        try await send("POST", "/activity/\(id)/redo", key: "activity")
+    }
+
+    /// Accepts every pending suggestion at once.
+    func acceptAllSuggestions() async throws {
+        try await sendDiscarding("POST", "/suggestions/accept-all")
+    }
 }

@@ -21,6 +21,14 @@ struct ActivityView: View {
                 }
                 if !content.suggestions.isEmpty {
                     SectionHeader(L("activity.todo"), trailing: String(content.suggestions.count))
+                    if content.suggestions.count > 1 {
+                        AsyncButton(L("activity.acceptAll")) {
+                            _ = await model.write { try await $0.acceptAllSuggestions() }
+                        }
+                        .font(.system(size: 15))
+                        .frame(minHeight: 44)
+                        .accessibilityIdentifier("accept-all")
+                    }
                     ForEach(content.suggestions) { suggestion in
                         VStack(alignment: .leading, spacing: 6) {
                             Text(suggestion.title).font(.system(size: 17)).padding(.top, 10)
@@ -61,7 +69,16 @@ struct ActivityView: View {
             }
             Spacer(minLength: 0)
             if activity.undone {
-                Text(L("activity.undone")).font(.system(size: 13)).foregroundStyle(Palette.label3).padding(.top, 2)
+                VStack(alignment: .trailing, spacing: 0) {
+                    Text(L("activity.undone")).font(.system(size: 13)).foregroundStyle(Palette.label3).padding(.top, 2)
+                    AsyncButton(L("activity.redo")) {
+                        let id = activity.id
+                        _ = await model.write { try await $0.redoActivity(id) }
+                    }
+                    .font(.system(size: 15))
+                    .frame(minWidth: 44, minHeight: 36, alignment: .trailing)
+                    .accessibilityIdentifier("redo-\(activity.summary)")
+                }
             } else if activity.undoable {
                 AsyncButton(L("activity.undo")) {
                     let id = activity.id

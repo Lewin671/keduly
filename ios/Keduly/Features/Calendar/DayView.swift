@@ -32,7 +32,7 @@ struct DayView: View {
                         .padding(.trailing, 12)
                         .padding(.bottom, 24)
                 }
-                .onAppear { proxy.scrollTo(7, anchor: .top) }
+                .onAppear { proxy.scrollTo("open", anchor: .top) }
             }
         }
     }
@@ -111,6 +111,13 @@ struct DayView: View {
                     .id(hour)
                 }
             }
+            // Where the axis opens: just above 07:00, so that no hour label is cut in half.
+            VStack(spacing: 0) {
+                Color.clear.frame(height: 7 * h - 16)
+                Color.clear.frame(height: 1).id("open")
+            }
+            .frame(width: 1)
+            .accessibilityHidden(true)
             GeometryReader { geo in
                 let width = geo.size.width - 60
                 ForEach(Array(blocks.enumerated()), id: \.offset) { _, block in

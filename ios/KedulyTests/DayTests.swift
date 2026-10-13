@@ -128,15 +128,17 @@ final class DayTests: XCTestCase {
         XCTAssertEqual(Format.cap(120), "99+")
     }
 
-    func testTodaySummaryFollowsTheWebApp() {
+    func testTodaySummaryUsesThePhoneWordingAndTheWebAppsCases() {
         func text(_ free: Int, _ minutes: Int, _ count: Int, _ important: Int) -> String {
             TodayBudget(freeMinutes: free, unplannedMinutes: minutes, unplanned: count, important: important, workEnd: "18:00").text
         }
-        XCTAssertEqual(text(120, 0, 0, 0), "18:00 前还有 2 小时空闲，事项都已安排")
-        XCTAssertEqual(text(120, 90, 2, 1), "18:00 前还有 2 小时空闲，2 件事项未安排（1.5 小时）")
-        XCTAssertEqual(text(60, 90, 3, 1), "18:00 前还有 1 小时空闲，3 件事项未安排（1.5 小时），排不下：先保住 1 件重要的，其余 2 件可以往后放")
-        XCTAssertEqual(text(60, 90, 2, 2), "18:00 前还有 1 小时空闲，2 件事项未安排（1.5 小时），排不下，需要取舍")
-        XCTAssertEqual(text(0, 30, 1, 0), "18:00 前已经排满，1 件事项未安排（30 分钟），排不下，需要取舍")
+        XCTAssertEqual(text(120, 0, 0, 0), "18:00 前还有 2 小时空闲，事项都已安排。")
+        XCTAssertEqual(text(120, 90, 2, 1), "18:00 前还有 2 小时空闲，2 件事项没排进日历，约需 1.5 小时。")
+        XCTAssertEqual(text(60, 90, 3, 1), "18:00 前还有 1 小时空闲，3 件事项要 1.5 小时，排不下。先保住 1 件重要的，其余 2 件可以改天。")
+        XCTAssertEqual(text(60, 90, 2, 2), "18:00 前还有 1 小时空闲，2 件事项要 1.5 小时，排不下。需要取舍。")
+        XCTAssertEqual(text(60, 90, 2, 0), "18:00 前还有 1 小时空闲，2 件事项要 1.5 小时，排不下。需要取舍。")
+        XCTAssertEqual(text(0, 30, 1, 0), "18:00 前已经排满，1 件事项要 30 分钟，排不下。需要取舍。")
+        XCTAssertEqual(text(0, 0, 0, 0), "18:00 前已经排满，事项都已安排。")
         let budget = TodayBudget(freeMinutes: 60, unplannedMinutes: 90, unplanned: 3, important: 1, workEnd: "18:00")
         XCTAssertTrue(budget.parts.contains(.warning("排不下")))
     }

@@ -132,10 +132,12 @@ struct TodayBudget: Equatable, Sendable {
             out.append(.plain(L("today.allPlanned")))
             return out
         }
-        out.append(.plain(L("today.unplanned", unplanned, Format.dur(unplannedMinutes))))
-        guard unplannedMinutes > freeMinutes else { return out }
+        guard unplannedMinutes > freeMinutes else {
+            out.append(.plain(L("today.unplanned", unplanned, Format.dur(unplannedMinutes))))
+            return out
+        }
         let rest = unplanned - important
-        out.append(.plain(L("today.comma")))
+        out.append(.plain(L("today.needs", unplanned, Format.dur(unplannedMinutes))))
         out.append(.warning(L("today.noFit")))
         out.append(.plain(important > 0 && rest > 0 ? L("today.triage", important, rest) : L("today.overflow")))
         return out
