@@ -292,6 +292,15 @@ class ApiClientTest {
         assertEquals("new-session", store.cookie)
     }
 
+    @Test fun anExpiredSessionsCookieIsDroppedWithTheAnswer() = runTest {
+        var seen: String? = "unset"
+        val server = FakeServer { FakeServer.Reply(401, """{"error":{"code":"unauthenticated","message":"sign in"}}""") }
+        val api = ApiClient(OkHttpClient.Builder().addInterceptor(server).build(), store) { seen = store.cookie }
+        try { api.today(); fail("expected a failure") } catch (e: ApiException) { assertEquals(401, e.status) }
+        // Gone before anyone is told, so no other late answer of that session still counts as current.
+        assertEquals(null, seen)
+    }
+
     @Test fun aLateSetCookieDoesNotReplaceTheNewSessionsCookie() = runTest {
         val server = FakeServer {
             store.cookie = "new-session"

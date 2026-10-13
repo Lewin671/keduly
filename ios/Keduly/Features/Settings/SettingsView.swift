@@ -81,6 +81,8 @@ struct SettingsView: View {
     }
 
     private func saveName() async {
+        // Another setting may be on its way; the name waits for it instead of being dropped.
+        while saving { try? await Task.sleep(for: .milliseconds(50)) }
         let text = name.trimmingCharacters(in: .whitespaces)
         guard let user = model.user, text != user.name else { return }
         if text.isEmpty { name = user.name } else { await save(UserPatch(name: text)) }

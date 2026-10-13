@@ -93,7 +93,11 @@ class ApiClient(
             val current = store.cookie == sent && store.server == server
             // The server sends the cookie again whenever it pushes the expiry out, on any response.
             if (current) for (header in cookies) renewedCookie(header)?.let { store.cookie = it.ifEmpty { null } }
-            current && status == 401 && session
+            val ended = current && status == 401 && session
+            // Dropped here, under the lock: a second late 401 of the same session then finds it is
+            // no longer current and cannot end a session the user starts afterwards.
+            if (ended) store.cookie = null
+            ended
         }
         if (status !in 200..299) {
             val error = failure(status, text)

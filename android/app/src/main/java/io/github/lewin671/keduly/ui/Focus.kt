@@ -258,6 +258,9 @@ fun ZenScreen(f: Focus) {
                     Text(stringResource(R.string.focus_collapse), fontSize = 15.sp, fontWeight = FontWeight.Medium, modifier = Modifier.padding(start = 3.dp, top = 8.dp, bottom = 8.dp))
                 }
             }
+            // The timer covers the pages, so it carries their notice about the connection itself.
+            val offline by app.offline.collectAsStateWithLifecycle()
+            if (offline) ErrorLine(stringResource(R.string.error_network), app::refresh)
             Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                 RunningDial(f, session)
                 if (working) {
