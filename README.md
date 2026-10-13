@@ -79,12 +79,24 @@ Run it again after upgrading the CLI.
 Create an app password in Settings → 系统日历 and add a CalDAV account in your calendar app with
 the server address shown there, your email and that password. Each project appears as a calendar.
 
+## Use it from a phone
+
+`ios/` and `android/` hold native apps for the same server and account: items, calendar and the
+focus timer. They are not in the app stores yet; build them from source and sign in with the
+server address, your email and your password.
+
+```sh
+scripts/check-ios.sh       # needs Xcode and XcodeGen; then open ios/Keduly.xcodeproj
+scripts/check-android.sh   # needs JDK 17 and the Android SDK; the APK is under android/app/build/outputs/apk/debug/
+```
+
 ## Documentation
 
 | Document | Contents |
 |---|---|
 | [docs/design/DESIGN.md](docs/design/DESIGN.md) | What the product is and why it looks the way it does |
 | [docs/design/mockup.html](docs/design/mockup.html) | The clickable design mockup |
+| [docs/design/mobile.html](docs/design/mobile.html) | The design of the phone apps |
 | [docs/api.md](docs/api.md) | The HTTP API and the CalDAV mapping |
 | [docs/deploy.md](docs/deploy.md) | Self-hosting |
 | [AGENTS.md](AGENTS.md) | Layout, rules and commands for contributors, human or not |
@@ -95,6 +107,7 @@ the server address shown there, your email and that password. Each project appea
 go run ./cmd/keduly serve --data ./data --addr 127.0.0.1:8080   # server
 cd web && pnpm install && pnpm dev                              # web app with hot reload
 scripts/check.sh                                                # formatting, vet, all tests
+scripts/seed-demo.py http://127.0.0.1:8080                      # demo data; needs --registration open
 ```
 
 ## Status
