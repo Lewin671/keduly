@@ -75,6 +75,7 @@ class ApiClient(
     ): JsonObject? = withContext(Dispatchers.IO) {
         val builder = Request.Builder().url(url(path, query)).header("Accept", "application/json")
         if (method != "GET") builder.header("X-Keduly-Request", "1")
+        val server = store.server
         val sent = store.cookie
         if (sent != null) builder.header("Cookie", "$SESSION_COOKIE=$sent")
         builder.method(method, if (method == "GET") null else (body ?: JsonObject(emptyMap())).toString().toRequestBody(jsonType))
@@ -85,11 +86,18 @@ class ApiClient(
         } catch (e: IOException) {
             throw ApiException(0, "network", e.message ?: "network error")
         }
-        // The server sends the cookie again whenever it pushes the expiry out, on any response.
-        for (header in cookies) renewedCookie(header)?.let { store.cookie = it.ifEmpty { null } }
+        // What a response says about the session applies only to the session the request was sent
+        // with. An answer that arrives after the user signed in again must neither end the new
+        // session nor replace its cookie.
+        val expired = synchronized(store) {
+            val current = store.cookie == sent && store.server == server
+            // The server sends the cookie again whenever it pushes the expiry out, on any response.
+            if (current) for (header in cookies) renewedCookie(header)?.let { store.cookie = it.ifEmpty { null } }
+            current && status == 401 && session
+        }
         if (status !in 200..299) {
             val error = failure(status, text)
-            if (status == 401 && session) onUnauthorized()
+            if (expired) onUnauthorized()
             throw error
         }
         if (text.isBlank()) return@withContext null

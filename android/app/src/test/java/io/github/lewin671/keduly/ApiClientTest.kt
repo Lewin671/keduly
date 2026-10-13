@@ -274,4 +274,61 @@ class ApiClientTest {
         assertEquals(listOf("200", "40"), server.requests.map { it.url.queryParameter("limit") })
         assertEquals(listOf(null, "c1"), server.requests.map { it.url.queryParameter("cursor") })
     }
+
+    @Test fun aLate401DoesNotEndTheSessionThatReplacedIt() = runTest {
+        // The answer to a request of the old session arrives after the user signed in again.
+        val server = FakeServer {
+            store.cookie = "new-session"
+            FakeServer.Reply(401, """{"error":{"code":"unauthenticated","message":"sign in"}}""")
+        }
+        try {
+            client(server).today()
+            fail("expected a failure")
+        } catch (e: ApiException) {
+            assertEquals(401, e.status)
+        }
+        assertEquals("keduly_session=secret-session", server.requests.single().header("Cookie"))
+        assertEquals(0, signedOut)
+        assertEquals("new-session", store.cookie)
+    }
+
+    @Test fun aLateSetCookieDoesNotReplaceTheNewSessionsCookie() = runTest {
+        val server = FakeServer {
+            store.cookie = "new-session"
+            FakeServer.Reply(200, Fixtures.text("counts"), listOf("keduly_session=renewed-old; Path=/; HttpOnly"))
+        }
+        client(server).counts()
+        assertEquals("new-session", store.cookie)
+        // Nor does a late answer that deletes the cookie sign the new session out.
+        store.cookie = "secret-session"
+        val deleting = FakeServer {
+            store.cookie = "newer-session"
+            FakeServer.Reply(200, Fixtures.text("counts"), listOf("keduly_session=; Path=/; Max-Age=0"))
+        }
+        client(deleting).counts()
+        assertEquals("newer-session", store.cookie)
+    }
+
+    @Test fun anAnswerFromAnotherServerAddressIsIgnoredToo() = runTest {
+        val server = FakeServer {
+            store.server = "http://127.0.0.1:9090"
+            FakeServer.Reply(401, """{"error":{"code":"unauthenticated","message":"sign in"}}""", listOf("keduly_session=other; Path=/"))
+        }
+        try {
+            client(server).today()
+        } catch (e: ApiException) {
+            // expected
+        }
+        assertEquals(0, signedOut)
+        assertEquals("secret-session", store.cookie)
+    }
+
+    @Test fun aSignedOutSessionStaysSignedOutWhenALateAnswerRenewsItsCookie() = runTest {
+        val server = FakeServer {
+            store.cookie = null
+            FakeServer.Reply(200, Fixtures.text("counts"), listOf("keduly_session=renewed-old; Path=/; HttpOnly"))
+        }
+        client(server).counts()
+        assertNull(store.cookie)
+    }
 }

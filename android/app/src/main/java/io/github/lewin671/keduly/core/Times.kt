@@ -76,6 +76,9 @@ object Times {
         return DaySpan(from, maxOf(to, from), startsEarlier = start.isBefore(dayStart), continues = end.isAfter(dayEnd))
     }
 
+    /** The account's calendar day at an instant given in epoch milliseconds. */
+    fun dayAt(millis: Long, zone: ZoneId): LocalDate = Instant.ofEpochMilli(millis).atZone(zone).toLocalDate()
+
     fun minutesOfDay(instant: Instant, zone: ZoneId): Int = instant.atZone(zone).toLocalTime().let { it.hour * 60 + it.minute }
 }
 

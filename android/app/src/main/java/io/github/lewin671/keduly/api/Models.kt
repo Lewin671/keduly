@@ -148,6 +148,17 @@ data class Focus(
     val now: String,
 )
 
+/**
+ * Whether the pages may show something else after the timer went from [before] to [after]: a
+ * tomato was earned or given up, or another session began. The revision does not move when a
+ * tomato ends by the clock, so this is the only sign of it.
+ */
+fun focusProgressChanged(before: Focus?, after: Focus): Boolean =
+    before != null && (
+        before.state != after.state || before.session?.id != after.session?.id ||
+            before.tomatoesToday != after.tomatoesToday || before.minutesToday != after.minutesToday || before.roundDone != after.roundDone
+        )
+
 @Serializable
 data class Suggestion(
     val id: String,

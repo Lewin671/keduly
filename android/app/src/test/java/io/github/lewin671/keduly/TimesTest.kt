@@ -153,4 +153,17 @@ class TimesTest {
         assertEquals("2026-10-14T15:30:00Z", Times.utc(span.start.toLocalDate(), span.start.toLocalTime(), shanghai))
         assertEquals("2026-10-15T18:10:00Z", Times.utc(span.end.toLocalDate(), span.end.toLocalTime(), la))
     }
+
+    @Test fun theAccountsDayTurnsAtItsOwnMidnight() {
+        // One minute before and one after midnight in Shanghai; the device (Berlin) is still in the afternoon.
+        val before = Instant.parse("2026-10-13T15:59:00Z").toEpochMilli()
+        val after = Instant.parse("2026-10-13T16:01:00Z").toEpochMilli()
+        assertEquals(LocalDate.of(2026, 10, 13), Times.dayAt(before, shanghai))
+        assertEquals(LocalDate.of(2026, 10, 14), Times.dayAt(after, shanghai))
+        // The same instants are one and the same morning in Los Angeles.
+        assertEquals(Times.dayAt(before, la), Times.dayAt(after, la))
+        // The day with 25 hours still turns at local midnight.
+        assertEquals(LocalDate.of(2026, 11, 1), Times.dayAt(Instant.parse("2026-11-02T07:59:00Z").toEpochMilli(), la))
+        assertEquals(LocalDate.of(2026, 11, 2), Times.dayAt(Instant.parse("2026-11-02T08:00:00Z").toEpochMilli(), la))
+    }
 }

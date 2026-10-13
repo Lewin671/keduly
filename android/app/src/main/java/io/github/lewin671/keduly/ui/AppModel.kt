@@ -23,6 +23,7 @@ import io.github.lewin671.keduly.api.Opt
 import io.github.lewin671.keduly.api.Project
 import io.github.lewin671.keduly.api.SessionStore
 import io.github.lewin671.keduly.api.defaultHttpClient
+import io.github.lewin671.keduly.api.focusProgressChanged
 import io.github.lewin671.keduly.core.ServerClock
 import io.github.lewin671.keduly.core.WriteQueue
 import io.github.lewin671.keduly.core.Times
@@ -86,6 +87,9 @@ class AppModel(application: Application) : AndroidViewModel(application) {
 
     /** Why the account's data could not be loaded, when it could not. */
     val bootError = MutableStateFlow<String?>(null)
+
+    /** True while the server gives no answer: a poll, a reload or a write failed and none has succeeded since. */
+    val offline = MutableStateFlow(false)
     val sheet = MutableStateFlow<Sheet?>(null)
 
     /** Whether the running timer covers the whole screen. */
@@ -145,6 +149,7 @@ class AppModel(application: Application) : AndroidViewModel(application) {
         calendarMode.value = 1
         sticky.clear()
         bootError.value = null
+        offline.value = false
         generation.update { it + 1 }
         phase.value = Phase.SignedOut
     }
@@ -217,8 +222,9 @@ class AppModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 load()
+                offline.value = false
             } catch (e: ApiException) {
-                // The page that is showing reports its own failure and offers to retry.
+                if (e.offline) offline.value = true
             }
             tick.update { it + 1 }
         }
@@ -242,15 +248,19 @@ class AppModel(application: Application) : AndroidViewModel(application) {
                 delay(POLL_MILLIS)
                 try {
                     val reply = api.counts()
-                    val dayChanged = today.value != LocalDate.now(zone())
-                    if (reply.revision != revision || dayChanged) {
+                    // Midnight in the account's zone changes what every page shows without any
+                    // write, so the day is tracked by the server's clock, not the device's.
+                    val dayChanged = today.value != Times.dayAt(serverNow(), zone())
+                    if (reply.revision != revision || dayChanged || offline.value) {
                         load()
+                        offline.value = false
                         tick.update { it + 1 }
                     } else {
                         setFocus(api.focus())
                     }
                 } catch (e: ApiException) {
-                    // Offline for now; the next round tries again.
+                    // The page in front says so and offers to retry; the next round tries again too.
+                    if (e.offline) offline.value = true
                 }
             }
         }
@@ -280,7 +290,10 @@ class AppModel(application: Application) : AndroidViewModel(application) {
                     refresh()
                 }
                 e.status == 401 -> Unit
-                else -> messages.tryEmit(describe(e))
+                else -> {
+                    if (e.offline) offline.value = true
+                    messages.tryEmit(describe(e))
+                }
             }
             Outcome.Failed
         }
@@ -309,8 +322,11 @@ class AppModel(application: Application) : AndroidViewModel(application) {
 
     private fun setFocus(next: Focus) {
         clock = ServerClock(Times.instant(next.now).toEpochMilli(), SystemClock.elapsedRealtime())
+        val changed = focusProgressChanged(focus.value, next)
         focus.value = next
         if (next.state == "idle") zen.value = false
+        // A tomato that ended by the clock changes counts and minutes on the pages that are open.
+        if (changed) tick.update { it + 1 }
     }
 
     fun refreshFocus() {

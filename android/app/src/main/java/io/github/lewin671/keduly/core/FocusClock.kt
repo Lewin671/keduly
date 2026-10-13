@@ -30,6 +30,16 @@ object FocusMath {
     fun tomatoesNeeded(estimateMinutes: Int?, tomatoMinutes: Int): Int =
         if (estimateMinutes == null || estimateMinutes <= 0 || tomatoMinutes <= 0) 0 else (estimateMinutes + tomatoMinutes - 1) / tomatoMinutes
 
+    /** How far back `GET /focus/sessions` reaches. */
+    const val MAX_RECORD_DAYS = 62
+
+    /**
+     * How many days of records to load when [asked] were asked for. A week without any focus has
+     * nothing in the first range and no list to put a "more" control under, so it loads everything
+     * the server offers at once: sessions from weeks ago stay reachable.
+     */
+    fun recordDays(asked: Int, weekMinutes: Int): Int = if (weekMinutes == 0) MAX_RECORD_DAYS else minOf(asked, MAX_RECORD_DAYS)
+
     /** The top of the chart's scale: an even number, at least 4, that holds the busiest day. */
     fun chartScale(tomatoes: List<Int>): Int = maxOf(4, ((tomatoes.maxOrNull() ?: 0) + 1) / 2 * 2)
 }

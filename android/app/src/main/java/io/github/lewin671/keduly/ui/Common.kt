@@ -76,8 +76,12 @@ fun <T> usePage(key: String, vararg deps: Any?, fetch: suspend (ApiClient) -> T)
     val latest by rememberUpdatedState(fetch)
     LaunchedEffect(tick, *deps) { model.load(app) { latest(it) } }
     val state by model.state.collectAsStateWithLifecycle()
+    val offline by app.offline.collectAsStateWithLifecycle()
+    // While the server cannot be reached the page frame (or the sheet) says so once, with a retry
+    // that asks for everything again; the page's own line would only repeat it.
+    val error = if (offline) null else state.error
     @Suppress("UNCHECKED_CAST")
-    return Page(state.data as T?, state.loading, state.error) { model.load(app) { latest(it) } }
+    return Page(state.data as T?, state.loading, error) { model.load(app) { latest(it) } }
 }
 
 @Composable
@@ -135,6 +139,10 @@ fun Screen(
             },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = bg, titleContentColor = K.label, actionIconContentColor = K.tint),
         )
+        // Without a connection the page keeps what it shows, says so and offers to retry.
+        val app = LocalApp.current
+        val offline by app.offline.collectAsStateWithLifecycle()
+        if (offline) ErrorLine(stringResource(R.string.error_network), app::refresh)
         content()
     }
 }

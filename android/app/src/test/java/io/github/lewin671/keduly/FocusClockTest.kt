@@ -1,6 +1,12 @@
 package io.github.lewin671.keduly
 
+import io.github.lewin671.keduly.api.ApiJson
+import io.github.lewin671.keduly.api.Focus
+import io.github.lewin671.keduly.api.focusProgressChanged
 import io.github.lewin671.keduly.core.FocusMath
+import kotlinx.serialization.json.decodeFromJsonElement
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import io.github.lewin671.keduly.core.ServerClock
 import java.time.Instant
 import org.junit.Assert.assertEquals
@@ -61,5 +67,31 @@ class FocusClockTest {
         assertEquals(6, FocusMath.chartScale(listOf(5)))
         assertEquals(8, FocusMath.chartScale(listOf(8, 2)))
         assertEquals(4, FocusMath.chartScale(emptyList()))
+    }
+
+    private fun focus(name: String) = ApiJson.decodeFromJsonElement<Focus>(Fixtures.json(name).getValue("focus"))
+
+    @Test fun aTomatoThatEndsByTheClockInvalidatesThePages() {
+        val working = focus("focus")
+        // The same countdown a poll later: nothing on the pages changed.
+        assertFalse(focusProgressChanged(working, working.copy(now = "2026-10-13T01:06:38Z")))
+        // The tomato ran out: one more earned, more minutes, the state is "over".
+        val earned = working.copy(state = "over", tomatoesToday = 4, minutesToday = 105, roundDone = 4, session = working.session!!.copy(completed = true))
+        assertTrue(focusProgressChanged(working, earned))
+        // Given up on another device: only the minutes and the state move.
+        assertTrue(focusProgressChanged(working, focus("focus_idle").copy(minutesToday = 86)))
+        // Another session began (started elsewhere) while the state stayed "work".
+        assertTrue(focusProgressChanged(working, working.copy(session = working.session!!.copy(id = "zzzzzzzzzzzzzzzz"))))
+        // The first reply after starting has nothing to compare with; loading is not a change.
+        assertFalse(focusProgressChanged(null, working))
+    }
+
+    @Test fun anEmptyWeekLoadsEveryRecordTheServerOffers() {
+        // Normally two days up front, then more on request.
+        assertEquals(2, FocusMath.recordDays(2, weekMinutes = 50))
+        assertEquals(14, FocusMath.recordDays(14, weekMinutes = 50))
+        // The last session was weeks ago: the first range would be empty and hide the only control.
+        assertEquals(62, FocusMath.recordDays(2, weekMinutes = 0))
+        assertEquals(62, FocusMath.recordDays(500, weekMinutes = 50))
     }
 }

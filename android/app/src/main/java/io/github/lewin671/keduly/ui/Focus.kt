@@ -332,7 +332,7 @@ fun FocusPickSheet(close: () -> Unit) {
 
 /* ---------- statistics ---------- */
 
-private class StatsPage(val stats: FocusStats, val sessions: List<FocusSession>)
+private class StatsPage(val stats: FocusStats, val sessions: List<FocusSession>, val days: Int)
 
 @Composable
 fun StatsScreen() {
@@ -340,7 +340,11 @@ fun StatsScreen() {
     val f = LocalFmt.current
     val boot by app.boot.collectAsStateWithLifecycle()
     var days by remember { mutableIntStateOf(2) }
-    val page = usePage("stats", days, f.today) { api -> StatsPage(api.focusStats(), api.focusSessions(f.today.minusDays(days - 1L).toString(), f.today.toString())) }
+    val page = usePage("stats", days, f.today) { api ->
+        val stats = api.focusStats()
+        val range = FocusMath.recordDays(days, stats.minutes)
+        StatsPage(stats, api.focusSessions(f.today.minusDays(range - 1L).toString(), f.today.toString()), range)
+    }
     Screen(stringResource(R.string.focus_stats)) {
         PageBody(page) { data ->
             val stats = data.stats
@@ -395,7 +399,7 @@ fun StatsScreen() {
                         }
                     }
                 }
-                if (days < 62) MoreLink(stringResource(R.string.stats_older), inset = false) { days = if (days < 14) 14 else 62 }
+                if (data.days < FocusMath.MAX_RECORD_DAYS) MoreLink(stringResource(R.string.stats_older), inset = false) { days = if (days < 14) 14 else FocusMath.MAX_RECORD_DAYS }
             }
         }
     }

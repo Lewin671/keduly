@@ -69,6 +69,8 @@ fun SheetHost() {
             dragHandle = { Box(Modifier.padding(top = 6.dp).size(36.dp, 5.dp).background(K.label3, RoundedCornerShape(3.dp))) },
         ) {
             Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, bottom = 20.dp)) {
+                val offline by app.offline.collectAsStateWithLifecycle()
+                if (offline) ErrorLine(stringResource(R.string.error_network), app::refresh)
                 when (current) {
                     is Sheet.ItemDetail -> ItemSheet(current.id, close)
                     is Sheet.NewItem -> NewItemSheet(current, close)
