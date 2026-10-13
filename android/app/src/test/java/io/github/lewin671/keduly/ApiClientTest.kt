@@ -229,4 +229,49 @@ class ApiClientTest {
         assertEquals("https://example.com/keduly", normalizeServer("https://example.com/keduly/"))
         assertNull(normalizeServer("  "))
     }
+
+    @Test fun untouchedEventTimesAreNotSentBack() {
+        // 01:30 happens twice in Los Angeles on 1 November 2026; this event is in the second one.
+        val la = java.time.ZoneId.of("America/Los_Angeles")
+        val stored = "2026-11-01T09:30:00Z"
+        val start = java.time.Instant.parse(stored).atZone(la).toLocalDateTime()
+        val end = java.time.Instant.parse("2026-11-01T10:30:00Z").atZone(la).toLocalDateTime()
+        assertEquals(java.time.LocalDateTime.of(2026, 11, 1, 1, 30), start)
+        // The wall-clock time alone reads as the first 01:30, an hour before the stored instant.
+        val edited = io.github.lewin671.keduly.api.eventTimes(true, false, start, end, la).toJson()
+        assertEquals(JsonPrimitive("2026-11-01T08:30:00Z"), edited["start"])
+        // So a save that did not touch the times leaves them out and the instants survive.
+        val untouched = io.github.lewin671.keduly.api.eventTimes(false, false, start, end, la).copy(title = Opt.Put("改了标题")).toJson()
+        assertEquals("""{"title":"改了标题"}""", untouched.toString())
+    }
+
+    @Test fun editedEventTimesAreSentWholeForTimedAndAllDayEvents() {
+        val zone = java.time.ZoneId.of("Asia/Shanghai")
+        val start = java.time.LocalDateTime.of(2026, 10, 14, 23, 30)
+        val end = java.time.LocalDateTime.of(2026, 10, 15, 11, 10)
+        assertEquals("""{"all_day":false,"start":"2026-10-14T15:30:00Z","end":"2026-10-15T03:10:00Z"}""",
+            io.github.lewin671.keduly.api.eventTimes(true, false, start, end, zone).toJson().toString())
+        assertEquals("""{"all_day":true,"start_date":"2026-10-14","end_date":"2026-10-15"}""",
+            io.github.lewin671.keduly.api.eventTimes(true, true, start, end, zone).toJson().toString())
+    }
+
+    @Test fun activityFollowsCursorsPastOnePage() = runTest {
+        fun entries(from: Int, count: Int) = (from until from + count).joinToString(",") {
+            """{"id":"a$it","actor":{"kind":"user","name":"Me"},"action":"item.create","summary":"s$it","reason":null,"undoable":true,"undone":false,"created_at":"2026-10-13T00:12:00Z"}"""
+        }
+        val server = FakeServer { request ->
+            when (request.url.queryParameter("cursor")) {
+                null -> FakeServer.Reply(200, """{"activities":[${entries(0, 200)}],"next_cursor":"c1"}""")
+                "c1" -> FakeServer.Reply(200, """{"activities":[${entries(200, 40)}],"next_cursor":"c2"}""")
+                else -> FakeServer.Reply(200, """{"activities":[],"next_cursor":null}""")
+            }
+        }
+        val page = client(server).activityUpTo(240)
+        assertEquals(240, page.activities.size)
+        assertEquals("a239", page.activities.last().id)
+        // More remain on the server, so the page still offers older entries.
+        assertEquals("c2", page.nextCursor)
+        assertEquals(listOf("200", "40"), server.requests.map { it.url.queryParameter("limit") })
+        assertEquals(listOf(null, "c1"), server.requests.map { it.url.queryParameter("cursor") })
+    }
 }

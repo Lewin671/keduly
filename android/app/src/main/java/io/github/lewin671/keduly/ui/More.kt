@@ -53,7 +53,7 @@ fun ActivityScreen() {
     var limit by rememberSaveable { mutableIntStateOf(20) }
     val page = usePage("activity", limit) { api ->
         val pending = api.suggestions()
-        val recent = api.activity(limit)
+        val recent = api.activityUpTo(limit)
         ActivityData(pending, recent.activities, recent.nextCursor != null)
     }
     Screen(stringResource(R.string.activity_title)) {
@@ -93,11 +93,16 @@ fun ActivityScreen() {
                             )
                         }
                         // Each change can be undone, and an undone one applied again.
-                        if (entry.undone) TextButton(enabled = !busy, onClick = { app.act { it.redoActivity(entry.id) } }) { Text(stringResource(R.string.activity_redo), fontSize = 15.sp, color = K.tint) }
+                        if (entry.undone) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(stringResource(R.string.activity_undone), fontSize = 13.sp, color = K.label2)
+                                TextButton(enabled = !busy, onClick = { app.act { it.redoActivity(entry.id) } }) { Text(stringResource(R.string.activity_redo), fontSize = 15.sp, color = K.tint) }
+                            }
+                        }
                         else if (entry.undoable) TextButton(enabled = !busy, onClick = { app.act { it.undoActivity(entry.id) } }) { Text(stringResource(R.string.activity_undo), fontSize = 15.sp, color = K.tint) }
                     }
                 }
-                if (data.more && limit < 200) MoreLink(stringResource(R.string.activity_older), inset = false) { limit = minOf(200, limit + 40) }
+                if (data.more) MoreLink(stringResource(R.string.activity_older), inset = false) { limit += 40 }
             }
         }
     }

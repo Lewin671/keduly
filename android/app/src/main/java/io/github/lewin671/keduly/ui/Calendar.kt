@@ -39,6 +39,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.lewin671.keduly.R
 import io.github.lewin671.keduly.api.Event
 import io.github.lewin671.keduly.api.EventPatch
+import io.github.lewin671.keduly.api.eventTimes
 import io.github.lewin671.keduly.api.Opt
 import io.github.lewin671.keduly.core.DaySpan
 import io.github.lewin671.keduly.core.EventSpan
@@ -388,6 +389,7 @@ fun EventFormSheet(sheet: Sheet.EventForm, close: () -> Unit) {
     var notes by rememberSaveable { mutableStateOf(event?.notes.orEmpty()) }
     var error by remember { mutableStateOf<String?>(null) }
     var picker by remember { mutableStateOf("") }
+    var timesEdited by rememberSaveable { mutableStateOf(false) }
     val project = projectOf(projectId)
     val fault = when {
         allDay && endDay.isBefore(startDay) -> TimeFault.EndBeforeStart
@@ -400,11 +402,8 @@ fun EventFormSheet(sheet: Sheet.EventForm, close: () -> Unit) {
         if (title.isNotBlank() && !busy) {
             if (fault != null) error = faultText
             else scope.launch {
-                val times = if (allDay) {
-                    EventPatch(allDay = Opt.Put(true), startDate = Opt.Put(startDay.toString()), endDate = Opt.Put(endDay.toString()))
-                } else {
-                    EventPatch(allDay = Opt.Put(false), start = Opt.Put(Times.utc(startDay, startTime, f.zone)), end = Opt.Put(Times.utc(endDay, endTime, f.zone)))
-                }
+                val span = EventSpan(startDay.atTime(startTime), endDay.atTime(endTime))
+                val times = eventTimes(true, allDay, span.start, span.end, f.zone)
                 val outcome = app.attempt { api ->
                     if (event == null) {
                         api.createEvent(
@@ -414,12 +413,11 @@ fun EventFormSheet(sheet: Sheet.EventForm, close: () -> Unit) {
                             ),
                         )
                     } else {
-                        // Only what changed is sent; a project that was taken away is sent as null.
-                        val sameTimes = allDay == event.allDay && if (allDay) startDay.toString() == event.startDate && endDay.toString() == event.endDate
-                        else times.start == Opt.Put(event.start) && times.end == Opt.Put(event.end)
+                        // Only what changed is sent; a project that was taken away is sent as null. The
+                        // times go only when the user edited them, so untouched instants stay exact.
                         api.updateEvent(
                             event.id,
-                            (if (sameTimes) EventPatch() else times).copy(
+                            eventTimes(timesEdited, allDay, span.start, span.end, f.zone).copy(
                                 title = if (title.trim() != event.title) Opt.Put(title.trim()) else Opt.Keep,
                                 projectId = if (projectId != event.projectId) Opt.Put(projectId) else Opt.Keep,
                                 location = if (location.trim() != event.location) Opt.Put(location.trim()) else Opt.Keep,
@@ -440,6 +438,7 @@ fun EventFormSheet(sheet: Sheet.EventForm, close: () -> Unit) {
 
     val span = EventSpan(startDay.atTime(startTime), endDay.atTime(endTime))
     val apply = { next: EventSpan ->
+        timesEdited = true
         startDay = next.start.toLocalDate()
         startTime = next.start.toLocalTime()
         endDay = next.end.toLocalDate()
@@ -457,7 +456,7 @@ fun EventFormSheet(sheet: Sheet.EventForm, close: () -> Unit) {
     Group(Modifier.padding(top = 14.dp), cell = K.sheetCell) {
         GroupRow(
             stringResource(R.string.cal_all_day), leading = { RowIcon(KIcons.Clock, K.label2, 21.dp) },
-            trailing = { Switch(allDay, { allDay = it; error = null }, colors = SwitchDefaults.colors(checkedTrackColor = K.green, checkedThumbColor = Color.White)) },
+            trailing = { Switch(allDay, { allDay = it; timesEdited = true; error = null }, colors = SwitchDefaults.colors(checkedTrackColor = K.green, checkedThumbColor = Color.White)) },
         )
         if (allDay) {
             GroupRow(stringResource(R.string.field_start_date), "${f.dayLabel(startDay)} ${f.weekdayShort(startDay)}", chevron = false) { picker = "startDay" }
@@ -465,10 +464,8 @@ fun EventFormSheet(sheet: Sheet.EventForm, close: () -> Unit) {
         } else {
             GroupRow(stringResource(R.string.field_date), "${f.dayLabel(startDay)} ${f.weekdayShort(startDay)}", chevron = false) { picker = "startDay" }
             GroupRow(stringResource(R.string.field_start), Times.hhmm(startTime), chevron = false) { picker = "startTime" }
-            GroupRow(
-                stringResource(R.string.field_end), (if (endDay != startDay) f.dayLabel(endDay) + " " else "") + Times.hhmm(endTime), last = true, chevron = false,
-                valueColor = if (fault != null) K.red else K.label2,
-            ) { picker = "endTime" }
+            GroupRow(stringResource(R.string.field_end_date), "${f.dayLabel(endDay)} ${f.weekdayShort(endDay)}", chevron = false, valueColor = if (fault != null) K.red else K.label2) { picker = "endDay" }
+            GroupRow(stringResource(R.string.field_end), Times.hhmm(endTime), last = true, chevron = false, valueColor = if (fault != null) K.red else K.label2) { picker = "endTime" }
         }
     }
     Group(Modifier.padding(top = 14.dp), cell = K.sheetCell) {
@@ -494,12 +491,13 @@ fun EventFormSheet(sheet: Sheet.EventForm, close: () -> Unit) {
                 // Moving the start keeps the length in days.
                 endDay = it.plusDays(Times.daysBetween(startDay, endDay).toLong().coerceAtLeast(0))
                 startDay = it
+                timesEdited = true
             } else {
                 apply(span.withDay(it))
             }
             picker = ""
         }
-        "endDay" -> DayPickerDialog(endDay, { picker = "" }) { endDay = it; picker = "" }
+        "endDay" -> DayPickerDialog(endDay, { picker = "" }) { apply(span.withEndDay(it)); picker = "" }
         "startTime" -> TimeDialog(startTime, { picker = "" }) { apply(span.withStart(it)); picker = "" }
         "endTime" -> TimeDialog(endTime, { picker = "" }) { apply(span.withEnd(it)); picker = "" }
         "project" -> ProjectDialog(projectId, stringResource(R.string.project_none), { picker = "" }) { projectId = it; picker = "" }

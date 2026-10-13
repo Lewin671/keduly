@@ -22,6 +22,7 @@
     <string name="activity_redo">恢复</string>
     <string name="activity_title">动态</string>
     <string name="activity_todo">待处理</string>
+    <string name="activity_undone">已撤销</string>
     <string name="activity_undo">撤销</string>
     <string name="activity_wants_delete">想删除「%1$s」</string>
     <string name="activity_you">你</string>

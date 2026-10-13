@@ -26,7 +26,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import io.github.lewin671.keduly.R
 import io.github.lewin671.keduly.api.Item
 import io.github.lewin671.keduly.api.ItemPage
@@ -136,6 +139,8 @@ fun MatrixScreen() {
 
 /* ---------- today ---------- */
 
+private const val TODAY_RELOAD_MILLIS = 60_000L
+
 @Composable
 private fun TodaySummary(view: TodayView) {
     val f = LocalFmt.current
@@ -179,6 +184,17 @@ fun TodayScreen() {
     val f = LocalFmt.current
     val nav = LocalNav.current
     val page = usePage("today") { it.today() }
+    // The budget counts from now, so the page asks again every minute while it is in front.
+    val lifecycle = LocalLifecycleOwner.current
+    val reload by rememberUpdatedState(page.retry)
+    LaunchedEffect(lifecycle) {
+        lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            while (true) {
+                delay(TODAY_RELOAD_MILLIS)
+                reload()
+            }
+        }
+    }
     Screen(stringResource(R.string.nav_today), small = "${f.md(f.today)} ${f.weekdayLong(f.today)}", bell = true) {
         PageBody(page) { view ->
             if (view.items.isEmpty() && view.overdue.isEmpty() && view.events.isEmpty()) {
@@ -187,8 +203,8 @@ fun TodayScreen() {
             }
             Scroll {
                 TodaySummary(view)
-                view.events.take(5).forEach { event -> EventLine(event) { nav.calendarDay() } }
-                if (view.events.size > 5) MoreLink(stringResource(R.string.list_more_events, view.events.size - 5), onClick = nav.calendarDay)
+                view.events.take(5).forEach { event -> EventLine(event) { nav.calendarDay(null) } }
+                if (view.events.size > 5) MoreLink(stringResource(R.string.list_more_events, view.events.size - 5), onClick = { nav.calendarDay(null) })
                 val day = view.items.filter { !it.evening }
                 val evening = view.items.filter { it.evening }
                 if (view.overdue.isNotEmpty()) {
@@ -235,7 +251,7 @@ fun UpcomingScreen() {
                     Sec(f.dayLabel(date), sub = f.weekdayLong(date), first = k == 0)
                     if (day.events.isNotEmpty()) {
                         Spacer(Modifier.height(8.dp))
-                        day.events.forEach { event -> EventLine(event) { nav.calendarDay() } }
+                        day.events.forEach { event -> EventLine(event) { nav.calendarDay(date) } }
                     }
                     ItemRows(day.items, showPlan = false)
                 }
@@ -376,7 +392,7 @@ fun SearchScreen() {
 
 /* ---------- project ---------- */
 
-private class ProjectPage(val detail: ProjectDetail, val open: List<Item>, val done: List<Item>)
+private class ProjectPage(val detail: ProjectDetail, val open: List<Item>, val openTotal: Int, val done: List<Item>)
 
 @Composable
 fun ProjectScreen(id: String) {
@@ -384,10 +400,11 @@ fun ProjectScreen(id: String) {
     val f = LocalFmt.current
     val nav = LocalNav.current
     var doneCount by rememberSaveable { mutableIntStateOf(0) }
-    val page = usePage("project/$id", doneCount) { api ->
+    var openLimit by rememberSaveable { mutableIntStateOf(200) }
+    val page = usePage("project/$id", doneCount, openLimit) { api ->
         val detail = api.project(id)
-        val open = api.itemsUpTo(500, projectId = id).items
-        ProjectPage(detail, open, if (doneCount > 0) api.itemsUpTo(doneCount, status = "done", projectId = id).items else emptyList())
+        val open = api.itemsUpTo(openLimit, projectId = id)
+        ProjectPage(detail, open.items, open.total, if (doneCount > 0) api.itemsUpTo(doneCount, status = "done", projectId = id).items else emptyList())
     }
     var menu by remember { mutableStateOf(false) }
     Screen(
@@ -412,17 +429,22 @@ fun ProjectScreen(id: String) {
                     Text(project.name, fontSize = 28.sp, lineHeight = 35.sp, fontWeight = FontWeight.Bold, maxLines = 3, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 10.dp))
                 }
                 if (project.notes.isNotBlank()) Text(project.notes, fontSize = 15.sp, lineHeight = 21.sp, color = K.label2, maxLines = 3, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(bottom = 10.dp))
+                if (all > 0) {
+                    Text(
+                        stringResource(R.string.project_open, project.openCount) +
+                            (if (project.openCount > 0) stringResource(R.string.project_unplanned, data.detail.unplannedCount) else "") +
+                            (if (data.detail.focusWeekMinutes > 0) stringResource(R.string.project_focus_week, f.span(data.detail.focusWeekMinutes)) else ""),
+                        fontSize = 15.sp, lineHeight = 21.sp, color = K.label2, modifier = Modifier.padding(bottom = 10.dp),
+                    )
+                }
+                // The next events show whether or not the project has items yet.
+                data.detail.upcomingEvents.take(2).forEach { event ->
+                    EventLine(event) { nav.calendarDay(event.startDate?.let(Times::date) ?: event.start?.let(f::day)) }
+                }
                 if (all == 0) {
-                    Blank(stringResource(R.string.project_empty), stringResource(R.string.project_empty_tip), top = 100.dp)
+                    Blank(stringResource(R.string.project_empty), stringResource(R.string.project_empty_tip), top = if (data.detail.upcomingEvents.isEmpty()) 100.dp else 56.dp)
                     return@Scroll
                 }
-                Text(
-                    stringResource(R.string.project_open, project.openCount) +
-                        (if (project.openCount > 0) stringResource(R.string.project_unplanned, data.detail.unplannedCount) else "") +
-                        (if (data.detail.focusWeekMinutes > 0) stringResource(R.string.project_focus_week, f.span(data.detail.focusWeekMinutes)) else ""),
-                    fontSize = 15.sp, lineHeight = 21.sp, color = K.label2, modifier = Modifier.padding(bottom = 10.dp),
-                )
-                data.detail.upcomingEvents.take(2).forEach { event -> EventLine(event) { nav.calendarDay() } }
                 val headings = data.detail.headings.sortedBy { it.position }
                 val loose = data.open.filter { item -> headings.none { it.id == item.headingId } }
                 var first = true
@@ -438,6 +460,9 @@ fun ProjectScreen(id: String) {
                     ItemRows(items, showProject = false)
                     first = false
                 }
+                // A long project loads in batches; the rest is one tap away.
+                val more = data.openTotal - data.open.size
+                if (more > 0) MoreLink(stringResource(R.string.list_more, minOf(200, more), more)) { openLimit += 200 }
                 if (first && project.openCount == 0) NoneLine(stringResource(R.string.project_all_done))
                 if (data.done.isNotEmpty()) {
                     Sec(stringResource(R.string.nav_done), project.doneCount.toString())

@@ -3,6 +3,9 @@
 // documented ones exist here.
 package io.github.lewin671.keduly.api
 
+import io.github.lewin671.keduly.core.Times
+import java.time.LocalDateTime
+import java.time.ZoneId
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
@@ -100,4 +103,19 @@ data class SessionPatch(
     val projectId: Opt<String> = Opt.Keep,
 ) {
     fun toJson(): JsonObject = body("item_id" to itemId, "title" to title, "project_id" to projectId)
+}
+
+/**
+ * The time fields an event form sends. When the user did not touch the date or time they are left
+ * out, so the stored instants stay exactly as they are: a wall-clock time cannot always be turned
+ * back into the instant it came from (an hour repeats when daylight saving ends).
+ */
+fun eventTimes(edited: Boolean, allDay: Boolean, start: LocalDateTime, end: LocalDateTime, zone: ZoneId): EventPatch = when {
+    !edited -> EventPatch()
+    allDay -> EventPatch(allDay = Opt.Put(true), startDate = Opt.Put(start.toLocalDate().toString()), endDate = Opt.Put(end.toLocalDate().toString()))
+    else -> EventPatch(
+        allDay = Opt.Put(false),
+        start = Opt.Put(Times.utc(start.toLocalDate(), start.toLocalTime(), zone)),
+        end = Opt.Put(Times.utc(end.toLocalDate(), end.toLocalTime(), zone)),
+    )
 }

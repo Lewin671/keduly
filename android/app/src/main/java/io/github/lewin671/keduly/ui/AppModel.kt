@@ -24,6 +24,7 @@ import io.github.lewin671.keduly.api.Project
 import io.github.lewin671.keduly.api.SessionStore
 import io.github.lewin671.keduly.api.defaultHttpClient
 import io.github.lewin671.keduly.core.ServerClock
+import io.github.lewin671.keduly.core.WriteQueue
 import io.github.lewin671.keduly.core.Times
 import java.time.LocalDate
 import java.time.ZoneId
@@ -79,7 +80,8 @@ class AppModel(application: Application) : AndroidViewModel(application) {
     val tick = MutableStateFlow(0)
 
     /** True while a write is in flight: every button that writes is disabled meanwhile. */
-    val busy = MutableStateFlow(false)
+    private val writes = WriteQueue()
+    val busy = writes.busy
     val messages = MutableSharedFlow<String>(extraBufferCapacity = 8)
 
     /** Why the account's data could not be loaded, when it could not. */
@@ -258,18 +260,17 @@ class AppModel(application: Application) : AndroidViewModel(application) {
 
     /**
      * Makes one write. It is never retried: when it timed out, what is shown is reloaded so the
-     * user sees whether it arrived before trying again.
+     * user sees whether it arrived before trying again. A write asked for while another is in
+     * flight (text saved as a sheet closes, say) waits its turn instead of being dropped.
      */
-    suspend fun <T> attempt(block: suspend (ApiClient) -> T): Outcome<T> {
-        if (busy.value) return Outcome.Failed
-        busy.value = true
+    suspend fun <T> attempt(block: suspend (ApiClient) -> T): Outcome<T> = writes.run {
         try {
             val value = block(api)
             refresh()
-            return Outcome.Done(value)
+            Outcome.Done(value)
         } catch (e: ApiException) {
             when {
-                e.status == 400 -> return Outcome.Refused(describe(e))
+                e.status == 400 -> return@run Outcome.Refused(describe(e))
                 e.status == 409 -> {
                     messages.tryEmit(text(R.string.error_conflict))
                     refresh()
@@ -281,9 +282,7 @@ class AppModel(application: Application) : AndroidViewModel(application) {
                 e.status == 401 -> Unit
                 else -> messages.tryEmit(describe(e))
             }
-            return Outcome.Failed
-        } finally {
-            busy.value = false
+            Outcome.Failed
         }
     }
 

@@ -123,13 +123,24 @@ class TimesTest {
         assertEquals(EventSpan(at(13, 9, 0), at(13, 10, 0)), EventSpan(at(13, 10, 0), at(13, 10, 0)).withStart(LocalTime.of(9, 0)))
     }
 
-    @Test fun anEndAtOrBeforeTheStartIsOnTheNextDay() {
+    @Test fun anEndAtOrBeforeTheStartOfASingleDayEventIsOnTheNextDay() {
         val span = EventSpan(at(14, 13, 20), at(14, 13, 35))
         assertEquals(at(14, 14, 5), span.withEnd(LocalTime.of(14, 5)).end)
         assertEquals(at(15, 1, 0), span.withEnd(LocalTime.of(1, 0)).end)
         assertEquals(at(15, 13, 20), span.withEnd(LocalTime.of(13, 20)).end)
-        // Choosing a later time again brings the end back to the start's day.
-        assertEquals(at(14, 18, 0), span.withEnd(LocalTime.of(1, 0)).withEnd(LocalTime.of(18, 0)).end)
+    }
+
+    @Test fun changingTheEndTimeKeepsTheEndDate() {
+        // Three days long: only the clock time of the end changes.
+        val long = EventSpan(at(13, 9, 0), at(16, 17, 0))
+        assertEquals(at(16, 12, 30), long.withEnd(LocalTime.of(12, 30)).end)
+        assertEquals(at(16, 8, 0), long.withEnd(LocalTime.of(8, 0)).end)
+        // Once the end is on another day it stays there until the user moves the end date.
+        val overnight = EventSpan(at(14, 13, 20), at(14, 13, 35)).withEnd(LocalTime.of(1, 0))
+        assertEquals(at(15, 18, 0), overnight.withEnd(LocalTime.of(18, 0)).end)
+        assertEquals(at(14, 18, 0), overnight.withEnd(LocalTime.of(18, 0)).withEndDay(LocalDate.of(2026, 10, 14)).end)
+        assertEquals(at(20, 17, 0), long.withEndDay(LocalDate.of(2026, 10, 20)).end)
+        assertEquals(long.start, long.withEndDay(LocalDate.of(2026, 10, 20)).start)
     }
 
     @Test fun movingAnEventsDayKeepsItsTimes() {
