@@ -68,7 +68,7 @@ data class Pick(val item: Item?)
 
 class AppModel(application: Application) : AndroidViewModel(application) {
     val store: SessionStore = KeystoreSessionStore(application)
-    val api = ApiClient(defaultHttpClient(), store) { endSession() }
+    val api = ApiClient(defaultHttpClient(), store) { sessionExpired() }
 
     val phase = MutableStateFlow(if (store.server != null && store.cookie != null) Phase.Starting else Phase.SignedOut)
     val boot = MutableStateFlow<Bootstrap?>(null)
@@ -134,6 +134,15 @@ class AppModel(application: Application) : AndroidViewModel(application) {
     /* ---------- session ---------- */
 
     /** A 401 anywhere: forget the session and everything that was loaded. */
+    /**
+     * The server refused the session. The client has already dropped its cookie, so a cookie that
+     * is there now belongs to a session the user started since, which this must not end.
+     */
+    private fun sessionExpired() {
+        if (synchronized(store) { store.cookie != null }) return
+        endSession()
+    }
+
     private fun endSession() {
         store.clear()
         poll?.cancel()
