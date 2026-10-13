@@ -87,6 +87,19 @@ struct EventSheet: View {
             guard ready else { return }
             end = new.addingTimeInterval(max(300, end.timeIntervalSince(old)))
         }
+        .onChange(of: allDay) { _, on in
+            // The other pair of pickers takes over from what was being edited, not from what was loaded.
+            guard ready else { return }
+            ready = false
+            if on {
+                let days = EventDates.allDay(start: start, end: end, zone: model.zone)
+                startDay = days.lowerBound
+                endDay = days.upperBound
+            } else {
+                (start, end) = EventDates.timed(days: startDay...max(startDay, endDay), previousStart: start, previousEnd: end, zone: model.zone)
+            }
+            DispatchQueue.main.async { ready = true }
+        }
         .onChange(of: startDay) { old, new in
             guard ready else { return }
             endDay = new.adding(days: max(0, old.days(until: endDay)))
@@ -109,8 +122,9 @@ struct EventSheet: View {
         if let event, let s = event.start, let e = event.end {
             start = s
             end = e
-            startDay = model.zone.day(of: s)
-            endDay = startDay
+            let days = EventDates.allDay(start: s, end: e, zone: model.zone)
+            startDay = days.lowerBound
+            endDay = days.upperBound
         } else if let event, let first = event.startDate, let last = event.endDate {
             startDay = first
             endDay = last
@@ -189,7 +203,7 @@ struct SuggestionSheet: View {
                     if loader.failed { ErrorLine(retry: load) }
                     if let suggestions = loader.value {
                         if let suggestion = suggestions.first(where: { $0.id == id }) {
-                            Text(suggestion.title).font(.system(size: 22, weight: .bold))
+                            Text(suggestion.title).font(.app(22, .bold))
                             SuggestionCard(title: SuggestionText.what(suggestion, zone: model.zone, today: model.today), reason: suggestion.reason,
                                            actor: "\(suggestion.actor.name) · \(Format.stamp(suggestion.createdAt, zone: model.zone, today: model.today))",
                                            id: suggestion.id) { dismiss() }

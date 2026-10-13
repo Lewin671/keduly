@@ -105,7 +105,7 @@ struct AllView: View {
 
     private func expand(_ id: String) async {
         guard let limit = limits[id] else { return }
-        if let page = try? await model.api.items(.init(projectId: id, limit: min(200, limit))) {
+        if let page = try? await model.api.items(.init(projectId: id), upTo: limit) {
             more[id] = page.items
         }
     }
@@ -167,7 +167,7 @@ struct DoneView: View {
                         ProgressView().frame(maxWidth: .infinity).padding(.vertical, 16)
                             .task { await list.more(model, query, step: 50) }
                     } else {
-                        Text(L("done.end")).font(.system(size: 13)).foregroundStyle(Palette.label3)
+                        Text(L("done.end")).font(.app(13)).foregroundStyle(Palette.label3)
                             .frame(maxWidth: .infinity).padding(.vertical, 18)
                     }
                 }

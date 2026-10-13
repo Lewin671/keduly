@@ -73,8 +73,8 @@ struct StatsView: View {
 
     private func figure(_ value: String, _ unit: String, _ caption: String) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            (Text(value).font(.system(size: 28, weight: .bold)) + Text(unit).font(.system(size: 15, weight: .semibold))).tracking(-0.4).lineLimit(1)
-            Text(caption).font(.system(size: 13)).foregroundStyle(Palette.label2)
+            (Text(value).font(.app(28, .bold)) + Text(unit).font(.app(15, .semibold))).tracking(-0.4).lineLimit(1)
+            Text(caption).font(.app(13)).foregroundStyle(Palette.label2)
         }
         .accessibilityElement(children: .combine)
     }
@@ -89,7 +89,7 @@ struct StatsView: View {
             HStack(alignment: .bottom, spacing: 0) {
                 ForEach(stats.days, id: \.date) { day in
                     VStack(spacing: 3) {
-                        Text(day.tomatoes > 0 ? String(day.tomatoes) : "").font(.system(size: 12, weight: .semibold)).foregroundStyle(Palette.label2)
+                        Text(day.tomatoes > 0 ? String(day.tomatoes) : "").font(.app(12, .semibold)).foregroundStyle(Palette.label2)
                         VStack(spacing: 0) {
                             ForEach(Array(day.projects.filter { $0.tomatoes > 0 }.reversed().enumerated()), id: \.offset) { _, amount in
                                 Rectangle().fill(amountColor(amount)).frame(height: CGFloat(amount.tomatoes) * unit)
@@ -109,7 +109,7 @@ struct StatsView: View {
                 if average > 0 {
                     HStack(spacing: 6) {
                         Line().stroke(Palette.label3, style: StrokeStyle(lineWidth: 1, dash: [3, 3])).frame(height: 1)
-                        Text(L("stats.average")).font(.system(size: 11)).foregroundStyle(Palette.label2).frame(width: 28, alignment: .leading)
+                        Text(L("stats.average")).font(.app(11)).foregroundStyle(Palette.label2).frame(width: 28, alignment: .leading)
                     }
                     .offset(y: -CGFloat(average) * unit + 6)
                 }
@@ -146,13 +146,13 @@ struct StatsView: View {
         VStack(spacing: 6) {
             HStack(spacing: 5) {
                 ColorDot(color: amountColor(amount))
-                Text(model.project(amount.projectId)?.name ?? L("stats.noProject")).font(.system(size: 17)).lineLimit(1)
+                Text(model.project(amount.projectId)?.name ?? L("stats.noProject")).font(.app(17)).lineLimit(1)
                 Spacer(minLength: 8)
                 HStack(spacing: 2) {
                     TomatoMark()
                     Text("\(amount.tomatoes) · \(Format.span(amount.minutes))")
                 }
-                .font(.system(size: 15)).foregroundStyle(Palette.label2).fixedSize()
+                .font(.app(15)).foregroundStyle(Palette.label2).fixedSize()
             }
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
@@ -180,14 +180,14 @@ struct StatsView: View {
                 Button { router.sheet = .filing(session) } label: {
                     HStack(spacing: 10) {
                         Text("\(model.zone.hhmm(session.start))–\(model.zone.hhmm(session.end))")
-                            .font(.system(size: 15)).foregroundStyle(Palette.label2).monospacedDigit().frame(width: 96, alignment: .leading)
-                        Text(session.title.isEmpty ? L("focus.free") : session.title).font(.system(size: 17)).lineLimit(1)
+                            .font(.app(15)).foregroundStyle(Palette.label2).monospacedDigit().frame(width: 96, alignment: .leading)
+                        Text(session.title.isEmpty ? L("focus.free") : session.title).font(.app(17)).lineLimit(1)
                             .frame(maxWidth: .infinity, alignment: .leading)
                         if session.completed {
                             TomatoMark()
                         } else {
                             let minutes = Int(session.end.timeIntervalSince(session.start) / 60)
-                            Text(L("stats.unfinished", Format.span(minutes))).font(.system(size: 13)).foregroundStyle(Palette.label2).fixedSize()
+                            Text(L("stats.unfinished", Format.span(minutes))).font(.app(13)).foregroundStyle(Palette.label2).fixedSize()
                         }
                     }
                     .frame(minHeight: 44)

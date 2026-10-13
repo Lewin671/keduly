@@ -21,8 +21,8 @@ struct SignInView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
                     .padding(.top, 56)
                     .accessibilityHidden(true)
-                Text("Keduly").font(.system(size: 28, weight: .bold)).padding(.top, 14)
-                Text(registering ? L("auth.registerLead") : L("auth.loginLead")).font(.system(size: 15)).foregroundStyle(Palette.label2).padding(.top, 4)
+                Text("Keduly").font(.app(28, .bold)).padding(.top, 14)
+                Text(registering ? L("auth.registerLead") : L("auth.loginLead")).font(.app(15)).foregroundStyle(Palette.label2).padding(.top, 4)
 
                 GroupCard {
                     field(L("auth.server"), last: false) {
@@ -51,7 +51,7 @@ struct SignInView: View {
                 .padding(.top, 28)
 
                 if let error {
-                    Text(error).font(.system(size: 13)).foregroundStyle(Palette.red)
+                    Text(error).font(.app(13)).foregroundStyle(Palette.red)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, 16).padding(.top, 8)
                         .accessibilityIdentifier("signin-error")
@@ -68,7 +68,7 @@ struct SignInView: View {
                         registering.toggle()
                         error = nil
                     }
-                    .font(.system(size: 15))
+                    .font(.app(15))
                     .frame(minHeight: 44)
                     .padding(.top, 6)
                     .accessibilityIdentifier("signin-toggle")
@@ -91,8 +91,8 @@ struct SignInView: View {
 
     private func field<Content: View>(_ title: String, last: Bool, @ViewBuilder content: () -> Content) -> some View {
         HStack(spacing: 12) {
-            Text(title).font(.system(size: 17)).frame(width: 64, alignment: .leading)
-            content().font(.system(size: 17))
+            Text(title).font(.app(17)).frame(width: 64, alignment: .leading)
+            content().font(.app(17))
         }
         .padding(.horizontal, 16)
         .frame(minHeight: 48)

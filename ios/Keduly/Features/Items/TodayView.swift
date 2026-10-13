@@ -23,6 +23,13 @@ struct TodayView: View {
         .navigationTitle(L("nav.today"))
         .toolbar { ToolbarItem(placement: .topBarTrailing) { BellButton() } }
         .task(id: model.dataVersion) { await load() }
+        .task {
+            // The free time is counted from now, so the sentence goes stale by itself: ask again every minute.
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(60))
+                if !Task.isCancelled { await load() }
+            }
+        }
     }
 
     private func load() async {
@@ -44,7 +51,7 @@ struct TodayView: View {
                 router.calendarMode = .day
                 router.tab = .calendar
             } label: {
-                Text(L("list.moreEvents", today.events.count - 5)).font(.system(size: 15)).foregroundStyle(Palette.tint)
+                Text(L("list.moreEvents", today.events.count - 5)).font(.app(15)).foregroundStyle(Palette.tint)
                     .frame(maxWidth: .infinity, minHeight: 36, alignment: .leading)
                     .padding(.leading, 55)
                     .contentShape(Rectangle())
@@ -64,13 +71,13 @@ struct TodayView: View {
         }
         SectionHeader(L("today.items"), trailing: String(daytime.filter { !$0.isDone }.count))
         if daytime.isEmpty {
-            Text(L("matrix.none")).font(.system(size: 15)).foregroundStyle(Palette.label3).padding(.leading, 34).padding(.top, 12)
+            Text(L("matrix.none")).font(.app(15)).foregroundStyle(Palette.label3).padding(.leading, 34).padding(.top, 12)
         } else {
             ItemRows(items: daytime, showPlan: false)
         }
         if !evening.isEmpty {
             SectionHeader(title: L("when.tonight"), trailing: String(evening.filter { !$0.isDone }.count)) {
-                Image(systemName: "moon.fill").font(.system(size: 15)).foregroundStyle(Color(uiColor: Palette.indigoUI))
+                Image(systemName: "moon.fill").font(.app(15)).foregroundStyle(Color(uiColor: Palette.indigoUI))
             }
             ItemRows(items: evening, showPlan: false)
         }
@@ -84,6 +91,6 @@ struct TodayView: View {
             case .warning(let s): return text + Text(s).foregroundStyle(Palette.red).fontWeight(.semibold)
             }
         }
-        .font(.system(size: 15))
+        .font(.app(15))
     }
 }

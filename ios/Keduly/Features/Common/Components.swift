@@ -67,7 +67,7 @@ struct ErrorLine: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            Text(L("error.network")).font(.system(size: 15)).foregroundStyle(Palette.label2)
+            Text(L("error.network")).font(.app(15)).foregroundStyle(Palette.label2)
             Spacer()
             Button(L("common.retry")) {
                 busy = true
@@ -76,7 +76,7 @@ struct ErrorLine: View {
                     busy = false
                 }
             }
-            .font(.system(size: 15, weight: .semibold))
+            .font(.app(15, .semibold))
             .disabled(busy)
         }
         .padding(.vertical, 10)
@@ -94,12 +94,13 @@ struct LargeTitle<Leading: View>: View {
         HStack(alignment: .firstTextBaseline, spacing: 10) {
             leading.alignmentGuide(.firstTextBaseline) { $0[.bottom] - 4 }
             Text(text)
-                .font(.system(size: 34, weight: .bold))
+                .font(.app(34, .bold))
                 .tracking(-0.6)
                 .lineLimit(lineLimit)
+                .minimumScaleFactor(lineLimit == 1 ? 0.6 : 1)
                 .accessibilityAddTraits(.isHeader)
             if let detail {
-                Text(detail).font(.system(size: 17)).foregroundStyle(Palette.label2).lineLimit(1)
+                Text(detail).font(.app(17)).foregroundStyle(Palette.label2).lineLimit(1)
             }
         }
         .padding(.top, 2)
@@ -125,10 +126,10 @@ struct SectionHeader<Icon: View>: View {
         VStack(spacing: 0) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 icon
-                Text(title).font(.system(size: 20, weight: .bold)).tracking(-0.4).foregroundStyle(color).lineLimit(1)
-                if let note { Text(note).font(.system(size: 13)).foregroundStyle(Palette.label2).lineLimit(1) }
+                Text(title).font(.app(20, .bold)).tracking(-0.4).foregroundStyle(color).lineLimit(1)
+                if let note { Text(note).font(.app(13)).foregroundStyle(Palette.label2).lineLimit(1) }
                 Spacer(minLength: 8)
-                if let trailing { Text(trailing).font(.system(size: 13)).foregroundStyle(Palette.label2).lineLimit(1) }
+                if let trailing { Text(trailing).font(.app(13)).foregroundStyle(Palette.label2).lineLimit(1) }
             }
             .padding(.top, 22)
             .padding(.bottom, 7)
@@ -153,8 +154,8 @@ struct Blank: View {
 
     var body: some View {
         VStack(spacing: 6) {
-            Text(title).font(.system(size: 20, weight: .semibold)).foregroundStyle(Palette.label)
-            Text(text).font(.system(size: 15)).foregroundStyle(Palette.label2).multilineTextAlignment(.center)
+            Text(title).font(.app(20, .semibold)).foregroundStyle(Palette.label)
+            Text(text).font(.app(15)).foregroundStyle(Palette.label2).multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
         .padding(.top, top)
@@ -301,14 +302,14 @@ struct GroupRow<Icon: View, Accessory: View>: View {
         HStack(spacing: 13) {
             icon.frame(width: 25)
             HStack(spacing: 8) {
-                Text(title).font(.system(size: 17)).foregroundStyle(titleColor).lineLimit(1)
+                Text(title).font(.app(17)).foregroundStyle(titleColor).lineLimit(1)
                 Spacer(minLength: 4)
                 accessory
                 if let value {
-                    Text(value).font(.system(size: 17)).foregroundStyle(valueColor).lineLimit(1).layoutPriority(1)
+                    Text(value).font(.app(17)).foregroundStyle(valueColor).lineLimit(1).layoutPriority(1)
                 }
                 if chevron {
-                    Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold)).foregroundStyle(Palette.label3)
+                    Image(systemName: "chevron.right").font(.app(13, .semibold)).foregroundStyle(Palette.label3)
                 }
             }
             .padding(.trailing, 12)
@@ -334,7 +335,7 @@ struct CapsuleButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: height > 40 ? 17 : 15, weight: .semibold))
+            .font(.app(height > 40 ? 17 : 15, .semibold))
             .lineLimit(1)
             .minimumScaleFactor(0.8)
             .frame(maxWidth: .infinity, minHeight: height)
@@ -379,7 +380,7 @@ struct MoreLink: View {
 
     var body: some View {
         AsyncButton(action: action) {
-            Text(title).font(.system(size: 15)).foregroundStyle(Palette.tint)
+            Text(title).font(.app(15)).foregroundStyle(Palette.tint)
                 .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
                 .padding(.leading, indent)
                 .contentShape(Rectangle())
@@ -399,7 +400,7 @@ struct BellButton: View {
                 .overlay(alignment: .topTrailing) {
                     if model.counts.pending > 0 {
                         Text(Format.cap(model.counts.pending))
-                            .font(.system(size: 11, weight: .semibold))
+                            .font(.app(11, .semibold))
                             .foregroundStyle(.white)
                             .padding(.horizontal, 5)
                             .frame(minWidth: 17, minHeight: 17)
@@ -425,13 +426,13 @@ struct EventLine: View {
         let color = Palette.project(model.project(event.projectId)?.color)
         Button { router.open(event) } label: {
             HStack(spacing: 9) {
-                Text(time).font(.system(size: 13)).monospacedDigit().fixedSize().frame(minWidth: 43, alignment: .leading)
+                Text(time).font(.app(13)).monospacedDigit().fixedSize().frame(minWidth: 43, alignment: .leading)
                 if event.status == .tentative {
                     DashedBar(color: color).frame(width: 3, height: 16)
                 } else {
                     RoundedRectangle(cornerRadius: 2).fill(color).frame(width: 3, height: 16)
                 }
-                Text(event.title).font(.system(size: 15)).lineLimit(1).strikethrough(event.status == .leaving)
+                Text(event.title).font(.app(15)).lineLimit(1).strikethrough(event.status == .leaving)
                 if event.status == .tentative { PendingTag(text: L("cal.pending")) }
                 Spacer(minLength: 0)
             }
@@ -470,7 +471,7 @@ struct PendingTag: View {
 
     var body: some View {
         Text(text)
-            .font(.system(size: 12))
+            .font(.app(12))
             .foregroundStyle(Palette.label2)
             .padding(.horizontal, 6)
             .padding(.vertical, 1)
@@ -486,7 +487,7 @@ struct NoticeBanner: View {
     var body: some View {
         if let notice = model.notice {
             Text(notice)
-                .font(.system(size: 15, weight: .medium))
+                .font(.app(15, .medium))
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 11)

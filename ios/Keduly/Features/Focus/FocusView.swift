@@ -58,7 +58,7 @@ struct FocusView: View {
         VStack(spacing: 0) {
             Spacer(minLength: 0)
             Text(L("focus.nth", focus.tomatoesToday + (focus.state == .over ? 0 : 1)))
-                .font(.system(size: 15, weight: .semibold)).foregroundStyle(Palette.label2)
+                .font(.app(15, .semibold)).foregroundStyle(Palette.label2)
             if running, let session = focus.session {
                 TimelineView(.periodic(from: .now, by: 0.5)) { _ in
                     let now = model.serverNow
@@ -107,7 +107,7 @@ struct FocusView: View {
                 .accessibilityIdentifier("focus-start")
             }
             Text(focus.tomatoesToday > 0 || focus.minutesToday > 0 ? L("focus.todayTotal", focus.tomatoesToday, Format.span(focus.minutesToday)) : L("stats.noStreak"))
-                .font(.system(size: 13)).foregroundStyle(Palette.label2)
+                .font(.app(13)).foregroundStyle(Palette.label2)
                 .padding(.top, 12)
                 .padding(.bottom, 10)
         }
@@ -117,8 +117,8 @@ struct FocusView: View {
     /// The detail names the project, which gives way first, and then what must stay readable.
     private func subject(title: String, detail: String?, suffix: String? = nil, color: Color?, chevron: Bool) -> some View {
         VStack(spacing: 3) {
-            (Text(title) + (chevron ? Text("  ") + Text(Image(systemName: "chevron.down")).font(.system(size: 12, weight: .bold)).foregroundStyle(Palette.label3) : Text("")))
-                .font(.system(size: 20, weight: .semibold)).tracking(-0.4)
+            (Text(title) + (chevron ? Text("  ") + Text(Image(systemName: "chevron.down")).font(.app(12, .bold)).foregroundStyle(Palette.label3) : Text("")))
+                .font(.app(20, .semibold)).tracking(-0.4)
                 .lineLimit(2).multilineTextAlignment(.center)
             if let detail, !detail.isEmpty {
                 HStack(spacing: 5) {
@@ -126,7 +126,7 @@ struct FocusView: View {
                     Text(detail).lineLimit(1)
                     if let suffix { Text("· \(suffix)").lineLimit(1).fixedSize() }
                 }
-                .font(.system(size: 15)).foregroundStyle(Palette.label2)
+                .font(.app(15)).foregroundStyle(Palette.label2)
             }
         }
         .padding(.horizontal, 6)
@@ -151,8 +151,8 @@ struct TimerPage: View {
             HStack {
                 Button { withAnimation { router.timerExpanded = false } } label: {
                     HStack(spacing: 3) {
-                        Image(systemName: "chevron.down").font(.system(size: 13, weight: .bold))
-                        Text(L("focus.collapse")).font(.system(size: 15, weight: .medium))
+                        Image(systemName: "chevron.down").font(.app(13, .bold))
+                        Text(L("focus.collapse")).font(.app(15, .medium))
                     }
                     .foregroundStyle(Palette.label)
                     .padding(.leading, 11)
@@ -169,7 +169,7 @@ struct TimerPage: View {
             .padding(.leading, 16)
 
             Spacer(minLength: 0)
-            Text(label).font(.system(size: 15, weight: .semibold)).foregroundStyle(Palette.label2)
+            Text(label).font(.app(15, .semibold)).foregroundStyle(Palette.label2)
                 .accessibilityIdentifier("timer-label")
             dial(color).padding(.top, 18)
             subject.padding(.top, 22)
@@ -179,7 +179,7 @@ struct TimerPage: View {
             HStack(spacing: 10) { actions }
                 .padding(.horizontal, Metrics.pageMargin)
             Text(focus.state == .work ? L("focus.noPause") : " ")
-                .font(.system(size: 13)).foregroundStyle(Palette.label2)
+                .font(.app(13)).foregroundStyle(Palette.label2)
                 .padding(.top, 12)
                 .padding(.bottom, 16)
         }
@@ -222,7 +222,7 @@ struct TimerPage: View {
         let free = session.itemId == nil && focus.state != .rest
         VStack(spacing: 3) {
             Text(focus.state == .rest ? L("focus.resting") : session.title.isEmpty ? L("focus.free") : session.title)
-                .font(.system(size: 20, weight: .semibold)).tracking(-0.4)
+                .font(.app(20, .semibold)).tracking(-0.4)
                 .lineLimit(2).multilineTextAlignment(.center)
             if focus.state != .rest {
                 HStack(spacing: 5) {
@@ -244,7 +244,7 @@ struct TimerPage: View {
                         .accessibilityIdentifier("timer-file")
                     }
                 }
-                .font(.system(size: 15))
+                .font(.app(15))
             }
         }
         .padding(.horizontal, 26)
@@ -308,20 +308,20 @@ struct TimerStrip: View {
             HStack(spacing: 9) {
                 if focus.state == .over {
                     TomatoMark(size: 20)
-                    Text(L("focus.timeUp")).font(.system(size: 15, weight: .semibold))
+                    Text(L("focus.timeUp")).font(.app(15, .semibold))
                 } else {
                     TimelineView(.periodic(from: .now, by: 1)) { _ in
                         let now = model.serverNow
                         HStack(spacing: 9) {
                             MiniRing(color: color, fraction: FocusMath.fractionLeft(end: session.end, plannedMinutes: session.plannedMinutes, now: now))
-                            Text(FocusMath.mmss(FocusMath.secondsLeft(end: session.end, now: now))).font(.system(size: 15, weight: .semibold)).monospacedDigit()
+                            Text(FocusMath.mmss(FocusMath.secondsLeft(end: session.end, now: now))).font(.app(15, .semibold)).monospacedDigit()
                         }
                     }
                 }
                 Text(focus.state == .rest ? L("focus.resting") : session.title.isEmpty ? L("focus.free") : session.title)
-                    .font(.system(size: 15)).foregroundStyle(Palette.label2).lineLimit(1)
+                    .font(.app(15)).foregroundStyle(Palette.label2).lineLimit(1)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold)).foregroundStyle(Palette.label3)
+                Image(systemName: "chevron.right").font(.app(13, .semibold)).foregroundStyle(Palette.label3)
             }
             .foregroundStyle(Palette.label)
             .padding(.leading, 13)

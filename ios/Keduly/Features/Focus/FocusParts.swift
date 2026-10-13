@@ -17,6 +17,7 @@ struct Dial<Center: View>: View {
         }
         .padding(4.5)
         .frame(width: 272, height: 272)
+        .dynamicTypeSize(...AppType.fixedLayoutLimit)
     }
 }
 
@@ -26,9 +27,9 @@ struct DialFigures: View {
 
     var body: some View {
         VStack(spacing: 4) {
-            Text(time).font(.system(size: 72, weight: .ultraLight)).monospacedDigit().tracking(-2)
+            Text(time).font(.app(72, .ultraLight)).monospacedDigit().tracking(-2)
                 .accessibilityIdentifier("dial-time")
-            Text(caption).font(.system(size: 13)).foregroundStyle(Palette.label2)
+            Text(caption).font(.app(13)).foregroundStyle(Palette.label2)
         }
     }
 }
@@ -42,7 +43,7 @@ struct RoundMarks: View {
             ForEach(0..<max(1, focus.roundSize), id: \.self) { index in
                 TomatoMark(filled: index < focus.roundDone, size: 22)
             }
-            Text(text).font(.system(size: 13)).foregroundStyle(Palette.label2).padding(.leading, 5)
+            Text(text).font(.app(13)).foregroundStyle(Palette.label2).padding(.leading, 5)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(focus.roundDone)/\(focus.roundSize) \(text)")
@@ -129,8 +130,8 @@ struct FocusPickerSheet: View {
         HStack(spacing: 10) {
             VStack(alignment: .leading, spacing: 2) {
                 (Text(important ? "! " : "").foregroundStyle(Palette.orange).fontWeight(.heavy) + Text(title))
-                    .font(.system(size: 17)).lineLimit(2).multilineTextAlignment(.leading)
-                Text(detail).font(.system(size: 13)).foregroundStyle(Palette.label2).lineLimit(1)
+                    .font(.app(17)).lineLimit(2).multilineTextAlignment(.leading)
+                Text(detail).font(.app(13)).foregroundStyle(Palette.label2).lineLimit(1)
             }
             Spacer(minLength: 0)
             if selected { Image(systemName: "checkmark").fontWeight(.semibold).foregroundStyle(Palette.tint) }
@@ -219,7 +220,7 @@ struct FilingSheet: View {
     /// The project's open items; without a project, today's.
     private func loadItems() async {
         if let project = session.projectId {
-            items = (try? await model.api.items(.init(projectId: project, limit: 200)))?.items ?? []
+            items = (try? await model.api.items(.init(projectId: project), upTo: .max))?.items ?? []
         } else {
             items = FocusPicker.candidates(try? await model.api.today())
         }

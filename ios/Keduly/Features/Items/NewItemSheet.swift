@@ -24,7 +24,7 @@ struct NewItemSheet: View {
             HStack {
                 Button(L("common.cancel")) { dismiss() }
                 Spacer()
-                Text(L("item.new")).font(.system(size: 17, weight: .semibold))
+                Text(L("item.new")).font(.app(17, .semibold))
                 Spacer()
                 Button(L("common.add")) { Task { await add() } }
                     .fontWeight(.semibold)
@@ -35,7 +35,7 @@ struct NewItemSheet: View {
             .padding(.horizontal, 4)
 
             TextField(L("item.placeholder"), text: $title, axis: .vertical)
-                .font(.system(size: 22, weight: .semibold))
+                .font(.app(22, .semibold))
                 .lineLimit(1...3)
                 .focused($focused)
                 .submitLabel(.done)
@@ -51,7 +51,7 @@ struct NewItemSheet: View {
                 .accessibilityIdentifier("new-item-title")
 
             if let error {
-                Text(error).font(.system(size: 13)).foregroundStyle(Palette.red).padding(.horizontal, 4).padding(.top, 6)
+                Text(error).font(.app(13)).foregroundStyle(Palette.red).padding(.horizontal, 4).padding(.top, 6)
             }
 
             FlowLayout(spacing: 8) {
@@ -125,12 +125,12 @@ struct NewItemSheet: View {
 
     private func chipLabel(_ symbol: String, _ text: String, set: Bool, tint: Color = Palette.label) -> some View {
         HStack(spacing: 6) {
-            Image(systemName: symbol).font(.system(size: 13, weight: .medium))
-            Text(text).font(.system(size: 15)).lineLimit(1)
+            Image(systemName: symbol).font(.app(13, .medium))
+            Text(text).font(.app(15)).lineLimit(1)
         }
         .foregroundStyle(set ? tint : Palette.label2)
         .padding(.horizontal, 12)
-        .frame(height: 34)
+        .frame(minHeight: 34)
         .frame(maxWidth: 240)
         .background(Palette.cell, in: Capsule())
         .contentShape(Capsule())

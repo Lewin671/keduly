@@ -197,6 +197,7 @@
 "project.allPlanned" = "，都已排进日历";
 "project.showDone" = "显示 %ld 件已完成";
 "project.focusWeek" = " · 本周已专注 %@";
+"project.focusWeekOnly" = "本周已专注 %@";
 "color.blue" = "蓝色";
 "color.indigo" = "靛色";
 "color.orange" = "橙色";

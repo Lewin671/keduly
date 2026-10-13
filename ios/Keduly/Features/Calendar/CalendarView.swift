@@ -117,7 +117,7 @@ struct MonthView: View {
             VStack(alignment: .leading, spacing: 0) {
                 HStack(spacing: 0) {
                     ForEach(Format.weekdayLetters, id: \.self) { letter in
-                        Text(letter).font(.system(size: 11, weight: .semibold)).foregroundStyle(Palette.label3).frame(maxWidth: .infinity)
+                        Text(letter).font(.app(11, .semibold)).foregroundStyle(Palette.label3).frame(maxWidth: .infinity)
                     }
                 }
                 .padding(.bottom, 4)
@@ -129,13 +129,14 @@ struct MonthView: View {
                     })
             }
             .padding(.horizontal, Metrics.pageMargin - 8)
+            .dynamicTypeSize(...AppType.fixedLayoutLimit)
 
             Divider().padding(.top, 6)
             HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(L("date.md", day.month, day.day)).font(.system(size: 17, weight: .semibold))
-                Text(Format.weekdayLong(day)).font(.system(size: 15)).foregroundStyle(Palette.label2)
+                Text(L("date.md", day.month, day.day)).font(.app(17, .semibold))
+                Text(Format.weekdayLong(day)).font(.app(15)).foregroundStyle(Palette.label2)
                 Spacer()
-                if !entries.isEmpty { Text(L("cal.count", entries.count)).font(.system(size: 13)).foregroundStyle(Palette.label2) }
+                if !entries.isEmpty { Text(L("cal.count", entries.count)).font(.app(13)).foregroundStyle(Palette.label2) }
             }
             .padding(.horizontal, Metrics.pageMargin)
             .padding(.top, 11)
@@ -143,7 +144,7 @@ struct MonthView: View {
 
             VStack(alignment: .leading, spacing: 0) {
                 if entries.isEmpty {
-                    Text(L("cal.none")).font(.system(size: 15)).foregroundStyle(Palette.label2).padding(.vertical, 14)
+                    Text(L("cal.none")).font(.app(15)).foregroundStyle(Palette.label2).padding(.vertical, 14)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 ForEach(Array(entries.enumerated()), id: \.element.entryKey) { offset, event in
@@ -222,9 +223,10 @@ struct AgendaRow: View {
                         Text(model.zone.hhmm(end)).foregroundStyle(Palette.label2)
                     }
                 }
-                .font(.system(size: 13))
+                .font(.app(13))
                 .monospacedDigit()
-                .frame(width: 43, alignment: .leading)
+                .fixedSize()
+                .frame(minWidth: 43, alignment: .leading)
                 .padding(.top, 7)
                 Group {
                     if event.status == .tentative { DashedBar(color: color) } else { RoundedRectangle(cornerRadius: 2).fill(color) }
@@ -232,8 +234,8 @@ struct AgendaRow: View {
                 .frame(width: 4)
                 .padding(.vertical, 7)
                 VStack(alignment: .leading, spacing: 0) {
-                    Text(event.title).font(.system(size: 17)).foregroundStyle(Palette.label).lineLimit(1).strikethrough(event.status == .leaving)
-                    Text(detail(project)).font(.system(size: 13)).foregroundStyle(Palette.label2).lineLimit(1)
+                    Text(event.title).font(.app(17)).foregroundStyle(Palette.label).lineLimit(1).strikethrough(event.status == .leaving)
+                    Text(detail(project)).font(.app(13)).foregroundStyle(Palette.label2).lineLimit(1)
                 }
                 .padding(.top, 6)
                 .padding(.bottom, 7)

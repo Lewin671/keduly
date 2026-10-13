@@ -32,7 +32,7 @@ struct MatrixView: View {
         SectionHeader(L("matrix.\(key.rawValue)"), note: L("matrix.\(key.rawValue)Label"),
                       trailing: key == .plan && quadrant.unplanned > 0 ? L("matrix.unplanned", quadrant.unplanned) : String(quadrant.total))
         if items.isEmpty {
-            Text(L("matrix.none")).font(.system(size: 15)).foregroundStyle(Palette.label3).padding(.leading, 34).padding(.top, 12).padding(.bottom, 4)
+            Text(L("matrix.none")).font(.app(15)).foregroundStyle(Palette.label3).padding(.leading, 34).padding(.top, 12).padding(.bottom, 4)
         } else {
             ItemRows(items: items)
             if quadrant.total > items.count {
@@ -47,7 +47,7 @@ struct MatrixView: View {
     }
 
     private func expand(_ key: QuadrantKey) async {
-        if let page = try? await model.api.items(.init(quadrant: key, limit: 200)) {
+        if let page = try? await model.api.items(.init(quadrant: key), upTo: .max) {
             full[key] = page.items
         }
     }

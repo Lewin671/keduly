@@ -81,6 +81,28 @@ extension APIClient {
         return try await get("/items", query)
     }
 
+    /// The first `count` items of a list, however many pages that takes: the server gives at most
+    /// 200 at a time. `nextCursor` of the result continues after the last item returned.
+    func items(_ q: ItemQuery, upTo count: Int) async throws -> ItemPage {
+        var query = q
+        query.cursor = nil
+        var items: [Item] = []
+        var total = 0
+        var cursor: String?
+        repeat {
+            query.limit = min(Self.pageLimit, count - items.count)
+            query.cursor = cursor
+            let page = try await self.items(query)
+            items += page.items
+            total = page.total
+            cursor = page.nextCursor
+            if page.items.isEmpty { break }
+        } while cursor != nil && items.count < count
+        return ItemPage(items: items, nextCursor: cursor, total: total)
+    }
+
+    static let pageLimit = 200
+
     func item(_ id: String) async throws -> Item {
         try await get("/items/\(id)", key: "item")
     }

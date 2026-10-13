@@ -202,6 +202,13 @@ final class FlowTests: XCTestCase {
         let when = wait(element("row-when"))
         XCTAssertTrue(wait(when.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", ":")).firstMatch).exists)
         shot("05-item-scheduled")
+        // A day without a time takes the block off the calendar again.
+        tap("row-when")
+        wait(app.buttons["今晚"]).tap()
+        wait(element("row-when"))
+        let stored = try XCTUnwrap((try api("GET", "/items?q=\(title.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)", cookie: try session()).json["items"] as? [[String: Any]])?.first)
+        XCTAssertTrue(stored["block"] is NSNull, "the time block is still there")
+        XCTAssertEqual(stored["evening"] as? Bool, true)
         tap("item-done")
         wait(text("明天截止"))
         // Complete, and take it back: the row stays in place.

@@ -91,6 +91,39 @@ extension UIColor {
     }
 }
 
+extension Font {
+    /// The system font at one of the design's sizes, following Dynamic Type.
+    ///
+    /// Each size the design uses is the default size of a system text style, so text looks the
+    /// same at the default setting and grows with the user's. A size that belongs to no style
+    /// stays fixed: those are the places that cannot grow (the dial, the tab bar, the day numbers).
+    static func app(_ size: CGFloat, _ weight: Font.Weight = .regular) -> Font {
+        guard let style = AppType.style(for: size) else { return .system(size: size, weight: weight) }
+        return .system(style).weight(weight)
+    }
+}
+
+enum AppType {
+    static func style(for size: CGFloat) -> Font.TextStyle? {
+        switch size {
+        case 34: return .largeTitle
+        case 28: return .title
+        case 22: return .title2
+        case 20: return .title3
+        case 17: return .body
+        case 16: return .callout
+        case 15: return .subheadline
+        case 13: return .footnote
+        case 12: return .caption
+        case 11, 11.5: return .caption2
+        default: return nil
+        }
+    }
+
+    /// The largest setting for parts whose frame is fixed: the tab bar, the calendar grid, the time axis, the chart.
+    static let fixedLayoutLimit = DynamicTypeSize.xLarge
+}
+
 /// The height the floating tab bar takes at the bottom of a page.
 enum Metrics {
     static let tabBarHeight: CGFloat = 62
