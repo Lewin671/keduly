@@ -140,11 +140,17 @@ class AppModel(application: Application) : AndroidViewModel(application) {
      */
     private fun sessionExpired() {
         if (synchronized(store) { store.cookie != null }) return
-        endSession()
+        // Nothing is cleared from the store here, so a sign-in that completes meanwhile keeps its cookie.
+        leaveSession()
     }
 
     private fun endSession() {
         store.clear()
+        leaveSession()
+    }
+
+    /** Forgets everything loaded for the session and shows the sign-in screen. */
+    private fun leaveSession() {
         poll?.cancel()
         boot.value = null
         today.value = null
