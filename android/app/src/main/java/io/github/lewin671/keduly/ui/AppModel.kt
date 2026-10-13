@@ -195,6 +195,12 @@ class AppModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    suspend fun finishDeviceSignIn() {
+        if (store.cookie == null) throw ApiException(200, "bad_response", "missing authorized session")
+        phase.value = Phase.Starting
+        start()
+    }
+
     fun signOut() {
         viewModelScope.launch {
             busy.value = true

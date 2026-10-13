@@ -578,7 +578,12 @@ function stats() {
   return { nav: nav({ back: '专注' }), tab: 'focus', body: `<h2 class="lt">统计</h2><div class="figs"><div><b>2<small>个</small></b><span>今天</span></div><div><b>18<small>个</small></b><span>最近 7 天</span></div><div><b>2.6<small>个</small></b><span>日均</span></div><div><b>5<small>天</small></b><span>连续</span></div></div><div class="chart">${bars}<span></span><div class="avg" style="bottom:${2.600 * unit}px"><span>日均</span></div></div><div class="cx">${'一二三四五六'.split('').map(d => `<span>${d}</span>`).join('')}<span class="td">日</span><span></span></div>${sec('时间花在哪')}${rows}${sec('今天', '2 个番茄')}${recs}<button class="link">更早的记录</button>` };
 }
 
+function authorization() {
+  return { cls: 'grouped', nav: nav({ left: '<button class="back">取消</button>' }), body: `<div style="padding:36px 24px;text-align:center"><h2>在已登录的浏览器中授权</h2><p style="margin:16px 0;color:var(--label2)">打开授权链接，输入下面的确认码。授权后此设备会自动登录。</p><div style="font-size:36px;letter-spacing:12px;padding:24px 0">4826</div><p style="color:var(--label2);font-size:14px">等待授权 · 两分钟内有效</p><button style="display:block;margin:28px auto 16px;color:var(--tint)">在浏览器中授权</button><button style="color:var(--tint)">分享授权链接</button><p style="margin-top:20px;font-size:12px;color:var(--label2);overflow-wrap:anywhere">https://keduly.example.com/#approve=example</p><p style="margin-top:32px;color:var(--red)">授权已过期或取消</p><button style="margin-top:12px;color:var(--tint)">重新请求授权</button></div>` };
+}
+
 const SCREENS = [
+  ['Device authorization', 'Sign-in offers 授权登录 after entering the server. The request shows a separate pin and an approval link to open or share with an already signed-in browser. Expiry and cancellation stop polling; retry is explicit. No password or claim secret is shown.', authorization],
   ['Items root', 'The top of the items tab: the lists, then projects grouped by area. The gear is only here.', lists],
   ['Matrix, the page the app opens on', 'The four quadrants stacked. A row is a title, one line of facts, and only the time on the right.', matrix],
   ['Today', 'One sentence on whether the day fits; events are a few quiet lines so the items stay on the first screen.', today],

@@ -4,6 +4,8 @@ package io.github.lewin671.keduly.api
 import java.io.IOException
 import java.io.InterruptedIOException
 import java.util.concurrent.TimeUnit
+import kotlin.coroutines.coroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonElement
@@ -73,7 +75,7 @@ class ApiClient(
         /** False for the endpoints that are called without a session: a 401 there is an answer, not an expiry. */
         session: Boolean = true,
     ): JsonObject? = withContext(Dispatchers.IO) {
-        val builder = Request.Builder().url(url(path, query)).header("Accept", "application/json")
+        val builder = Request.Builder().url(url(path, query)).header("Accept", "application/json").header("User-Agent", "Keduly/Android")
         if (method != "GET") builder.header("X-Keduly-Request", "1")
         val server = store.server
         val sent = store.cookie
@@ -86,6 +88,7 @@ class ApiClient(
         } catch (e: IOException) {
             throw ApiException(0, "network", e.message ?: "network error")
         }
+        coroutineContext.ensureActive()
         // What a response says about the session applies only to the session the request was sent
         // with. An answer that arrives after the user signed in again must neither end the new
         // session nor replace its cookie.
@@ -149,6 +152,22 @@ class ApiClient(
         request("POST", "auth/register", body = buildJsonObject { put("email", email); put("password", password); put("name", name); put("timezone", timezone) }, session = false),
         "user",
     )
+
+    suspend fun startLoginRequest(): DeviceLoginRequest =
+        decode(request("POST", "auth/requests", session = false), null)
+
+    suspend fun claimLoginRequest(login: DeviceLoginRequest): Boolean {
+        val claim: DeviceLoginClaim = decode(request("POST", "auth/requests/${login.request.id}/claim",
+            body = buildJsonObject { put("secret", login.secret) }, session = false), null)
+        return when (claim.status) {
+            "pending" -> false
+            "approved" -> {
+                if (claim.user == null || store.cookie == null) throw ApiException(200, "bad_response", "missing authorized session")
+                true
+            }
+            else -> throw ApiException(200, "bad_response", "unexpected authorization status")
+        }
+    }
 
     suspend fun logout() { request("POST", "auth/logout", session = false) }
     suspend fun updateMe(patch: MePatch): User = send("PATCH", "me", "user", patch.toJson())

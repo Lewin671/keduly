@@ -77,6 +77,46 @@ final class RequestTests: XCTestCase {
         XCTAssertNil(request.httpBody)
     }
 
+    func testDeviceAuthorizationClaimsOnlyWithItsSecretAndKeepsTheSession() async throws {
+        let store = MemoryStore(nil)
+        let api = await client(store)
+        StubProtocol.respond { _ in
+            (201, [:], #"{"request":{"id":"abcdefghijklmnop","expires_at":"2026-10-13T17:00:00Z"},"pin":"4826","secret":"claim-secret"}"#)
+        }
+        let request = try await api.startLoginRequest()
+        XCTAssertEqual(request.pin, "4826")
+        XCTAssertEqual(request.approvalURL(server: server)?.absoluteString, "https://keduly.example.com/#approve=abcdefghijklmnop")
+        XCTAssertFalse(request.approvalURL(server: server)!.absoluteString.contains(request.secret))
+        StubProtocol.respond { _ in (200, [:], #"{"status":"pending"}"#) }
+        let pending = try await api.claimLoginRequest(request)
+        XCTAssertFalse(pending)
+        XCTAssertNil(store.load())
+        XCTAssertEqual(StubProtocol.requests.last?.url?.path, "/api/v1/auth/requests/abcdefghijklmnop/claim")
+        XCTAssertEqual(StubProtocol.requests.last?.value(forHTTPHeaderField: "X-Keduly-Request"), "1")
+        XCTAssertEqual(StubProtocol.bodies.last.flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: String] }, ["secret": "claim-secret"])
+        let user = String(Fixtures.user.dropLast()) + #", "status":"approved"}"#
+        StubProtocol.respond { _ in (200, ["Set-Cookie": "keduly_session=authorized; Path=/; HttpOnly; Secure"], user) }
+        let approved = try await api.claimLoginRequest(request)
+        XCTAssertTrue(approved)
+        XCTAssertEqual(store.load(), SessionCredentials(server: server, cookie: "authorized"))
+    }
+
+    func testDeviceAuthorizationRejectsApprovalWithoutASession() async throws {
+        let api = await client(MemoryStore(nil))
+        let request = DeviceLoginRequest(request: .init(id: "abcdefghijklmnop", expiresAt: Date()), pin: "4826", secret: "secret")
+        let user = String(Fixtures.user.dropLast()) + #", "status":"approved"}"#
+        StubProtocol.respond { _ in (200, [:], user) }
+        do {
+            _ = try await api.claimLoginRequest(request)
+            XCTFail("approval without a cookie must not sign in")
+        } catch { XCTAssertEqual(error as? APIError, .badResponse) }
+        StubProtocol.respond { _ in (404, [:], #"{"error":{"code":"not_found","message":"expired"}}"#) }
+        do {
+            _ = try await api.claimLoginRequest(request)
+            XCTFail("expired request must not sign in")
+        } catch let error as APIError { XCTAssertEqual(error.status, 404) }
+    }
+
     func testARenewedCookieOnAnyAnswerReplacesTheOldOne() async throws {
         let store = MemoryStore(SessionCredentials(server: server, cookie: "secret-1"))
         let api = await client(store)

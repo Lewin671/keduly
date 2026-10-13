@@ -13,6 +13,8 @@ struct SignInView: View {
     @State private var canRegister = false
     @State private var error: String?
     @State private var busy = false
+    @State private var authorizationServer: URL?
+    @State private var authorizing = false
 
     var body: some View {
         ScrollView {
@@ -63,6 +65,21 @@ struct SignInView: View {
                     .padding(.top, 20)
                     .accessibilityIdentifier("signin-submit")
 
+                if !registering {
+                    Button(L("auth.authorize")) {
+                        do {
+                            authorizationServer = try ServerAddress.parse(server)
+                            authorizing = true
+                            error = nil
+                        } catch {
+                            self.error = L("auth.serverInvalid")
+                        }
+                    }
+                    .font(.app(15)).frame(minHeight: 44)
+                    .disabled(busy || server.isEmpty)
+                    .accessibilityIdentifier("signin-authorize")
+                }
+
                 if canRegister || registering {
                     Button(registering ? L("auth.toLogin") : L("auth.toRegister")) {
                         registering.toggle()
@@ -77,6 +94,11 @@ struct SignInView: View {
             .padding(.horizontal, Metrics.pageMargin)
         }
         .background(Palette.grouped.ignoresSafeArea())
+        .sheet(isPresented: $authorizing) {
+            if let authorizationServer {
+                DeviceAuthorizationView(server: authorizationServer)
+            }
+        }
         .onAppear { if server.isEmpty { server = savedServer } }
         .task(id: server) {
             // Whether to offer registering depends on the server, once its address looks complete.

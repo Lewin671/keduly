@@ -110,7 +110,10 @@ that item.
 Accept or reject suggestions; create or revoke tokens and app passwords; change the account (name,
 password, time zone, working hours, the lengths of a tomato and of the rests); register; sign a device in or approve
 one that asks to be (the QR codes); delete a project when the token needs delete
-confirmation. Do not look for a way around these: tell the user to do it in the web app.
+confirmation. Phone apps offer **授权登录**: enter the server, open or share the approval link
+with an already signed-in browser, then confirm the four-digit pin there. The phone signs in
+automatically, without entering the password; the request expires after two minutes. Do not
+look for a way around approval: the user authorizes it in the web app.
 
 ## Conventions
 

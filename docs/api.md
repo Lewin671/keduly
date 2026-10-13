@@ -327,7 +327,11 @@ A request or code that is unknown, expired, used, refused or withdrawn is `404 n
 Changing the password withdraws all of the account's.
 
 **Login request**: the new device shows the QR code and a signed-in device approves it. The QR
-code holds `{origin}/#approve={id}`.
+code holds `{origin}/#approve={id}`. Native phone apps can also open or share this same
+approval link in a browser that is already signed in; the link contains neither the pin nor
+the claim secret. They display the pin separately, poll every 2 seconds while active, and
+stop on cancellation or expiry. Only an approved response with a session cookie completes
+phone sign-in. Starting a new request requires an explicit retry.
 
 | Method and path | Auth | Body | Response |
 |---|---|---|---|

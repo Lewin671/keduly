@@ -23,6 +23,25 @@ extension APIClient {
         return try Self.decodeBody(data, key: "user")
     }
 
+    func startLoginRequest() async throws -> DeviceLoginRequest {
+        let data = try await perform("POST", "/auth/requests", expectsSession: false)
+        return try Self.decodeBody(data)
+    }
+
+    func claimLoginRequest(_ request: DeviceLoginRequest) async throws -> Bool {
+        struct Body: Encodable, Sendable { let secret: String }
+        let data = try await perform("POST", "/auth/requests/\(request.request.id)/claim",
+                                     body: Self.encode(Body(secret: request.secret)), expectsSession: false)
+        let claim: DeviceLoginClaim = try Self.decodeBody(data)
+        switch claim.status {
+        case "pending": return false
+        case "approved":
+            guard claim.user != nil, hasSession else { throw APIError.badResponse }
+            return true
+        default: throw APIError.badResponse
+        }
+    }
+
     func logout() async throws {
         try await sendDiscarding("POST", "/auth/logout")
     }

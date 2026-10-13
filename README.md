@@ -119,3 +119,11 @@ the phone layout is basic.
 ## License
 
 [AGPL-3.0](LICENSE)
+
+### Phone sign-in without a password
+
+On iOS or Android, enter your server address and choose **授权登录**. Open or share the
+approval link with a browser where you are already signed in, and enter the four-digit pin
+shown on the phone. The phone signs in automatically after approval. Requests expire after
+two minutes; cancelling stops the phone's claim loop, and retry creates a new request. The
+approval link contains neither the pin nor the secret that claims the session.

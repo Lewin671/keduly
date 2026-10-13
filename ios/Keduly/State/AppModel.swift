@@ -104,6 +104,12 @@ final class AppModel {
         await enter()
     }
 
+    func finishDeviceSignIn(server: URL) async throws {
+        guard await api.hasSession else { throw APIError.badResponse }
+        self.server = server
+        await enter()
+    }
+
     func signOut() async {
         try? await api.logout()
         await api.forget()

@@ -304,4 +304,13 @@
         <item>紫色</item>
         <item>棕色</item>
     </string-array>
+    <string name="auth_authorize">授权登录</string>
+    <string name="auth_authorization_lead">在已登录的浏览器中授权</string>
+    <string name="auth_authorization_help">打开授权链接，输入下面的确认码。授权后此设备会自动登录。</string>
+    <string name="auth_authorization_waiting">等待授权 · 两分钟内有效</string>
+    <string name="auth_authorization_open">在浏览器中授权</string>
+    <string name="auth_authorization_share">分享授权链接</string>
+    <string name="auth_authorization_expired">授权已过期或取消</string>
+    <string name="auth_authorization_retry">重新请求授权</string>
+    <string name="auth_authorization_cancel">取消</string>
 </resources>

@@ -56,6 +56,43 @@ class ApiClientTest {
     private fun client(server: FakeServer) = ApiClient(OkHttpClient.Builder().addInterceptor(server).build(), store) { signedOut++ }
     private fun ok(fixture: String) = FakeServer { FakeServer.Reply(200, Fixtures.text(fixture)) }
 
+    @Test fun deviceAuthorizationClaimsWithTheSecretAndPersistsTheSession() = runTest {
+        store.cookie = null
+        var approved = false
+        val server = FakeServer { request ->
+            when {
+                request.url.encodedPath.endsWith("/auth/requests") -> FakeServer.Reply(201,
+                    """{"request":{"id":"abcdefghijklmnop","expires_at":"2026-10-13T17:00:00Z"},"pin":"4826","secret":"claim-secret"}""")
+                !approved -> FakeServer.Reply(200, """{"status":"pending"}""")
+                else -> FakeServer.Reply(200, Fixtures.text("user").trimEnd().dropLast(1) + """, "status":"approved"}""",
+                    listOf("keduly_session=authorized; Path=/; HttpOnly"))
+            }
+        }
+        val api = client(server)
+        val login = api.startLoginRequest()
+        assertEquals("4826", login.pin)
+        assertEquals("https://keduly.example.com/#approve=abcdefghijklmnop", login.approvalUrl("https://keduly.example.com"))
+        assertFalse(login.approvalUrl("https://keduly.example.com").contains(login.secret))
+        assertFalse(api.claimLoginRequest(login))
+        assertNull(store.cookie)
+        assertEquals("1", server.requests.last().header("X-Keduly-Request"))
+        assertEquals("""{"secret":"claim-secret"}""", server.bodies.last())
+        approved = true
+        assertTrue(api.claimLoginRequest(login))
+        assertEquals("authorized", store.cookie)
+    }
+
+    @Test fun deviceAuthorizationRejectsAnApprovalWithoutACookie() = runTest {
+        store.cookie = null
+        val api = client(FakeServer { FakeServer.Reply(200, Fixtures.text("user").trimEnd().dropLast(1) + """, "status":"approved"}""") })
+        val login = io.github.lewin671.keduly.api.DeviceLoginRequest(
+            io.github.lewin671.keduly.api.DeviceLoginRequest.Request("abcdefghijklmnop", "2026-10-13T17:00:00Z"), "4826", "secret")
+        try {
+            api.claimLoginRequest(login)
+            fail("approval without a cookie must not sign in")
+        } catch (e: ApiException) { assertEquals("bad_response", e.code) }
+    }
+
     @Test fun everyWriteCarriesTheHeaderAndTheCookie() = runTest {
         val server = FakeServer { request ->
             when {

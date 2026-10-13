@@ -279,3 +279,14 @@ data class FocusStats(
 
 @Serializable
 data class ActivityPage(val activities: List<Activity>, val nextCursor: String?)
+
+// Request credentials are never saved with screen state or included in the approval link.
+@Serializable
+data class DeviceLoginRequest(val request: Request, val pin: String, val secret: String) {
+    @Serializable
+    data class Request(val id: String, val expiresAt: String)
+    fun approvalUrl(server: String): String = server.trimEnd('/') + "/#approve=" + request.id
+}
+
+@Serializable
+data class DeviceLoginClaim(val status: String, val user: User? = null)

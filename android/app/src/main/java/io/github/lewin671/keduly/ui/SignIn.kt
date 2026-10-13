@@ -47,6 +47,7 @@ fun SignIn() {
     var registering by rememberSaveable { mutableStateOf(false) }
     var open by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
+    var authorizationServer by remember { mutableStateOf<String?>(null) }
 
     // Ask the server whether it takes new accounts once the address has settled.
     LaunchedEffect(server) {
@@ -61,6 +62,8 @@ fun SignIn() {
         }
         if (!open) registering = false
     }
+
+    authorizationServer?.let { origin -> DeviceAuthorization(origin) { authorizationServer = null } }
 
     val ready = normalizeServer(server) != null && email.isNotBlank() && password.isNotEmpty() && (!registering || (name.isNotBlank() && password.length >= 8))
     val submit = {
@@ -108,6 +111,11 @@ fun SignIn() {
         error?.let { Text(it, fontSize = 14.sp, color = K.red, modifier = Modifier.fillMaxWidth().padding(top = 10.dp)) }
         Spacer(Modifier.height(18.dp))
         PillButton(stringResource(if (registering) R.string.auth_register else R.string.auth_login), Modifier.fillMaxWidth(), primary = true, enabled = ready && !busy, onClick = submit)
+        if (!registering) {
+            TextButton(onClick = { authorizationServer = normalizeServer(server) }, enabled = normalizeServer(server) != null && !busy) {
+                Text(stringResource(R.string.auth_authorize), color = K.tint, fontSize = 15.sp)
+            }
+        }
         if (open) {
             TextButton(onClick = { registering = !registering; error = null }, modifier = Modifier.padding(top = 6.dp)) {
                 Text(stringResource(if (registering) R.string.auth_to_login else R.string.auth_to_register), color = K.tint, fontSize = 15.sp)

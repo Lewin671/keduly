@@ -80,6 +80,7 @@ actor APIClient {
         var request = URLRequest(url: url)
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue("Keduly/iPhone", forHTTPHeaderField: "User-Agent")
         if method != "GET" {
             request.setValue("1", forHTTPHeaderField: "X-Keduly-Request")
             if method != "DELETE" || body != nil {
@@ -107,6 +108,7 @@ actor APIClient {
         } catch {
             throw APIError.network
         }
+        try Task.checkCancellation()
         guard let http = response as? HTTPURLResponse else { throw APIError.badResponse }
         let current = cookie == sentWith && self.server == server
         if current { adoptCookie(from: http, server: server) }

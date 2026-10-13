@@ -289,3 +289,15 @@
 "focusSettings.round" = "每几个番茄后长休息";
 "focusSettings.minutes" = "分钟";
 "focusSettings.footer" = "计时记在服务器上，换一台设备看到的是同一个计时。";
+
+// Device authorization
+"auth.authorize" = "授权登录";
+"auth.authorizationTitle" = "授权登录";
+"auth.authorizationLead" = "在已登录的浏览器中授权";
+"auth.authorizationHelp" = "打开授权链接，输入下面的确认码。授权后此设备会自动登录。";
+"auth.authorizationWaiting" = "等待授权 · 两分钟内有效";
+"auth.authorizationOpen" = "在浏览器中授权";
+"auth.authorizationShare" = "分享授权链接";
+"auth.authorizationExpired" = "授权已过期或取消";
+"auth.authorizationRetry" = "重新请求授权";
+"auth.authorizationCancel" = "取消";
