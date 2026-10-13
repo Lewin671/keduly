@@ -13,8 +13,11 @@ struct SignInView: View {
     @State private var canRegister = false
     @State private var error: String?
     @State private var busy = false
-    @State private var authorizationServer: URL?
-    @State private var authorizing = false
+    private struct AuthorizationDestination: Identifiable {
+        let server: URL
+        var id: String { server.absoluteString }
+    }
+    @State private var authorization: AuthorizationDestination?
 
     var body: some View {
         ScrollView {
@@ -68,8 +71,7 @@ struct SignInView: View {
                 if !registering {
                     Button(L("auth.authorize")) {
                         do {
-                            authorizationServer = try ServerAddress.parse(server)
-                            authorizing = true
+                            authorization = AuthorizationDestination(server: try ServerAddress.parse(server))
                             error = nil
                         } catch {
                             self.error = L("auth.serverInvalid")
@@ -94,10 +96,8 @@ struct SignInView: View {
             .padding(.horizontal, Metrics.pageMargin)
         }
         .background(Palette.grouped.ignoresSafeArea())
-        .sheet(isPresented: $authorizing) {
-            if let authorizationServer {
-                DeviceAuthorizationView(server: authorizationServer)
-            }
+        .sheet(item: $authorization) { destination in
+            DeviceAuthorizationView(server: destination.server)
         }
         .onAppear { if server.isEmpty { server = savedServer } }
         .task(id: server) {
