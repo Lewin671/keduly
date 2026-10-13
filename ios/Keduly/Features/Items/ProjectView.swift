@@ -48,7 +48,7 @@ struct ProjectView: View {
         let id = id
         await loader.load(model) { api in
             async let detail = api.project(id)
-            async let items = api.items(.init(projectId: id, limit: 200))
+            async let items = api.items(.init(projectId: id), upTo: .max)
             return Content(detail: try await detail, items: try await items.items)
         }
         if showDone { await done.reload(model, doneQuery, first: 10) }
@@ -62,19 +62,23 @@ struct ProjectView: View {
             ProgressRing(color: color, fraction: total > 0 ? Double(project.doneCount) / Double(total) : 0, size: 26)
         }
         if !project.notes.isEmpty {
-            Text(project.notes).font(.system(size: 15)).foregroundStyle(Palette.label2).lineLimit(3).padding(.bottom, 10)
+            Text(project.notes).font(.app(15)).foregroundStyle(Palette.label2).lineLimit(3).padding(.bottom, 10)
+        }
+        // The summary and the next events stand whether or not there are open items.
+        if let summary = summary(content) {
+            Text(summary).font(.app(15)).foregroundStyle(Palette.label2).padding(.bottom, 6)
+        }
+        if !content.detail.upcomingEvents.isEmpty {
+            VStack(spacing: 0) {
+                ForEach(content.detail.upcomingEvents.prefix(2), id: \.entryKey) { EventLine(event: $0, showDay: true) }
+            }
+            .padding(.top, 4)
         }
         if content.items.isEmpty {
-            Blank(title: L("project.empty"), text: L("project.emptyTip"), top: project.doneCount > 0 ? 60 : 110)
+            let above = !content.detail.upcomingEvents.isEmpty || project.doneCount > 0
+            Blank(title: L("project.empty"), text: L("project.emptyTip"), top: above ? 50 : 110)
                 .padding(.bottom, 30)
         } else {
-            Text(summary(content)).font(.system(size: 15)).foregroundStyle(Palette.label2).padding(.bottom, 6)
-            if !content.detail.upcomingEvents.isEmpty {
-                VStack(spacing: 0) {
-                    ForEach(content.detail.upcomingEvents.prefix(2), id: \.entryKey) { EventLine(event: $0, showDay: true) }
-                }
-                .padding(.top, 4)
-            }
             let loose = content.items.filter { item in !content.detail.headings.contains { $0.id == item.headingId } }
             if !loose.isEmpty {
                 Divider().padding(.top, 10)
@@ -106,10 +110,20 @@ struct ProjectView: View {
         }
     }
 
-    private func summary(_ content: Content) -> String {
-        var text = L("project.open", content.detail.project.openCount)
-        text += content.detail.unplannedCount > 0 ? L("project.unplanned", content.detail.unplannedCount) : L("project.allPlanned")
-        if content.detail.focusWeekMinutes > 0 { text += L("project.focusWeek", Format.span(content.detail.focusWeekMinutes)) }
+    private func summary(_ content: Content) -> String? {
+        ProjectSummary.text(open: content.detail.project.openCount, unplanned: content.detail.unplannedCount, focusWeekMinutes: content.detail.focusWeekMinutes)
+    }
+}
+
+enum ProjectSummary {
+    /// "7 件未完成，4 件没排进日历 · 本周已专注 5 小时". Without open items only the focus time is left to say.
+    static func text(open: Int, unplanned: Int, focusWeekMinutes: Int) -> String? {
+        guard open > 0 else {
+            return focusWeekMinutes > 0 ? L("project.focusWeekOnly", Format.span(focusWeekMinutes)) : nil
+        }
+        var text = L("project.open", open)
+        text += unplanned > 0 ? L("project.unplanned", unplanned) : L("project.allPlanned")
+        if focusWeekMinutes > 0 { text += L("project.focusWeek", Format.span(focusWeekMinutes)) }
         return text
     }
 }
@@ -141,7 +155,7 @@ struct ProjectEditor: View {
                         ForEach(ProjectColor.allCases, id: \.self) { option in
                             Button { color = option } label: {
                                 Circle().fill(Palette.project(option)).frame(width: 28, height: 28)
-                                    .overlay { if color == option { Image(systemName: "checkmark").font(.system(size: 13, weight: .bold)).foregroundStyle(.white) } }
+                                    .overlay { if color == option { Image(systemName: "checkmark").font(.app(13, .bold)).foregroundStyle(.white) } }
                                     .frame(maxWidth: .infinity, minHeight: 44)
                             }
                             .buttonStyle(.plain)

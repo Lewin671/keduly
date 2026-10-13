@@ -11,6 +11,8 @@ struct ItemRow: View {
     var showPlan = true
     var last = false
 
+    @Environment(\.dynamicTypeSize) private var typeSize
+
     private var item: Item { model.current(source) }
 
     var body: some View {
@@ -21,10 +23,16 @@ struct ItemRow: View {
             .padding(.leading, -11)
             Button { router.sheet = .item(item.id) } label: {
                 VStack(alignment: .leading, spacing: 2) {
-                    HStack(alignment: .top, spacing: 10) {
+                    if typeSize.isAccessibilitySize {
+                        // Large type: the title gets the whole width, and when it will be done its own line.
                         title
-                        Spacer(minLength: 0)
                         when
+                    } else {
+                        HStack(alignment: .top, spacing: 10) {
+                            title
+                            Spacer(minLength: 0)
+                            when
+                        }
                     }
                     facts
                 }
@@ -41,7 +49,7 @@ struct ItemRow: View {
     private var title: some View {
         (Text(item.important ? "! " : "").foregroundStyle(Palette.orange).fontWeight(.heavy)
             + Text(item.title).foregroundStyle(item.isDone ? Palette.label2 : Palette.label).strikethrough(item.isDone))
-            .font(.system(size: 17))
+            .font(.app(17))
             .lineLimit(2)
             .multilineTextAlignment(.leading)
     }
@@ -58,7 +66,7 @@ struct ItemRow: View {
                     MiniRing(color: Palette.tint, fraction: FocusMath.fractionLeft(end: session.end, plannedMinutes: session.plannedMinutes, now: now), size: 16)
                     Text(FocusMath.mmss(FocusMath.secondsLeft(end: session.end, now: now))).monospacedDigit()
                 }
-                .font(.system(size: 13, weight: .semibold))
+                .font(.app(13, .semibold))
                 .foregroundStyle(Palette.tint)
             }
             .padding(.top, 2)
@@ -72,7 +80,7 @@ struct ItemRow: View {
     }
 
     private func side(_ text: String) -> some View {
-        Text(text).font(.system(size: 13)).foregroundStyle(Palette.label2).lineLimit(1).fixedSize().padding(.top, 2)
+        Text(text).font(.app(13)).foregroundStyle(Palette.label2).lineLimit(1).fixedSize().padding(.top, 2)
     }
 
     // MARK: Facts
@@ -82,7 +90,10 @@ struct ItemRow: View {
         let project = model.project(item.projectId)
         let parts = factParts
         if showProject || !parts.isEmpty {
-            HStack(spacing: 0) {
+            // Large type: the project stands on a line of its own, so the facts after it stay whole.
+            let stacked = typeSize.isAccessibilitySize && showProject && !parts.isEmpty
+            let layout = stacked ? AnyLayout(VStackLayout(alignment: .leading, spacing: 2)) : AnyLayout(HStackLayout(spacing: 0))
+            layout {
                 if showProject {
                     HStack(spacing: 5) {
                         if let project { ColorDot(color: Palette.project(project.color)) }
@@ -90,17 +101,19 @@ struct ItemRow: View {
                     }
                     .layoutPriority(0)
                 }
-                ForEach(Array(parts.enumerated()), id: \.offset) { index, part in
-                    if showProject || index > 0 { Text(" · ").foregroundStyle(Palette.label3).fixedSize() }
-                    HStack(spacing: 2) {
-                        if part.tomato { TomatoMark() }
-                        Text(part.text).foregroundStyle(part.hot ? Palette.red : Palette.label2)
+                HStack(spacing: 0) {
+                    ForEach(Array(parts.enumerated()), id: \.offset) { index, part in
+                        if (showProject && !stacked) || index > 0 { Text(" · ").foregroundStyle(Palette.label3).fixedSize() }
+                        HStack(spacing: 2) {
+                            if part.tomato { TomatoMark() }
+                            Text(part.text).foregroundStyle(part.hot ? Palette.red : Palette.label2).lineLimit(1)
+                        }
+                        .fixedSize(horizontal: !stacked, vertical: false)
                     }
-                    .fixedSize()
-                    .layoutPriority(1)
                 }
+                .layoutPriority(1)
             }
-            .font(.system(size: 13))
+            .font(.app(13))
             .foregroundStyle(Palette.label2)
         }
     }

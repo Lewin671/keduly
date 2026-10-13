@@ -25,13 +25,13 @@ struct ActivityView: View {
                         AsyncButton(L("activity.acceptAll")) {
                             _ = await model.write { try await $0.acceptAllSuggestions() }
                         }
-                        .font(.system(size: 15))
+                        .font(.app(15))
                         .frame(minHeight: 44)
                         .accessibilityIdentifier("accept-all")
                     }
                     ForEach(content.suggestions) { suggestion in
                         VStack(alignment: .leading, spacing: 6) {
-                            Text(suggestion.title).font(.system(size: 17)).padding(.top, 10)
+                            Text(suggestion.title).font(.app(17)).padding(.top, 10)
                             SuggestionCard(title: SuggestionText.what(suggestion, zone: model.zone, today: model.today), reason: suggestion.reason,
                                            actor: "\(suggestion.actor.name) · \(Format.stamp(suggestion.createdAt, zone: model.zone, today: model.today))",
                                            id: suggestion.id)
@@ -59,23 +59,23 @@ struct ActivityView: View {
     private func row(_ activity: Activity, last: Bool) -> some View {
         HStack(alignment: .top, spacing: 10) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(activity.summary).font(.system(size: 17)).foregroundStyle(activity.undone ? Palette.label2 : Palette.label)
+                Text(activity.summary).font(.app(17)).foregroundStyle(activity.undone ? Palette.label2 : Palette.label)
                     .strikethrough(activity.undone)
                 if let reason = activity.reason, !reason.isEmpty {
-                    Text(reason).font(.system(size: 13)).foregroundStyle(Palette.label2)
+                    Text(reason).font(.app(13)).foregroundStyle(Palette.label2)
                 }
                 Text("\(activity.actor.kind == .user ? L("activity.you") : activity.actor.name) · \(Format.stamp(activity.createdAt, zone: model.zone, today: model.today))")
-                    .font(.system(size: 13)).foregroundStyle(Palette.label2)
+                    .font(.app(13)).foregroundStyle(Palette.label2)
             }
             Spacer(minLength: 0)
             if activity.undone {
                 VStack(alignment: .trailing, spacing: 0) {
-                    Text(L("activity.undone")).font(.system(size: 13)).foregroundStyle(Palette.label3).padding(.top, 2)
+                    Text(L("activity.undone")).font(.app(13)).foregroundStyle(Palette.label3).padding(.top, 2)
                     AsyncButton(L("activity.redo")) {
                         let id = activity.id
                         _ = await model.write { try await $0.redoActivity(id) }
                     }
-                    .font(.system(size: 15))
+                    .font(.app(15))
                     .frame(minWidth: 44, minHeight: 36, alignment: .trailing)
                     .accessibilityIdentifier("redo-\(activity.summary)")
                 }
@@ -84,7 +84,7 @@ struct ActivityView: View {
                     let id = activity.id
                     _ = await model.write { try await $0.undoActivity(id) }
                 }
-                .font(.system(size: 15))
+                .font(.app(15))
                 .frame(minWidth: 44, minHeight: 44, alignment: .topTrailing)
                 .accessibilityIdentifier("undo-\(activity.summary)")
             }

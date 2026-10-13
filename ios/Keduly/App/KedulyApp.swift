@@ -36,12 +36,12 @@ struct RootView: View {
             case .launching(let failed):
                 if failed {
                     VStack(spacing: 14) {
-                        Text(L("error.network")).font(.system(size: 17)).foregroundStyle(Palette.label2)
+                        Text(L("error.network")).font(.app(17)).foregroundStyle(Palette.label2)
                         AsyncButton(L("common.retry")) { await model.enter() }
                             .buttonStyle(CapsuleButtonStyle(primary: true))
                             .frame(width: 180)
                         AsyncButton(L("account.signOut")) { await model.signOut() }
-                            .font(.system(size: 15))
+                            .font(.app(15))
                             .frame(minHeight: 44)
                     }
                 } else {

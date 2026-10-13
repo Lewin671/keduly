@@ -15,6 +15,7 @@ struct DayView: View {
         let entries = index.entries(on: day)
         VStack(spacing: 0) {
             strip
+                .dynamicTypeSize(...AppType.fixedLayoutLimit)
                 .padding(.horizontal, Metrics.pageMargin - 8)
                 .contentShape(Rectangle())
                 .gesture(DragGesture(minimumDistance: 30).onEnded { value in
@@ -22,12 +23,13 @@ struct DayView: View {
                     withAnimation { router.calendarDay = day.adding(days: value.translation.width < 0 ? 7 : -7) }
                 })
             ForEach(entries.filter(\.allDay), id: \.entryKey) { event in
-                allDayRow(event)
+                allDayRow(event).dynamicTypeSize(...AppType.fixedLayoutLimit)
             }
             Divider()
             ScrollViewReader { proxy in
                 ScrollView {
                     timeline(entries.filter { !$0.allDay })
+                        .dynamicTypeSize(...AppType.fixedLayoutLimit)
                         .padding(.top, 10)
                         .padding(.trailing, 12)
                         .padding(.bottom, 24)
@@ -46,7 +48,7 @@ struct DayView: View {
                 let today = cell == model.today, selected = cell == day
                 Button { router.calendarDay = cell } label: {
                     VStack(spacing: 3) {
-                        Text(Format.weekdayLetters[offset]).font(.system(size: 11, weight: .semibold)).foregroundStyle(Palette.label3)
+                        Text(Format.weekdayLetters[offset]).font(.app(11, .semibold)).foregroundStyle(Palette.label3)
                         Text(String(cell.day))
                             .font(.system(size: 19, weight: today || selected ? .semibold : .regular))
                             .foregroundStyle(selected ? (today ? Color.white : Palette.background) : today ? Palette.red : Palette.label)
@@ -70,9 +72,9 @@ struct DayView: View {
         return VStack(spacing: 0) {
             Divider()
             HStack(spacing: 6) {
-                Text(L("cal.allDay")).font(.system(size: 11)).foregroundStyle(Palette.label2).frame(width: 44, alignment: .trailing)
+                Text(L("cal.allDay")).font(.app(11)).foregroundStyle(Palette.label2).frame(width: 44, alignment: .trailing)
                 Button { router.open(event) } label: {
-                    Text(event.title).font(.system(size: 13, weight: .semibold)).lineLimit(1)
+                    Text(event.title).font(.app(13, .semibold)).lineLimit(1)
                         .strikethrough(event.status == .leaving)
                         .foregroundStyle(Palette.ink(color, 0.62))
                         .padding(.horizontal, 9)
@@ -102,7 +104,7 @@ struct DayView: View {
                     ZStack(alignment: .topLeading) {
                         Rectangle().fill(Palette.separator).frame(height: 0.5).padding(.leading, 58)
                         if hour > 0 {
-                            Text(Zone.hhmm(hour * 60)).font(.system(size: 11, weight: .medium)).foregroundStyle(Palette.label2)
+                            Text(Zone.hhmm(hour * 60)).font(.app(11, .medium)).foregroundStyle(Palette.label2)
                                 .frame(width: 50, alignment: .trailing)
                                 .offset(y: -7)
                         }
@@ -154,7 +156,7 @@ private struct NowLine: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            Text(label).font(.system(size: 11, weight: .semibold)).foregroundStyle(.white).monospacedDigit()
+            Text(label).font(.app(11, .semibold)).foregroundStyle(.white).monospacedDigit()
                 .frame(width: 44, height: 18)
                 .background(Palette.red, in: Capsule())
                 .padding(.leading, 6)
@@ -230,13 +232,13 @@ private struct EventBlock: View {
 
     private var titleText: some View {
         Text(event.title)
-            .font(.system(size: 13, weight: event.status == .tentative ? .medium : .semibold))
+            .font(.app(13, event.status == .tentative ? .medium : .semibold))
             .strikethrough(event.status == .leaving || event.itemDone == true)
             .multilineTextAlignment(.leading)
     }
 
     private var timeText: some View {
-        Text(time).font(.system(size: 11.5)).opacity(0.8).lineLimit(1)
+        Text(time).font(.app(11.5)).opacity(0.8).lineLimit(1)
     }
 
     /// The whole range, or only the start where three lanes leave no room.
@@ -262,8 +264,8 @@ private struct MoreBlock: View {
     var body: some View {
         Button(action: action) {
             VStack(alignment: .leading, spacing: 0) {
-                Text(L("cal.plus", count)).font(.system(size: 13, weight: .semibold)).lineLimit(1)
-                Text("\(Zone.hhmm(start))–\(Zone.hhmm(end))").font(.system(size: 11.5)).opacity(0.8).lineLimit(1).minimumScaleFactor(0.8)
+                Text(L("cal.plus", count)).font(.app(13, .semibold)).lineLimit(1)
+                Text("\(Zone.hhmm(start))–\(Zone.hhmm(end))").font(.app(11.5)).opacity(0.8).lineLimit(1).minimumScaleFactor(0.8)
             }
             .padding(.leading, 7)
             .padding(.trailing, 4)

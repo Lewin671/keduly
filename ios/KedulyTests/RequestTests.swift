@@ -177,6 +177,58 @@ final class RequestTests: XCTestCase {
         XCTAssertEqual(onItem, ["item_id": "eeeeeeeeeeeeeeee"])
     }
 
+    /// A page of `count` numbered items starting at `offset`, out of `total`.
+    private static func page(offset: Int, count: Int, total: Int) -> String {
+        let items = (offset..<min(offset + count, total)).map { Fixtures.itemBody.replacingOccurrences(of: "eeeeeeeeeeeeeeee", with: "item\($0)") }
+        let next = offset + count < total ? "\"c\(offset + count)\"" : "null"
+        return "{ \"items\": [\(items.joined(separator: ","))], \"next_cursor\": \(next), \"total\": \(total) }"
+    }
+
+    private func servePages(total: Int) {
+        StubProtocol.respond { request in
+            let query = Dictionary(uniqueKeysWithValues: URLComponents(url: request.url!, resolvingAgainstBaseURL: false)!.queryItems!.map { ($0.name, $0.value!) })
+            let offset = query["cursor"].map { Int($0.dropFirst())! } ?? 0
+            return (200, [:], Self.page(offset: offset, count: Int(query["limit"]!)!, total: total))
+        }
+    }
+
+    private func queries() -> [[String: String]] {
+        StubProtocol.requests.map { Dictionary(uniqueKeysWithValues: URLComponents(url: $0.url!, resolvingAgainstBaseURL: false)!.queryItems!.map { ($0.name, $0.value!) }) }
+    }
+
+    func testLoadingAWholeListFollowsTheCursorPastTheServersLimit() async throws {
+        let api = await client()
+        servePages(total: 450)
+        let page = try await api.items(.init(quadrant: .do), upTo: .max)
+        XCTAssertEqual(page.items.count, 450)
+        XCTAssertEqual(page.items.map(\.id), (0..<450).map { "item\($0)" })
+        XCTAssertEqual(page.total, 450)
+        XCTAssertNil(page.nextCursor)
+        // Three requests, each for at most 200, each continuing where the last one ended.
+        XCTAssertEqual(queries().map { $0["limit"] }, ["200", "200", "200"])
+        XCTAssertEqual(queries().map { $0["cursor"] }, [nil, "c200", "c400"])
+        XCTAssertTrue(queries().allSatisfy { $0["quadrant"] == "do" })
+    }
+
+    func testLoadingPartOfAListStopsAtTheCountAndKeepsTheCursor() async throws {
+        let api = await client()
+        servePages(total: 450)
+        let page = try await api.items(.init(projectId: "p"), upTo: 230)
+        XCTAssertEqual(page.items.count, 230)
+        XCTAssertEqual(page.items.last?.id, "item229")
+        XCTAssertEqual(page.nextCursor, "c230")
+        XCTAssertEqual(queries().map { $0["limit"] }, ["200", "30"])
+    }
+
+    func testLoadingAShortListTakesOneRequest() async throws {
+        let api = await client()
+        servePages(total: 3)
+        let page = try await api.items(.init(), upTo: 20)
+        XCTAssertEqual(page.items.count, 3)
+        XCTAssertNil(page.nextCursor)
+        XCTAssertEqual(queries().map { $0["limit"] }, ["20"])
+    }
+
     func testServerAddress() throws {
         XCTAssertEqual(try ServerAddress.parse(" keduly.example.com/ ", allowsHTTP: false).absoluteString, "https://keduly.example.com")
         XCTAssertEqual(try ServerAddress.parse("https://keduly.example.com:8443", allowsHTTP: false).absoluteString, "https://keduly.example.com:8443")

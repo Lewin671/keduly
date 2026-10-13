@@ -108,11 +108,11 @@ struct ItemSheet: View {
             .padding(.top, -7)
             VStack(alignment: .leading, spacing: 4) {
                 TextField(L("item.title"), text: $title, axis: .vertical)
-                    .font(.system(size: 22, weight: .bold))
+                    .font(.app(22, .bold))
                     .focused($focus, equals: .title)
                     .accessibilityIdentifier("item-title")
                 TextField(L("item.notes"), text: $notes, axis: .vertical)
-                    .font(.system(size: 15))
+                    .font(.app(15))
                     .foregroundStyle(Palette.label2)
                     .focused($focus, equals: .notes)
                     .accessibilityIdentifier("item-notes")
@@ -122,7 +122,7 @@ struct ItemSheet: View {
         .padding(.horizontal, 4)
 
         if let error {
-            Text(error).font(.system(size: 13)).foregroundStyle(Palette.red).padding(.top, 8).padding(.horizontal, 4)
+            Text(error).font(.app(13)).foregroundStyle(Palette.red).padding(.top, 8).padding(.horizontal, 4)
         }
 
         if let suggestion = item.suggestion {
@@ -151,7 +151,7 @@ struct ItemSheet: View {
                 GroupRow(title: L("field.project"), minHeight: 46) { rowIcon("circle.circle") } accessory: {
                     HStack(spacing: 5) {
                         if let project { ColorDot(color: Palette.project(project.color)) }
-                        Text(project?.name ?? L("nav.inbox")).font(.system(size: 17)).foregroundStyle(Palette.label2).lineLimit(1)
+                        Text(project?.name ?? L("nav.inbox")).font(.app(17)).foregroundStyle(Palette.label2).lineLimit(1)
                     }
                 }
             }
@@ -188,7 +188,7 @@ struct ItemSheet: View {
             Menu {
                 Button(L("common.delete"), systemImage: "trash", role: .destructive) { confirmingDelete = true }
             } label: {
-                Image(systemName: "ellipsis").font(.system(size: 20, weight: .semibold)).foregroundStyle(Palette.label)
+                Image(systemName: "ellipsis").font(.app(20, .semibold)).foregroundStyle(Palette.label)
                     .frame(width: 50, height: 50)
                     .background(Palette.fill, in: Circle())
             }
@@ -209,7 +209,7 @@ struct ItemSheet: View {
     }
 
     private func rowIcon(_ symbol: String) -> some View {
-        Image(systemName: symbol).font(.system(size: 17)).foregroundStyle(Palette.label2)
+        Image(systemName: symbol).font(.app(17)).foregroundStyle(Palette.label2)
     }
 
     private func whenText(_ item: Item) -> String {
@@ -247,9 +247,9 @@ struct SuggestionCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(title).font(.system(size: 15, weight: .semibold))
-            if !reason.isEmpty { Text(reason).font(.system(size: 13)).foregroundStyle(Palette.label2) }
-            Text(actor).font(.system(size: 13)).foregroundStyle(Palette.label2)
+            Text(title).font(.app(15, .semibold))
+            if !reason.isEmpty { Text(reason).font(.app(13)).foregroundStyle(Palette.label2) }
+            Text(actor).font(.app(13)).foregroundStyle(Palette.label2)
             HStack(spacing: 8) {
                 AsyncButton(L("suggest.reject")) {
                     if case .success = await model.write({ try await $0.rejectSuggestion(id) }) { onDecided() }
@@ -319,8 +319,7 @@ struct WhenPage: View {
                 .disabled(busy)
                 .accessibilityIdentifier("when-schedule")
                 AsyncButton(L("when.planDay", Format.dayLabel(chosenDay, today: model.today))) {
-                    await update(ItemPatch(plannedDate: .set(chosenDay), evening: .set(false)))
-                    dismiss()
+                    await plan(chosenDay, evening: false)
                 }
             } header: {
                 Text(L("when.schedule"))
@@ -341,7 +340,7 @@ struct WhenPage: View {
                     AsyncButton(L("when.clear"), role: .destructive) {
                         if item.block != nil {
                             let id = item.id
-                            _ = await model.write { try await $0.unscheduleItem(id) }
+                            guard case .success = await model.write({ try await $0.unscheduleItem(id) }) else { return }
                         }
                         await update(ItemPatch(plannedDate: .clear, evening: .set(false)))
                         dismiss()
@@ -390,8 +389,7 @@ struct WhenPage: View {
 
     private func planButton(_ title: String, _ day: Day, evening: Bool) -> some View {
         AsyncButton {
-            await update(ItemPatch(plannedDate: .set(day), evening: .set(evening)))
-            dismiss()
+            await plan(day, evening: evening)
         } label: {
             HStack {
                 Text(title).foregroundStyle(Palette.label)
@@ -401,6 +399,17 @@ struct WhenPage: View {
                 }
             }
         }
+    }
+
+    /// A day without a time. A time block the item has is removed first: left in place, the calendar
+    /// would keep the old appointment. If that fails nothing else is changed.
+    private func plan(_ day: Day, evening: Bool) async {
+        if item.block != nil {
+            let id = item.id
+            guard case .success = await model.write({ try await $0.unscheduleItem(id) }) else { return }
+        }
+        await update(ItemPatch(plannedDate: .set(day), evening: .set(evening)))
+        dismiss()
     }
 
     private func schedule(_ start: Date) async {

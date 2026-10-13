@@ -123,7 +123,7 @@ private struct BottomBar: View {
                 .shadow(color: .black.opacity(0.14), radius: 14, y: 8)
                 Spacer()
                 Button(action: add) {
-                    Image(systemName: "plus").font(.system(size: 24, weight: .semibold)).foregroundStyle(Palette.onTint)
+                    Image(systemName: "plus").font(.app(24, .semibold)).foregroundStyle(Palette.onTint)
                         .frame(width: 62, height: 62)
                         .background(Palette.tint, in: Circle())
                         .shadow(color: Palette.tint.opacity(0.38), radius: 11, y: 8)
@@ -136,6 +136,7 @@ private struct BottomBar: View {
         .padding(.horizontal, Metrics.pageMargin)
         .padding(.top, 8)
         .padding(.bottom, -8)
+        .dynamicTypeSize(...AppType.fixedLayoutLimit)
         .ignoresSafeArea(.keyboard)
     }
 
@@ -151,8 +152,8 @@ private struct BottomBar: View {
             }
         } label: {
             VStack(spacing: 2) {
-                Image(systemName: symbol).font(.system(size: 21, weight: .medium)).frame(height: 25)
-                Text(title).font(.system(size: 10, weight: .semibold))
+                Image(systemName: symbol).font(.app(21, .medium)).frame(height: 25)
+                Text(title).font(.app(10, .semibold))
             }
             .foregroundStyle(on ? Palette.tint : Palette.label2)
             .frame(width: 82, height: 54)

@@ -111,6 +111,51 @@ final class DayTests: XCTestCase {
         XCTAssertTrue(index.entries(on: Day("2026-10-13")!).isEmpty)
     }
 
+    func testSwitchingATimedEventToAllDayKeepsTheDaysItCovers() {
+        // 22:30 to 00:30 the next day in Shanghai covers two days; in Los Angeles the same instants are one morning.
+        let start = instant("2026-10-11T14:30:00Z"), end = instant("2026-10-11T16:30:00Z")
+        XCTAssertEqual(EventDates.allDay(start: start, end: end, zone: shanghai), Day("2026-10-11")!...Day("2026-10-12")!)
+        XCTAssertEqual(EventDates.allDay(start: start, end: end, zone: losAngeles), Day("2026-10-11")!...Day("2026-10-11")!)
+        // A date changed in the timed pickers is the date the all-day event gets.
+        let moved = instant("2026-10-20T02:00:00Z")
+        XCTAssertEqual(EventDates.allDay(start: moved, end: moved.addingTimeInterval(3600), zone: shanghai), Day("2026-10-20")!...Day("2026-10-20")!)
+        // Ending exactly at midnight does not reach into the next day.
+        XCTAssertEqual(EventDates.allDay(start: instant("2026-10-11T14:00:00Z"), end: instant("2026-10-11T16:00:00Z"), zone: shanghai), Day("2026-10-11")!...Day("2026-10-11")!)
+    }
+
+    func testSwitchingAnAllDayEventToTimedKeepsItsDaysAndTheTimesOfDay() {
+        let previousStart = instant("2026-10-11T01:00:00Z"), previousEnd = instant("2026-10-11T02:00:00Z") // 09:00 and 10:00 in Shanghai
+        let span = EventDates.timed(days: Day("2026-10-20")!...Day("2026-10-22")!, previousStart: previousStart, previousEnd: previousEnd, zone: shanghai)
+        XCTAssertEqual(span.start, instant("2026-10-20T01:00:00Z"))
+        XCTAssertEqual(span.end, instant("2026-10-22T02:00:00Z"))
+        // One day: the same times on that day.
+        let day = EventDates.timed(days: Day("2026-10-20")!...Day("2026-10-20")!, previousStart: previousStart, previousEnd: previousEnd, zone: shanghai)
+        XCTAssertEqual(day.end.timeIntervalSince(day.start), 3600)
+        // Times that would end before they start give an hour.
+        let odd = EventDates.timed(days: Day("2026-10-20")!...Day("2026-10-20")!, previousStart: previousEnd, previousEnd: previousStart, zone: shanghai)
+        XCTAssertEqual(odd.start, instant("2026-10-20T02:00:00Z"))
+        XCTAssertEqual(odd.end, instant("2026-10-20T03:00:00Z"))
+        // Across the clock change in Los Angeles the wall-clock times hold: 09:00 is 16:00Z before and 17:00Z after.
+        let la = EventDates.timed(days: Day("2026-10-31")!...Day("2026-11-02")!, previousStart: instant("2026-07-01T16:00:00Z"), previousEnd: instant("2026-07-01T17:00:00Z"), zone: losAngeles)
+        XCTAssertEqual(la.start, instant("2026-10-31T16:00:00Z"))
+        XCTAssertEqual(la.end, instant("2026-11-02T18:00:00Z"))
+        // Round trip.
+        XCTAssertEqual(EventDates.allDay(start: span.start, end: span.end, zone: shanghai), Day("2026-10-20")!...Day("2026-10-22")!)
+    }
+
+    func testProjectSummary() {
+        XCTAssertEqual(ProjectSummary.text(open: 7, unplanned: 4, focusWeekMinutes: 300), "7 件未完成，4 件没排进日历 · 本周已专注 5 小时")
+        XCTAssertEqual(ProjectSummary.text(open: 2, unplanned: 0, focusWeekMinutes: 0), "2 件未完成，都已排进日历")
+        XCTAssertEqual(ProjectSummary.text(open: 0, unplanned: 0, focusWeekMinutes: 50), "本周已专注 50 分钟")
+        XCTAssertNil(ProjectSummary.text(open: 0, unplanned: 0, focusWeekMinutes: 0))
+    }
+
+    func testEveryDesignSizeFollowsDynamicType() {
+        for size: CGFloat in [34, 28, 22, 20, 17, 16, 15, 13, 12, 11] { XCTAssertNotNil(AppType.style(for: size), "\(size)") }
+        // The dial, the tab bar and the day numbers keep their size.
+        for size: CGFloat in [72, 10, 19] { XCTAssertNil(AppType.style(for: size), "\(size)") }
+    }
+
     func testLabels() {
         let today = Day("2026-10-11")!
         XCTAssertEqual(Format.dayLabel(today, today: today), "今天")

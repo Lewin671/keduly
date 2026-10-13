@@ -21,7 +21,7 @@ struct ListsRootView: View {
                 GroupCard {
                     Button { router.sheet = .newProject } label: {
                         GroupRow(title: L("project.new"), titleColor: Palette.tint, chevron: false, last: true) {
-                            Image(systemName: "plus").font(.system(size: 19, weight: .medium)).foregroundStyle(Palette.tint)
+                            Image(systemName: "plus").font(.app(19, .medium)).foregroundStyle(Palette.tint)
                         }
                     }
                     .buttonStyle(.plain)
@@ -58,9 +58,9 @@ struct ListsRootView: View {
 
     private var searchField: some View {
         HStack(spacing: 6) {
-            Image(systemName: "magnifyingglass").font(.system(size: 16, weight: .medium)).foregroundStyle(Palette.label2)
+            Image(systemName: "magnifyingglass").font(.app(16, .medium)).foregroundStyle(Palette.label2)
             TextField(L("search.placeholder"), text: $query)
-                .font(.system(size: 17))
+                .font(.app(17))
                 .submitLabel(.search)
                 .autocorrectionDisabled()
                 .accessibilityIdentifier("search-field")
@@ -110,7 +110,7 @@ struct ListsRootView: View {
     private func smart(_ route: Route, _ symbol: String, _ title: String, _ color: Color, _ count: Int?, last: Bool = false) -> some View {
         Button { router.push(route) } label: {
             GroupRow(title: title, value: count.flatMap { $0 > 0 ? Format.cap($0) : nil }, last: last) {
-                Image(systemName: symbol).font(.system(size: 19, weight: .medium)).foregroundStyle(color)
+                Image(systemName: symbol).font(.app(19, .medium)).foregroundStyle(color)
             }
         }
         .buttonStyle(.plain)
@@ -125,7 +125,7 @@ struct ListsRootView: View {
         ForEach(model.areas) { area in
             let list = model.projects.filter { $0.areaId == area.id }
             if !list.isEmpty {
-                Text(area.name).font(.system(size: 13)).foregroundStyle(Palette.label2)
+                Text(area.name).font(.app(13)).foregroundStyle(Palette.label2)
                     .padding(.top, 22).padding(.bottom, 7).padding(.horizontal, 16)
                     .accessibilityAddTraits(.isHeader)
                 projectCard(list)

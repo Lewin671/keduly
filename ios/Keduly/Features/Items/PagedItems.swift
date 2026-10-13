@@ -12,11 +12,8 @@ final class PagedItems {
     var remaining: Int { max(0, total - (items?.count ?? 0)) }
 
     func reload(_ model: AppModel, _ query: APIClient.ItemQuery, first: Int) async {
-        var query = query
-        query.limit = min(200, max(first, items?.count ?? 0))
-        query.cursor = nil
         do {
-            let page = try await model.api.items(query)
+            let page = try await model.api.items(query, upTo: max(first, items?.count ?? 0))
             items = page.items
             total = page.total
             cursor = page.nextCursor
