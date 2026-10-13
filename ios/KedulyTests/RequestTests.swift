@@ -106,6 +106,72 @@ final class RequestTests: XCTestCase {
         XCTAssertFalse(hasSession)
     }
 
+    /// Waits until the stub has seen a request to the path.
+    private func sent(_ path: String) async {
+        while !StubProtocol.requests.contains(where: { $0.url?.path == path }) { await Task.yield() }
+    }
+
+    func testALate401DoesNotEndTheSessionOfANewSignIn() async throws {
+        let store = MemoryStore(SessionCredentials(server: server, cookie: "secret-1"))
+        let api = await client(store)
+        let ended = Counter()
+        await api.setUnauthenticatedHandler { ended.increment() }
+        // The answer to /today is held back; everything else is answered at once.
+        let gate = DispatchSemaphore(value: 0)
+        StubProtocol.respond { request in
+            switch request.url!.path {
+            case "/api/v1/today":
+                gate.wait()
+                return (401, [:], #"{ "error": { "code": "unauthenticated", "message": "expired" } }"#)
+            case "/api/v1/auth/login":
+                return (200, ["Set-Cookie": "keduly_session=fresh; Path=/; HttpOnly"], Fixtures.user)
+            default:
+                return (401, [:], #"{ "error": { "code": "unauthenticated", "message": "expired" } }"#)
+            }
+        }
+        let slow = Task { try await api.today() }
+        await sent("/api/v1/today")
+        // The first 401 ends the old session, and the user signs in again.
+        do { _ = try await api.counts(); XCTFail("expected a failure") } catch { XCTAssertEqual(error as? APIError, .unauthenticated) }
+        XCTAssertEqual(ended.value, 1)
+        XCTAssertNil(store.load())
+        _ = try await api.login(email: "me@example.com", password: "pass-word")
+        XCTAssertEqual(store.load()?.cookie, "fresh")
+        // Now the 401 of the old session arrives. It fails its own request and nothing else.
+        gate.signal()
+        do { _ = try await slow.value; XCTFail("expected a failure") } catch { XCTAssertEqual(error as? APIError, .unauthenticated) }
+        XCTAssertEqual(store.load(), SessionCredentials(server: server, cookie: "fresh"))
+        XCTAssertEqual(ended.value, 1)
+        let hasSession = await api.hasSession
+        XCTAssertTrue(hasSession)
+    }
+
+    func testALateCookieRenewalDoesNotReplaceTheCookieOfANewSignIn() async throws {
+        let store = MemoryStore(SessionCredentials(server: server, cookie: "secret-1"))
+        let api = await client(store)
+        let gate = DispatchSemaphore(value: 0)
+        StubProtocol.respond { request in
+            switch request.url!.path {
+            case "/api/v1/today":
+                gate.wait()
+                return (200, ["Set-Cookie": "keduly_session=secret-1-renewed; Path=/; HttpOnly"], Fixtures.today)
+            case "/api/v1/auth/login":
+                return (200, ["Set-Cookie": "keduly_session=fresh; Path=/; HttpOnly"], Fixtures.user)
+            default:
+                return (200, [:], Fixtures.counts)
+            }
+        }
+        let slow = Task { try await api.today() }
+        await sent("/api/v1/today")
+        await api.forget()
+        _ = try await api.login(email: "me@example.com", password: "pass-word")
+        gate.signal()
+        _ = try await slow.value
+        XCTAssertEqual(store.load()?.cookie, "fresh")
+        _ = try await api.counts()
+        XCTAssertEqual(StubProtocol.requests.last?.value(forHTTPHeaderField: "Cookie"), "keduly_session=fresh")
+    }
+
     func testAWrongPasswordIsNotALostSession() async throws {
         let api = await client()
         await api.setUnauthenticatedHandler { XCTFail("signing in failed; no session ended") }
@@ -239,6 +305,14 @@ final class RequestTests: XCTestCase {
     }
 }
 
+/// Counts calls from any thread.
+final class Counter: @unchecked Sendable {
+    private let lock = NSLock()
+    private var count = 0
+    var value: Int { lock.withLock { count } }
+    func increment() { lock.withLock { count += 1 } }
+}
+
 /// A session store that lives in memory.
 final class MemoryStore: SessionStore, @unchecked Sendable {
     private let lock = NSLock()
@@ -310,11 +384,16 @@ final class StubProtocol: URLProtocol, @unchecked Sendable {
             client?.urlProtocol(self, didFailWithError: failure)
             return
         }
-        let answer: Answer = handler?(request) ?? (500, [:], "")
-        let response = HTTPURLResponse(url: request.url!, statusCode: answer.status, httpVersion: "HTTP/1.1", headerFields: answer.headers)!
-        client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
-        client?.urlProtocol(self, didLoad: Data(answer.body.utf8))
-        client?.urlProtocolDidFinishLoading(self)
+        // Off the loading thread, so that a handler may hold one answer back while others are served.
+        let request = request
+        nonisolated(unsafe) let this = self
+        DispatchQueue.global().async {
+            let answer: Answer = handler?(request) ?? (500, [:], "")
+            let response = HTTPURLResponse(url: request.url!, statusCode: answer.status, httpVersion: "HTTP/1.1", headerFields: answer.headers)!
+            this.client?.urlProtocol(this, didReceive: response, cacheStoragePolicy: .notAllowed)
+            this.client?.urlProtocol(this, didLoad: Data(answer.body.utf8))
+            this.client?.urlProtocolDidFinishLoading(this)
+        }
     }
 
     override func stopLoading() {}

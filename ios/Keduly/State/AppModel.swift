@@ -39,6 +39,8 @@ final class AppModel {
     @ObservationIgnored private var pollTask: Task<Void, Never>?
     @ObservationIgnored private var focusTask: Task<Void, Never>?
     @ObservationIgnored private var active = true
+    /// The account's day when the pages were last known to be current.
+    @ObservationIgnored private var day: Day?
 
     init(api: APIClient) {
         self.api = api
@@ -81,6 +83,7 @@ final class AppModel {
             async let focus = api.focus()
             apply(try await boot)
             setFocus(try await focus)
+            day = today
             phase = .signedIn
             startPolling()
         } catch APIError.unauthenticated {
@@ -119,6 +122,7 @@ final class AppModel {
         focus = nil
         clock = nil
         revision = nil
+        day = nil
         itemOverrides = [:]
         notice = nil
         unreachable = false
@@ -156,6 +160,7 @@ final class AppModel {
         guard returned, phase == .signedIn else { return }
         Task {
             await refreshShared()
+            day = today
             reloadAll()
         }
     }
@@ -188,12 +193,33 @@ final class AppModel {
         } catch {
             return
         }
-        if let focus = try? await api.focus() { setFocus(focus) }
+        // Two things change what pages show without changing the revision: the timer moving on by
+        // the clock (a tomato earned, minutes spent) and the account's day turning over.
+        var stale = false
+        if let focus = try? await api.focus() {
+            stale = focusMoved(to: focus)
+            setFocus(focus)
+        }
+        if dayTurned() { stale = true }
         let answer = counts
         self.counts = answer.counts
-        guard answer.revision != revision else { return }
-        await refreshShared()
-        reloadAll()
+        if answer.revision != revision {
+            await refreshShared()
+            stale = true
+        }
+        if stale { reloadAll() }
+    }
+
+    /// Whether the timer is in another state or on another session than the one pages were loaded with.
+    private func focusMoved(to focus: Focus) -> Bool {
+        self.focus?.session?.id != focus.session?.id || self.focus?.state != focus.state
+    }
+
+    /// Whether today, in the account's zone, is another day than at the last check.
+    private func dayTurned() -> Bool {
+        let today = today
+        defer { day = today }
+        return day != nil && day != today
     }
 
     // MARK: - Writes
@@ -254,9 +280,9 @@ final class AppModel {
     @discardableResult
     func refreshFocus() async -> Bool {
         guard let focus = try? await api.focus() else { return false }
-        let ended = self.focus?.session?.id != focus.session?.id || self.focus?.state != focus.state
+        let moved = focusMoved(to: focus)
         setFocus(focus)
-        if ended { reloadAll() }
+        if moved { reloadAll() }
         return true
     }
 

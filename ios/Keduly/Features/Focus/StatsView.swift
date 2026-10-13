@@ -8,6 +8,8 @@ struct StatsView: View {
     private struct Content: Sendable {
         let stats: FocusStats
         let sessions: [FocusSession]
+        /// The sessions go back as far as the server allows, because the first range was empty.
+        var reachedBack = false
     }
 
     @State private var loader = Loader<Content>()
@@ -47,12 +49,18 @@ struct StatsView: View {
     }
 
     private func load() async {
-        let today = model.today, from = today.adding(days: -daysBack)
+        let today = model.today, from = today.adding(days: -daysBack), furthest = today.adding(days: -Self.maxDaysBack)
+        let widened = daysBack < Self.maxDaysBack
         await loader.load(model) { api in
             async let stats = api.focusStats()
             async let sessions = api.focusSessions(from: from, to: today)
-            return Content(stats: try await stats, sessions: try await sessions)
+            let content = Content(stats: try await stats, sessions: try await sessions)
+            // Nothing this week: before saying there are no records, look as far back as the server
+            // allows, or sessions from a few weeks ago could never be seen or filed.
+            guard content.stats.minutes == 0, content.sessions.isEmpty, widened else { return content }
+            return Content(stats: content.stats, sessions: try await api.focusSessions(from: furthest, to: today), reachedBack: true)
         }
+        if loader.value?.reachedBack == true { daysBack = Self.maxDaysBack }
     }
 
     // MARK: Figures
@@ -126,6 +134,8 @@ struct StatsView: View {
             }
             .padding(.top, 6)
         }
+        // The bars and their labels share a fixed grid.
+        .dynamicTypeSize(...AppType.fixedLayoutLimit)
     }
 
     private struct Line: Shape {
