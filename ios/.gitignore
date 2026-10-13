@@ -1,0 +1,5 @@
+# The project is generated from project.yml by XcodeGen.
+*.xcodeproj/
+/build/
+xcuserdata/
+.DS_Store
