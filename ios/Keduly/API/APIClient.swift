@@ -87,6 +87,9 @@ actor APIClient {
                 request.httpBody = body ?? Data("{}".utf8)
             }
         }
+        // What the answer may do to the session (renew its cookie, end it) only holds for the session
+        // the request was sent with. By the time a slow answer arrives the user may have signed in again.
+        let sentWith = cookie
         if let cookie {
             request.setValue("\(Self.cookieName)=\(cookie)", forHTTPHeaderField: "Cookie")
         }
@@ -105,13 +108,14 @@ actor APIClient {
             throw APIError.network
         }
         guard let http = response as? HTTPURLResponse else { throw APIError.badResponse }
-        adoptCookie(from: http, server: server)
+        let current = cookie == sentWith && self.server == server
+        if current { adoptCookie(from: http, server: server) }
 
         switch http.statusCode {
         case 200..<300:
             return data
         case 401:
-            if expectsSession {
+            if expectsSession && current {
                 forget()
                 await onUnauthenticated?()
             }

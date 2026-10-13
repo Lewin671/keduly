@@ -5,6 +5,7 @@ struct SettingsView: View {
     @Environment(AppModel.self) private var model
     @State private var name = ""
     @State private var error: String?
+    @State private var saving = false
     @State private var confirmingSignOut = false
     @FocusState private var editingName: Bool
 
@@ -67,7 +68,12 @@ struct SettingsView: View {
         }
     }
 
+    /// One save at a time: a control reads the value the server last confirmed, so a second
+    /// change made before the first one returned would start from the old value.
     private func save(_ patch: UserPatch) async {
+        guard !saving else { return }
+        saving = true
+        defer { saving = false }
         switch await model.write(inline: true, { try await $0.updateMe(patch) }) {
         case .success: error = nil
         case .failure(let failure): error = failure.status == 400 ? failure.message : nil
@@ -87,6 +93,7 @@ struct SettingsView: View {
             get: { model.zone.date(on: day, minutes: Zone.minutes(ofClock: value) ?? 0) },
             set: { date in Task { await save(patch(model.zone.hhmm(date))) } }
         ), displayedComponents: .hourAndMinute)
+        .disabled(saving)
     }
 
     private func stepper(_ title: String, _ value: Int, _ range: ClosedRange<Int>, _ unit: String, id: String, _ patch: @escaping (Int) -> UserPatch) -> some View {
@@ -97,6 +104,7 @@ struct SettingsView: View {
                 Text("\(value) \(unit)").foregroundStyle(Palette.label2).monospacedDigit()
             }
         }
+        .disabled(saving)
         .accessibilityIdentifier(id)
     }
 }
