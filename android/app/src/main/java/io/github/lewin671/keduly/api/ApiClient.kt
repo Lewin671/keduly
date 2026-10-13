@@ -236,7 +236,19 @@ class ApiClient(
 
     /* ---------- activity ---------- */
 
-    suspend fun activity(limit: Int): ActivityPage = get("activity", null, "limit" to limit.toString())
+    suspend fun activity(limit: Int, cursor: String? = null): ActivityPage = get("activity", null, "limit" to limit.toString(), "cursor" to cursor)
+
+    /** The newest [count] entries, following cursors past the size of one page. */
+    suspend fun activityUpTo(count: Int): ActivityPage {
+        val all = ArrayList<Activity>()
+        var cursor: String? = null
+        do {
+            val page = activity(minOf(count - all.size, 200), cursor)
+            all += page.activities
+            cursor = page.nextCursor
+        } while (cursor != null && all.size < count)
+        return ActivityPage(all, cursor)
+    }
     suspend fun undoActivity(id: String) { request("POST", "activity/$id/undo") }
     suspend fun redoActivity(id: String) { request("POST", "activity/$id/redo") }
 }

@@ -43,6 +43,7 @@ import io.github.lewin671.keduly.api.ItemPatch
 import io.github.lewin671.keduly.api.Opt
 import io.github.lewin671.keduly.api.Project
 import io.github.lewin671.keduly.api.ProjectPatch
+import io.github.lewin671.keduly.core.Draft
 import io.github.lewin671.keduly.core.Times
 import java.time.Instant
 import java.time.LocalDate
@@ -239,17 +240,18 @@ fun ItemSheet(id: String, close: () -> Unit) {
         return
     }
     val project = projectOf(item.projectId)
-    var title by remember(id) { mutableStateOf(item.title) }
-    var notes by remember(id) { mutableStateOf(item.notes) }
+    // Null until the user types: an untouched field follows the server and is never written back.
+    var titleDraft by remember(id) { mutableStateOf<String?>(null) }
+    var notesDraft by remember(id) { mutableStateOf<String?>(null) }
     var dialog by remember { mutableStateOf("") }
     val latest by rememberUpdatedState(item)
     // Title and notes are saved when the sheet goes away; everything else applies at once.
     DisposableEffect(id) {
         onDispose {
-            val changedTitle = title.trim().takeIf { it.isNotEmpty() && it != latest.title }
-            val changedNotes = notes.trim().takeIf { it != latest.notes }
-            if (changedTitle != null || changedNotes != null) {
-                app.act { api -> api.updateItem(id, ItemPatch(title = changedTitle?.let { Opt.Put(it) } ?: Opt.Keep, notes = changedNotes?.let { Opt.Put(it) } ?: Opt.Keep)) }
+            val title = Draft.toWrite(titleDraft, latest.title, allowEmpty = false)
+            val notes = Draft.toWrite(notesDraft, latest.notes, allowEmpty = true)
+            if (title != null || notes != null) {
+                app.act { api -> api.updateItem(id, ItemPatch(title = title?.let { Opt.Put(it) } ?: Opt.Keep, notes = notes?.let { Opt.Put(it) } ?: Opt.Keep)) }
             }
         }
     }
@@ -264,11 +266,11 @@ fun ItemSheet(id: String, close: () -> Unit) {
         }
         Column(Modifier.weight(1f).padding(top = 9.dp, end = 4.dp)) {
             PlainField(
-                title, { title = it }, stringResource(R.string.item_title),
+                Draft.shown(titleDraft, item.title), { titleDraft = it }, stringResource(R.string.item_title),
                 TextStyle(fontSize = 22.sp, lineHeight = 28.sp, fontWeight = FontWeight.Bold, textDecoration = if (item.done) TextDecoration.LineThrough else null),
                 Modifier.fillMaxWidth(),
             )
-            PlainField(notes, { notes = it }, stringResource(R.string.item_notes), TextStyle(fontSize = 15.sp, lineHeight = 21.sp, color = K.label2), Modifier.fillMaxWidth().padding(top = 4.dp))
+            PlainField(Draft.shown(notesDraft, item.notes), { notesDraft = it }, stringResource(R.string.item_notes), TextStyle(fontSize = 15.sp, lineHeight = 21.sp, color = K.label2), Modifier.fillMaxWidth().padding(top = 4.dp))
         }
     }
     item.suggestion?.let { suggestion ->

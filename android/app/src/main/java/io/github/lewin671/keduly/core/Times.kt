@@ -90,11 +90,18 @@ data class EventSpan(val start: LocalDateTime, val end: LocalDateTime) {
         return EventSpan(next, next.plus(if (length.isNegative || length.isZero) java.time.Duration.ofHours(1) else length))
     }
 
-    /** An end at or before the start's time of day means the next day. */
+    /**
+     * Changing the end's clock time keeps the end's date, so an event that spans several days
+     * still does. Only an event within one day rolls over: an end at or before its start means
+     * the next day.
+     */
     fun withEnd(time: LocalTime): EventSpan {
-        val day = start.toLocalDate()
-        return copy(end = (if (time.isAfter(start.toLocalTime())) day else day.plusDays(1)).atTime(time))
+        val sameDay = end.toLocalDate() == start.toLocalDate()
+        val next = end.toLocalDate().atTime(time)
+        return copy(end = if (sameDay && !next.isAfter(start)) next.plusDays(1) else next)
     }
+
+    fun withEndDay(day: LocalDate): EventSpan = copy(end = day.atTime(end.toLocalTime()))
 
     /** Moving the day keeps the times and the number of days the event spans. */
     fun withDay(day: LocalDate): EventSpan {

@@ -48,6 +48,7 @@ import io.github.lewin671.keduly.api.Item
 import io.github.lewin671.keduly.api.Project
 import io.github.lewin671.keduly.core.FocusMath
 import io.github.lewin671.keduly.core.Times
+import java.time.LocalDate
 import kotlinx.coroutines.delay
 
 val LocalApp = staticCompositionLocalOf<AppModel> { error("no app model") }
@@ -55,7 +56,7 @@ val LocalFmt = staticCompositionLocalOf<Fmt> { error("no formatter") }
 val LocalNav = staticCompositionLocalOf<Nav> { error("no navigation") }
 
 /** Where a screen can go. */
-class Nav(val go: (String) -> Unit, val back: () -> Unit, val activity: () -> Unit, val calendarDay: () -> Unit)
+class Nav(val go: (String) -> Unit, val back: () -> Unit, val activity: () -> Unit, val calendarDay: (LocalDate?) -> Unit)
 
 /** The distance from the screen edge to the content, and to the text of an item row. */
 val PagePad = 20.dp

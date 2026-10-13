@@ -24,6 +24,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.ViewModelStore
+import androidx.lifecycle.ViewModelStoreOwner
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavGraphBuilder
@@ -39,6 +42,11 @@ import io.github.lewin671.keduly.R
 import io.github.lewin671.keduly.api.normalizeServer
 import io.github.lewin671.keduly.core.FocusMath
 import io.github.lewin671.keduly.core.Times
+
+/** Holds the view models of one signed-in session that do not belong to a page. */
+private class SessionStoreOwner : ViewModelStoreOwner {
+    override val viewModelStore = ViewModelStore()
+}
 
 private class Tab(val graph: String, val root: String, val label: Int, val icon: ImageVector)
 
@@ -66,7 +74,8 @@ fun App(launch: Launch?) {
             when (phase) {
                 Phase.Starting -> Starting()
                 Phase.SignedOut -> SignIn()
-                Phase.SignedIn -> key(generation) { Shell(launch?.route) }
+                // A page asked for by a debug launch applies to the session it started, not to later ones.
+                Phase.SignedIn -> key(generation) { Shell(if (generation == 0) launch?.route else null) }
             }
         }
     }
@@ -101,6 +110,9 @@ private fun Shell(startRoute: String?) {
     val resources = LocalContext.current.resources
     val fmt = remember(user.timezone, day, user.focusMinutes, configuration) { Fmt(resources, app.zone(), day, user.focusMinutes) }
 
+    val session = remember { SessionStoreOwner() }
+    DisposableEffect(session) { onDispose { session.viewModelStore.clear() } }
+
     val controller = rememberNavController()
     val entry by controller.currentBackStackEntryAsState()
     val route = entry?.destination?.route
@@ -110,9 +122,10 @@ private fun Shell(startRoute: String?) {
             go = { controller.navigate(it) { launchSingleTop = true } },
             back = { controller.popBackStack() },
             activity = { controller.navigate("${tab.graph}/activity") { launchSingleTop = true } },
-            calendarDay = {
+            calendarDay = { day ->
+                // The day view of that day; null is today.
                 app.calendarMode.value = 0
-                app.calendarDate.value = null
+                app.calendarDate.value = day
                 controller.switchTab(TABS[1])
             },
         )
@@ -201,11 +214,15 @@ private fun Shell(startRoute: String?) {
                     }
                 }
             }
-            if (zen && running != null) {
-                BackHandler { app.zen.value = false }
-                ZenScreen(running)
+            // The timer and the sheets sit outside the pages, so their data would otherwise live in
+            // the activity's store and outlast the account it belongs to.
+            CompositionLocalProvider(LocalViewModelStoreOwner provides session) {
+                if (zen && running != null) {
+                    BackHandler { app.zen.value = false }
+                    ZenScreen(running)
+                }
+                SheetHost()
             }
-            SheetHost()
         }
     }
 }
