@@ -427,7 +427,7 @@ These endpoints assemble what one screen needs in a single request.
 | `items` | Open items with `planned_date` today or earlier, plus items completed today. Important items first |
 | `overdue` | Open items whose `due_date` is before today and that are not already in `items` |
 | `events` | Today's events, time blocks excluded, all-day ones first |
-| `free_minutes` | Minutes from now (or from `work_start`, when the working day has not begun) to `work_end` not covered by any event or time block (pending suggestions count as covered). Overlapping events are counted once. Zero once `work_end` has passed |
+| `free_minutes` | Minutes from now (or from `work_start`, when the working day has not begun) to `work_end` not covered by any event or time block (pending suggestions count as covered). Overlapping events are counted once. Zero once `work_end` has passed. It shrinks as time passes without the revision changing, so a client that keeps Today open asks again about once a minute |
 | `unplanned_minutes` | Work left on items in `items` and `overdue` that are open, not `evening`, and have neither a time block nor a pending suggestion: each item's `estimate_minutes` less its `focus.minutes`, never below zero |
 
 `GET /upcoming` takes two dates (inclusive, at most 62 days apart) and returns only days that have

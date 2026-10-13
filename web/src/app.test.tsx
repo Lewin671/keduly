@@ -543,6 +543,17 @@ describe('calendar', () => {
 });
 
 describe('items', () => {
+  it('reloads today every minute, as its free time counts from now', async () => {
+    const timers = vi.spyOn(globalThis, 'setInterval');
+    await open('#/items/today');
+    const tick = timers.mock.calls.find(([, ms]) => ms === 60_000)![0] as () => void;
+    timers.mockRestore();
+    const before = callsTo('GET', '/today').length;
+    tick();
+    await settle();
+    expect(callsTo('GET', '/today').length).toBe(before + 1);
+  });
+
   it('lists today with its summary, overdue and evening sections', async () => {
     await open('#/items/today');
     expect(document.body.dataset.mode).toBe('tasks');

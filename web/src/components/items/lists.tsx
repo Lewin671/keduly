@@ -37,6 +37,11 @@ export function Inbox(): JSX.Element {
 export function Today(): JSX.Element {
   // Keyed by the day, so the list is fetched again when the date changes at midnight.
   const res = useResource(`today:${today.value}`, api.getToday);
+  // The free time counts from now, so it goes stale without any change on the server.
+  useEffect(() => {
+    const timer = setInterval(res.reload, 60_000);
+    return () => clearInterval(timer);
+  }, []);
   const head = <ListHead icon={<Icon name="star" />} name={t('nav.today')} color="#f5b400" />;
   const data = res.data;
   if (res.failed) return <>{head}<LoadFailed retry={res.reload} /></>;
