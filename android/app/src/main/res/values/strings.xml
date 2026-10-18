@@ -382,4 +382,22 @@
     <string name="update_permission_body">Android 需要你允许 Keduly 安装应用：在设置里打开「允许来自此来源的应用」，返回后再点一次安装。</string>
     <string name="update_open_settings">去设置</string>
     <string name="update_toast">有新版本 %1$s，可在设置中更新</string>
+    <string name="approve_title">允许其他设备登录</string>
+    <string name="approve_paste_lead">在要登录的设备上点「授权登录」，把授权链接发到这台手机，再粘贴到这里。</string>
+    <string name="approve_link">授权链接</string>
+    <string name="approve_paste">粘贴</string>
+    <string name="approve_not_link">这不是授权链接</string>
+    <string name="approve_other_server">这个链接来自另一台服务器（%1$s）</string>
+    <string name="approve_ask">允许这台设备登录？</string>
+    <string name="approve_lead">一台设备（%1$s）想登录你的账号 %2$s</string>
+    <string name="approve_lead_unknown">一台设备想登录你的账号 %1$s</string>
+    <string name="approve_pin">输入那台设备屏幕上的 4 位数字</string>
+    <string name="approve_warning">允许后，那台设备可以查看和修改你的全部内容。如果二维码或链接是别人发给你的，请拒绝。</string>
+    <string name="approve_wrong_pin">数字不对，再看一眼那台设备的屏幕</string>
+    <string name="approve_allow">允许登录</string>
+    <string name="approve_refuse">拒绝</string>
+    <string name="approve_gone">授权链接已失效</string>
+    <string name="approve_gone_lead">它已经过期、被用过，或者数字输错了 3 次。请在那台设备上重新点「授权登录」。</string>
+    <string name="approve_done">已允许</string>
+    <string name="approve_done_lead">那台设备会在几秒内自动登录。想让它退出，可以在网页版的设置里修改密码。</string>
 </resources>

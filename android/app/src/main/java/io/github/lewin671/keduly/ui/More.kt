@@ -161,6 +161,7 @@ private fun ValueDialog(title: String, initial: String, number: Boolean, suffix:
 @Composable
 fun SettingsScreen() {
     val app = LocalApp.current
+    val nav = LocalNav.current
     val boot by app.boot.collectAsStateWithLifecycle()
     val busy by app.busy.collectAsStateWithLifecycle()
     val user = boot?.user ?: return
@@ -172,7 +173,8 @@ fun SettingsScreen() {
             Group {
                 GroupRow(stringResource(R.string.account_name), user.name, leading = { RowIcon(KIcons.Person, K.blue) }) { dialog = "name" }
                 GroupRow(stringResource(R.string.account_email), user.email, leading = { RowIcon(KIcons.Tray, K.blue) })
-                GroupRow(stringResource(R.string.account_timezone), user.timezone, last = true, leading = { RowIcon(KIcons.Clock, K.blue) })
+                GroupRow(stringResource(R.string.account_timezone), user.timezone, leading = { RowIcon(KIcons.Clock, K.blue) })
+                GroupRow(stringResource(R.string.approve_title), last = true, leading = { RowIcon(KIcons.Check, K.blue) }) { nav.go("approve") }
             }
             GroupNote(stringResource(R.string.account_timezone_note))
             GroupHeader(stringResource(R.string.account_hours))

@@ -293,5 +293,9 @@ data class DeviceLoginRequest(val request: Request, val pin: String, val secret:
     fun approvalUrl(server: String): String = server.trimEnd('/') + "/#approve=" + request.id
 }
 
+/** A login request as the approving device sees it: [device] is the server's name for the asker, empty when unknown. */
+@Serializable
+data class PendingLogin(val id: String, val device: String = "", val expiresAt: String)
+
 @Serializable
 data class DeviceLoginClaim(val status: String, val user: User? = null)

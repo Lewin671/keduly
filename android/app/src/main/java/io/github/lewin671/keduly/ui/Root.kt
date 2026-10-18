@@ -187,8 +187,8 @@ private fun Shell(startRoute: String?) {
                     }
                 },
                 floatingActionButton = {
-                    // Settings is a page of values to edit; the add button would sit on top of them.
-                    if (route != "settings") FloatingActionButton(
+                    // Settings and approving a device are pages of values to edit; the add button would sit on top of them.
+                    if (route != "settings" && route != "approve") FloatingActionButton(
                         onClick = {
                             app.sheet.value = when {
                                 tab === TABS[1] -> Sheet.EventForm(null, app.calendarDate.value ?: day)
@@ -215,6 +215,7 @@ private fun Shell(startRoute: String?) {
                         composable("search") { SearchScreen() }
                         composable("project/{id}") { ProjectScreen(it.arguments?.getString("id").orEmpty()) }
                         composable("settings") { SettingsScreen() }
+                        composable("approve") { ApproveScreen() }
                         activityPage(TABS[0])
                     }
                     navigation(route = TABS[1].graph, startDestination = "calendar") {

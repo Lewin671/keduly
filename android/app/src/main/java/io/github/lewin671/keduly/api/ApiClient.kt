@@ -156,6 +156,15 @@ class ApiClient(
     suspend fun startLoginRequest(): DeviceLoginRequest =
         decode(request("POST", "auth/requests", session = false), null)
 
+    /** A request another device made, for approving it here; the pin stays on that device. */
+    suspend fun loginRequest(id: String): PendingLogin = get("auth/requests/$id", "request")
+
+    suspend fun approveLoginRequest(id: String, pin: String) {
+        request("POST", "auth/requests/$id/approve", body = buildJsonObject { put("pin", pin) })
+    }
+
+    suspend fun refuseLoginRequest(id: String) { request("DELETE", "auth/requests/$id") }
+
     suspend fun claimLoginRequest(login: DeviceLoginRequest): Boolean {
         val claim: DeviceLoginClaim = decode(request("POST", "auth/requests/${login.request.id}/claim",
             body = buildJsonObject { put("secret", login.secret) }, session = false), null)
