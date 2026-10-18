@@ -301,6 +301,14 @@ recurring events (they are read-only, as in the web app). Without a connection t
 is on screen, say that the server cannot be reached and offer to retry; they do not queue changes.
 The timer is the server's: a phone that is asleep does not ring when a tomato ends.
 
+Settings end with the installed version. The Android release build also updates itself from the
+GitHub releases: it reads `latest.properties` when it comes to the foreground (at most every six
+hours) and when 检查更新 is tapped, mentions a newer release once, and downloads only when asked.
+The APK must match the manifest's size and SHA-256, this app's package name and the promised
+version code before it goes to the system installer, which also checks the signature. Debug builds
+do not update themselves. iOS has no installs outside the App Store or Xcode, so it shows the
+version only.
+
 ## Edge cases
 
 The mockup has a "设计稿演示数据" switch at the bottom of the sidebar (for the mockup only, not a

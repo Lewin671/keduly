@@ -23,6 +23,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LifecycleStartEffect
+import io.github.lewin671.keduly.update.UpdateState
+import io.github.lewin671.keduly.update.Updater
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
@@ -146,6 +148,16 @@ private fun Shell(startRoute: String?) {
     val running = focus?.takeIf { it.state != "idle" }
     val snackbar = remember { SnackbarHostState() }
     LaunchedEffect(Unit) { app.messages.collect { snackbar.showSnackbar(it) } }
+    // A newer release found in the background is mentioned once; Settings offers it from then on.
+    LaunchedEffect(Unit) {
+        var told: String? = null
+        Updater.state.collect { state ->
+            if (state is UpdateState.Available && state.release.version != told) {
+                told = state.release.version
+                app.messages.tryEmit(app.text(R.string.update_toast, state.release.version))
+            }
+        }
+    }
 
     CompositionLocalProvider(LocalFmt provides fmt, LocalNav provides nav) {
         FocusWatcher()

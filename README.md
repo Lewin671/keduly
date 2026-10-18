@@ -85,8 +85,10 @@ the server address shown there, your email and that password. Each project appea
 ## Use it from a phone
 
 `ios/` and `android/` hold native apps for the same server and account: items, calendar and the
-focus timer. They are not in the app stores yet; build them from source and sign in with the
-server address, your email and your password.
+focus timer. They are not in the app stores yet. For Android, download `keduly-android-v….apk`
+from the [latest release](https://github.com/Lewin671/keduly/releases/latest); the app then
+offers newer releases itself, under Settings. For iOS, build from source. Sign in with the server
+address, your email and your password.
 
 ```sh
 scripts/check-ios.sh       # needs Xcode and XcodeGen; then open ios/Keduly.xcodeproj

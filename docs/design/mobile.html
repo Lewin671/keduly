@@ -582,6 +582,12 @@ function authorization() {
   return { cls: 'grouped', nav: nav({ left: '<button class="back">取消</button>' }), body: `<div style="padding:36px 24px;text-align:center"><h2>在已登录的浏览器中授权</h2><p style="margin:16px 0;color:var(--label2)">打开授权链接，输入下面的确认码。授权后此设备会自动登录。</p><div style="font-size:36px;letter-spacing:12px;padding:24px 0">4826</div><p style="color:var(--label2);font-size:14px">等待授权 · 两分钟内有效</p><button style="display:block;margin:28px auto 16px;color:var(--tint)">在浏览器中授权</button><button style="color:var(--tint)">分享授权链接</button><p style="margin-top:20px;font-size:12px;color:var(--label2);overflow-wrap:anywhere">https://keduly.example.com/#approve=example</p><p style="margin-top:32px;color:var(--red)">授权已过期或取消</p><button style="margin-top:12px;color:var(--tint)">重新请求授权</button></div>` };
 }
 
+function settingsUpdate() {
+  const row = (i, c, l, v, vc) => `<button class="gr" style="--c:${c}">${icon(i)}<span class="gr-b"><b>${l}</b><em style="${vc ? `color:${vc}` : ''}">${v}</em>${icon('right', 'chev')}</span></button>`;
+  const note = t => `<p style="font-size:13px;line-height:18px;color:var(--label2);padding:7px 16px 0">${t}</p>`;
+  return { cls: 'grouped', nav: nav({ back: '事项' }), body: `<h2 class="lt">设置</h2><div class="grp-h">应用</div><div class="grp">${row('layers', 'var(--indigo)', '版本', '0.2.1')}${row('down', 'var(--blue)', '检查更新', '<i class="dot" style="--c:var(--red)"></i> 新版本 0.3.0', 'var(--tint)')}</div>${note('更新来自 GitHub 上的发布，下载后校验，再由系统安装。')}<div class="grp-h">服务器</div><div class="grp">${row('layers', 'var(--teal)', 'keduly.example.com', '')}</div><div class="grp" style="margin-top:22px"><button class="gr"><span class="gr-b"><b style="color:var(--red)">退出登录</b></span></button></div>` };
+}
+
 const SCREENS = [
   ['Device authorization', 'Sign-in offers 授权登录 after entering the server. The request shows a separate pin and an approval link to open or share with an already signed-in browser. Expiry and cancellation stop polling; retry is explicit. No password or claim secret is shown.', authorization],
   ['Items root', 'The top of the items tab: the lists, then projects grouped by area. The gear is only here.', lists],
@@ -593,6 +599,7 @@ const SCREENS = [
   ['Calendar, day (a timer is running)', 'Overlaps share up to three lanes. The strip above the tab bar leads back to the timer.', dayView],
   ['Focus, idle', 'The main button sits above the tab bar. Tapping the item picks another; statistics are at the top right.', focusIdle],
   ['Focus, working', 'Full screen, tinted with the project colour, no tab bar. 收起 returns to the page it came from.', focusRun],
+  ['Settings, app version and update (Android)', 'Android only: the release build looks for a newer GitHub release on coming to the foreground (at most every six hours) and on tap. A find is mentioned once in a snackbar; the row then offers it (下载并安装 dialog with size and notes), shows the download percentage, and hands the verified APK to the system installer, asking for 安装未知应用 first if needed. Debug builds and iOS show only 版本.', settingsUpdate],
   ['Focus, statistics', 'Four figures, a week of bars stacked by project colour, where the time went, the records.', stats],
 ];
 

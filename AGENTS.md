@@ -19,6 +19,7 @@ Keduly is a calendar and task manager with a first-class interface for AI agents
 | `deploy/` | Example container and reverse proxy files |
 | `scripts/` | `check.sh` runs every check of the server, the web app and the CLI; `check-ios.sh` and `check-android.sh` build and test the phone apps; `seed-demo.py` fills a development server with demo data; `build.sh` builds the release binary; `release.sh` builds the archives of a release |
 | `install.sh` | What users pipe into `sh`: downloads a release and installs the binary; the skill is a separate `keduly skill install` |
+| `version.properties` | The version of a release and the Android version code. `ios/project.yml` repeats both, and the release checks that they agree |
 
 ## Rules
 
@@ -55,6 +56,6 @@ Keduly is a calendar and task manager with a first-class interface for AI agents
 | Build and test the Android app (needs JDK 17 and the Android SDK) | `scripts/check-android.sh` |
 | Fill a development server with demo data | `scripts/seed-demo.py http://127.0.0.1:8080` (the server must run with `--registration open`) |
 | Build the release binary (web app embedded) | `scripts/build.sh` |
-| Publish a release | `git tag v0.2.0 && git push origin v0.2.0`; the workflow in `.github/workflows/release.yml` builds and uploads it |
+| Publish a release | Raise `version` and `androidVersionCode` in `version.properties` and `ios/project.yml`, commit, then `git tag -a v0.3.0 -m "<notes for users>" && git push origin main v0.3.0`. The workflow in `.github/workflows/release.yml` checks, builds the CLI archives and the signed APK, and publishes them with `latest.properties`, which the Android app updates from. The tag's message is the release notes |
 | Run the server for development | `go run ./cmd/keduly serve --data ./data --addr 127.0.0.1:8080` |
 | Run the web app with hot reload | `cd web && pnpm dev` (proxies `/api` and `/dav` to `127.0.0.1:8080`) |

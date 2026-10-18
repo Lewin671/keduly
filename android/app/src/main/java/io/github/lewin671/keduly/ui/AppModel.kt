@@ -23,6 +23,7 @@ import io.github.lewin671.keduly.api.Opt
 import io.github.lewin671.keduly.api.Project
 import io.github.lewin671.keduly.api.SessionStore
 import io.github.lewin671.keduly.api.defaultHttpClient
+import io.github.lewin671.keduly.update.Updater
 import io.github.lewin671.keduly.api.focusProgressChanged
 import io.github.lewin671.keduly.core.ServerClock
 import io.github.lewin671.keduly.core.WriteQueue
@@ -270,6 +271,7 @@ class AppModel(application: Application) : AndroidViewModel(application) {
 
     fun setForeground(on: Boolean) {
         if(on) HabitNotifications.reconcile(getApplication())
+        if (on) Updater.check(getApplication())
         foreground = on
         if (!on) {
             poll?.cancel()

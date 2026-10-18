@@ -352,3 +352,5 @@
 "habit.permissionInvite" = "点击开启本机提醒后，系统会询问通知权限。";
 
 "error.habit_records_depend" = "请先在动态中撤销该习惯后续的改期或记录，再修改重复规则。";
+"update.app" = "应用";
+"update.version" = "版本";

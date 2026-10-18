@@ -50,6 +50,13 @@ struct SettingsView: View {
                     Text(L("focusSettings.footer"))
                 }
 
+                // Updates come from the App Store or Xcode, so the app only says which version it is.
+                Section {
+                    LabeledContent(L("update.version"), value: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "")
+                } header: {
+                    Text(L("update.app"))
+                }
+
                 Section {
                     Button(L("account.signOut"), role: .destructive) { confirmingSignOut = true }
                         .accessibilityIdentifier("sign-out")

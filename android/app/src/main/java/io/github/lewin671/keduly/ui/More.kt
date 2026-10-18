@@ -27,6 +27,13 @@ import io.github.lewin671.keduly.api.Suggestion
 import io.github.lewin671.keduly.core.Times
 import java.time.LocalTime
 import kotlinx.coroutines.launch
+import android.text.format.Formatter
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
+import io.github.lewin671.keduly.update.UpdateState
+import io.github.lewin671.keduly.update.Updater
+import io.github.lewin671.keduly.update.release
 
 /* ---------- activity ---------- */
 
@@ -181,6 +188,7 @@ fun SettingsScreen() {
                 GroupRow(stringResource(R.string.focus_settings_round), stringResource(R.string.stats_count, user.roundSize), last = true, leading = { RowIcon(KIcons.Grid, K.green) }) { dialog = "round" }
             }
             GroupNote(stringResource(R.string.focus_settings_footer))
+            UpdateGroup()
             GroupHeader(stringResource(R.string.auth_server))
             Group {
                 GroupRow(app.store.server.orEmpty().substringAfter("://"), last = true, leading = { RowIcon(KIcons.Layers, K.teal) })
@@ -208,4 +216,92 @@ fun SettingsScreen() {
             dismissButton = { TextButton(onClick = close) { Text(stringResource(R.string.cancel)) } },
         )
     }
+}
+
+/* ---------- update ---------- */
+
+/**
+ * The installed version and, in a release build, the update from GitHub: what a look found,
+ * the download, and the hand-off to the system's installer.
+ */
+@Composable
+private fun UpdateGroup() {
+    val context = LocalContext.current
+    val state by Updater.state.collectAsStateWithLifecycle()
+    val failed by Updater.checkFailed.collectAsStateWithLifecycle()
+    val installed = remember { context.packageManager.getPackageInfo(context.packageName, 0).versionName.orEmpty() }
+    val enabled = remember { Updater.enabled(context) }
+    var ask by remember { mutableStateOf(false) }
+    var permission by remember { mutableStateOf(false) }
+    val installer = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {}
+    // Back from the system's settings with the permission given, the install goes on.
+    val settings = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        val ready = Updater.state.value
+        if (ready is UpdateState.Ready && Updater.canInstall(context)) installer.launch(Updater.installIntent(context, ready.file))
+    }
+    fun install(ready: UpdateState.Ready) {
+        if (Updater.canInstall(context)) installer.launch(Updater.installIntent(context, ready.file)) else permission = true
+    }
+    // A download the user started goes to the installer as soon as it is verified.
+    var waiting by remember { mutableStateOf(false) }
+    LaunchedEffect(state) {
+        val ready = state
+        if (waiting && ready is UpdateState.Ready) {
+            waiting = false
+            install(ready)
+        }
+    }
+
+    GroupHeader(stringResource(R.string.update_app))
+    Group {
+        GroupRow(stringResource(R.string.update_version), installed, last = !enabled, chevron = false, leading = { RowIcon(KIcons.Layers, K.indigo) })
+        if (enabled) {
+            val value = when (val s = state) {
+                UpdateState.Checking -> stringResource(R.string.update_checking)
+                UpdateState.Latest -> stringResource(R.string.update_latest)
+                is UpdateState.Available -> stringResource(R.string.update_available, s.release.version)
+                is UpdateState.Downloading -> stringResource(R.string.update_downloading, (s.done * 100 / s.release.size).toInt())
+                is UpdateState.Ready -> stringResource(R.string.update_ready)
+                is UpdateState.Failed -> stringResource(R.string.update_failed)
+                UpdateState.Unknown -> if (failed) stringResource(R.string.update_check_failed) else ""
+            }
+            val offered = state.release != null && state !is UpdateState.Downloading
+            GroupRow(
+                stringResource(R.string.update_check), value, last = true,
+                valueColor = if (offered) K.tint else K.label2,
+                valueDot = if (state is UpdateState.Available) K.red else null,
+                enabled = state !is UpdateState.Checking && state !is UpdateState.Downloading,
+                leading = { RowIcon(KIcons.Down, K.blue) },
+            ) {
+                when (val s = state) {
+                    is UpdateState.Available -> ask = true
+                    is UpdateState.Failed -> { waiting = true; Updater.download(context) }
+                    is UpdateState.Ready -> install(s)
+                    else -> Updater.check(context, manual = true)
+                }
+            }
+        }
+    }
+    if (enabled) GroupNote(stringResource(R.string.update_note))
+
+    val offer = state.release
+    if (ask && offer != null) AlertDialog(
+        onDismissRequest = { ask = false },
+        title = { Text(stringResource(R.string.update_dialog_title, offer.version)) },
+        text = {
+            Column {
+                Text(stringResource(R.string.update_dialog_body, Formatter.formatShortFileSize(context, offer.size)))
+                if (offer.notes.isNotEmpty()) Text(offer.notes, fontSize = 13.sp, lineHeight = 18.sp, color = K.label2, modifier = Modifier.padding(top = 10.dp))
+            }
+        },
+        confirmButton = { TextButton(onClick = { ask = false; waiting = true; Updater.download(context) }) { Text(stringResource(R.string.update_download), fontWeight = FontWeight.SemiBold) } },
+        dismissButton = { TextButton(onClick = { ask = false }) { Text(stringResource(R.string.update_later)) } },
+    )
+    if (permission) AlertDialog(
+        onDismissRequest = { permission = false },
+        title = { Text(stringResource(R.string.update_permission_title)) },
+        text = { Text(stringResource(R.string.update_permission_body)) },
+        confirmButton = { TextButton(onClick = { permission = false; settings.launch(Updater.permissionIntent(context)) }) { Text(stringResource(R.string.update_open_settings), fontWeight = FontWeight.SemiBold) } },
+        dismissButton = { TextButton(onClick = { permission = false }) { Text(stringResource(R.string.cancel)) } },
+    )
 }
