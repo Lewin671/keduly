@@ -38,6 +38,7 @@
     <string name="auth_register">注册</string>
     <string name="auth_register_lead">创建一个账号</string>
     <string name="auth_server">服务器地址</string>
+    <string name="auth_server_invalid">服务器地址不对</string>
     <string name="auth_taken">这个邮箱已经注册过了</string>
     <string name="auth_to_login">已有账号？登录</string>
     <string name="auth_to_register">还没有账号？注册</string>

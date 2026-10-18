@@ -112,7 +112,11 @@ fun SignIn() {
         Spacer(Modifier.height(18.dp))
         PillButton(stringResource(if (registering) R.string.auth_register else R.string.auth_login), Modifier.fillMaxWidth(), primary = true, enabled = ready && !busy, onClick = submit)
         if (!registering) {
-            TextButton(onClick = { authorizationServer = normalizeServer(server) }, enabled = normalizeServer(server) != null && !busy) {
+            // Like iOS: without a usable address the tap says so instead of doing nothing.
+            TextButton(onClick = {
+                authorizationServer = normalizeServer(server)
+                error = if (authorizationServer == null) app.text(R.string.auth_server_invalid) else null
+            }, enabled = !busy) {
                 Text(stringResource(R.string.auth_authorize), color = K.tint, fontSize = 15.sp)
             }
         }
