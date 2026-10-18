@@ -331,13 +331,14 @@ code holds `{origin}/#approve={id}`. Native phone apps can also open or share th
 approval link in a browser that is already signed in; the link contains neither the pin nor
 the claim secret. They display the pin separately, poll every 2 seconds while active, and
 stop on cancellation or expiry. Only an approved response with a session cookie completes
-phone sign-in. Starting a new request requires an explicit retry.
+phone sign-in. Starting a new request requires an explicit retry. A signed-in phone app approves
+with the same calls as the web app, taking the id from a pasted approval link.
 
 | Method and path | Auth | Body | Response |
 |---|---|---|---|
 | `POST /auth/requests` | none | | `201 { request, pin, secret }`. `request` is `{ id, device, expires_at }`. The device shows `pin` (4 digits) beside the QR code and keeps `secret` to itself |
 | `POST /auth/requests/{id}/claim` | none | `secret` | `{ "status": "pending" }` while it waits. Once approved, `{ "status": "approved", user }` and the session cookie, exactly once. Polled every 2 seconds |
-| `GET /auth/requests/{id}` | session | | `{ request }`, without the pin. `device` names the asking browser and system from a fixed list, e.g. `Chrome · Mac`, and is empty when unrecognised |
+| `GET /auth/requests/{id}` | session | | `{ request }`, without the pin. `device` names the asking browser and system from a fixed list, e.g. `Chrome · Mac` or `Keduly · Android` for the phone apps, and is empty when unrecognised |
 | `POST /auth/requests/{id}/approve` | session | `pin` | `204`: the asking device may sign in as the caller. A wrong pin is `400 invalid_request`; the third one deletes the request |
 | `DELETE /auth/requests/{id}` | session | | `204`. Refuses the request |
 

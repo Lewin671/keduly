@@ -588,8 +588,17 @@ function settingsUpdate() {
   return { cls: 'grouped', nav: nav({ back: '事项' }), body: `<h2 class="lt">设置</h2><div class="grp-h">应用</div><div class="grp">${row('layers', 'var(--indigo)', '版本', '0.2.1')}${row('down', 'var(--blue)', '检查更新', '<i class="dot" style="--c:var(--red)"></i> 新版本 0.3.0', 'var(--tint)')}</div>${note('更新来自 GitHub 上的发布，下载后校验，再由系统安装。')}<div class="grp-h">服务器</div><div class="grp">${row('layers', 'var(--teal)', 'keduly.example.com', '')}</div><div class="grp" style="margin-top:22px"><button class="gr"><span class="gr-b"><b style="color:var(--red)">退出登录</b></span></button></div>` };
 }
 
+function approvePaste() {
+  return { cls: 'grouped', nav: nav({ back: '设置' }), body: `<h2 class="lt">允许其他设备登录</h2><p style="margin:4px 16px 14px;color:var(--label2);font-size:15px;line-height:21px">在要登录的设备上点「授权登录」，把授权链接发到这台手机，再粘贴到这里。</p><div class="grp"><div class="gr"><span class="gr-b"><b style="color:var(--label3)">授权链接</b><em style="color:var(--tint)">粘贴</em></span></div></div><p style="margin:8px 16px;color:var(--red);font-size:14px">这个链接来自另一台服务器（keduly.example.org）</p>` };
+}
+function approveAsk() {
+  return { cls: 'grouped', nav: nav({ back: '设置' }), body: `<div style="padding:28px 24px;text-align:center"><h2>允许这台设备登录？</h2><p style="margin:14px 0;color:var(--label2)">一台设备（Keduly · Android）想登录你的账号 me@example.com</p><p style="margin-top:22px;font-size:14px;color:var(--label2)">输入那台设备屏幕上的 4 位数字</p><div style="font-size:32px;letter-spacing:12px;padding:10px 0;border-bottom:1px solid var(--sep);margin:0 60px">93··</div><p style="margin:18px 0;font-size:13px;line-height:18px;color:var(--orange)">允许后，那台设备可以查看和修改你的全部内容。如果二维码或链接是别人发给你的，请拒绝。</p><button class="btn go" style="width:100%">允许登录</button><button style="display:block;margin:16px auto;color:var(--tint)">拒绝</button></div>` };
+}
+
 const SCREENS = [
   ['Device authorization', 'Sign-in offers 授权登录 after entering the server. The request shows a separate pin and an approval link to open or share with an already signed-in browser. Expiry and cancellation stop polling; retry is explicit. No password or claim secret is shown.', authorization],
+  ['Approve another device: paste', 'Settings → 允许其他设备登录. The approval link that the asking device shared is pasted; only its request id is used, and it must be this server.', approvePaste],
+  ['Approve another device: ask', 'The same approval as the web app: which device, which account, the 4 digits from the other screen, the warning, 允许登录 and 拒绝.', approveAsk],
   ['Items root', 'The top of the items tab: the lists, then projects grouped by area. The gear is only here.', lists],
   ['Matrix, the page the app opens on', 'The four quadrants stacked. A row is a title, one line of facts, and only the time on the right.', matrix],
   ['Today', 'One sentence on whether the day fits; events are a few quiet lines so the items stay on the first screen.', today],

@@ -43,6 +43,9 @@ func deviceLabel(userAgent string) string {
 	has := func(s string) bool { return strings.Contains(userAgent, s) }
 	var browser, system string
 	switch {
+	case has("Keduly/"):
+		// The phone apps send Keduly/iPhone and Keduly/Android.
+		browser = "Keduly"
 	case has("Edg/"), has("EdgiOS/"), has("EdgA/"):
 		browser = "Edge"
 	case has("Firefox/"), has("FxiOS/"):

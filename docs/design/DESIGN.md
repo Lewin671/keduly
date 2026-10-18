@@ -225,6 +225,20 @@ Rules that the design must keep:
 
 The mockup's demo switch has a "换设备登录" row that shows each of these screens.
 
+The phone apps approve too, so a signed-in phone is enough to let another device in. Settings
+has "允许其他设备登录" under the account. The person pastes the approval link that the asking
+device shared ("粘贴"); the app reads which device is asking, then shows the same approval screen
+as the web app: the device and the account, the 4 digits typed from the other screen, the
+warning, "允许登录" and "拒绝". The link must belong to the server the phone is signed in to;
+the request id is all that is taken from it.
+
+| Case on the phone | Handling |
+|---|---|
+| The pasted text holds no approval link | "这不是授权链接" under the field |
+| The link is for another server | "这个链接来自另一台服务器（host）", nothing is sent |
+| Expired, used, refused or three wrong numbers | "授权链接已失效" and "请在那台设备上重新点「授权登录」" |
+| Approved | "已允许": the other device signs in within seconds. Signing it out means changing the password in the web app |
+
 ## Phone apps
 
 The iOS and Android apps are native and share one design: [mobile.html](mobile.html) shows its ten
