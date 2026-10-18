@@ -12,6 +12,7 @@ enum Route: Hashable {
     case stats
     case activity
     case settings
+    case approve
 }
 
 /// What a new item starts with, depending on where the add button was pressed.

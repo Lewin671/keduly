@@ -302,6 +302,26 @@
 "auth.authorizationRetry" = "重新请求授权";
 "auth.authorizationCancel" = "取消";
 
+// Approving another device from this phone
+"approve.title" = "允许其他设备登录";
+"approve.pasteLead" = "在要登录的设备上点「授权登录」，把授权链接发到这台手机，再粘贴到这里。";
+"approve.link" = "授权链接";
+"approve.paste" = "粘贴";
+"approve.notLink" = "这不是授权链接";
+"approve.otherServer" = "这个链接来自另一台服务器（%@）";
+"approve.ask" = "允许这台设备登录？";
+"approve.lead" = "一台设备（%@）想登录你的账号 %@";
+"approve.leadUnknown" = "一台设备想登录你的账号 %@";
+"approve.pin" = "输入那台设备屏幕上的 4 位数字";
+"approve.warning" = "允许后，那台设备可以查看和修改你的全部内容。如果二维码或链接是别人发给你的，请拒绝。";
+"approve.wrongPin" = "数字不对，再看一眼那台设备的屏幕";
+"approve.allow" = "允许登录";
+"approve.refuse" = "拒绝";
+"approve.gone" = "授权链接已失效";
+"approve.goneLead" = "它已经过期、被用过，或者数字输错了 3 次。请在那台设备上重新点「授权登录」。";
+"approve.done" = "已允许";
+"approve.doneLead" = "那台设备会在几秒内自动登录。想让它退出，可以在网页版的设置里修改密码。";
+
 "habit.heading" = "习惯";
 "habit.new" = "新建习惯";
 "habit.title" = "名称";

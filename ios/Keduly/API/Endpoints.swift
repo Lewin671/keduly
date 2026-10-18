@@ -42,6 +42,20 @@ extension APIClient {
         }
     }
 
+    /// A request another device made, for approving it here; the pin stays on that device.
+    func loginRequest(_ id: String) async throws -> PendingLogin {
+        try await get("/auth/requests/\(id)", key: "request")
+    }
+
+    func approveLoginRequest(_ id: String, pin: String) async throws {
+        struct Body: Encodable, Sendable { let pin: String }
+        try await sendDiscarding("POST", "/auth/requests/\(id)/approve", body: Body(pin: pin))
+    }
+
+    func refuseLoginRequest(_ id: String) async throws {
+        try await sendDiscarding("DELETE", "/auth/requests/\(id)")
+    }
+
     func logout() async throws {
         try await sendDiscarding("POST", "/auth/logout")
     }

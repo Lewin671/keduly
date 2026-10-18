@@ -560,6 +560,33 @@ final class FlowTests: XCTestCase {
         let me = try api("POST", "/auth/login", ["email": email, "password": "register-password"])
         XCTAssertEqual((me.json["user"] as? [String: Any])?["name"] as? String, "Tester")
     }
+
+    /// Settings → 允许其他设备登录: the pasted link of another device's request, a wrong pin, then
+    /// the right one; the other device then claims its session.
+    func test14ApproveAnotherDevice() throws {
+        let asked = try api("POST", "/auth/requests").json
+        let request = try XCTUnwrap(asked["request"] as? [String: Any])
+        let id = try XCTUnwrap(request["id"] as? String)
+        let pin = try XCTUnwrap(asked["pin"] as? String)
+        let secret = try XCTUnwrap(asked["secret"] as? String)
+        launch("approve")
+        fill("approve-link", "https://keduly.example.org/#approve=\(id)")
+        app.typeText("\n")
+        wait(text("另一台服务器"))
+        shot("approve-paste")
+        fill("approve-link", "\(server)/#approve=\(id)")
+        app.typeText("\n")
+        wait(text("想登录你的账号"))
+        fill("approve-pin", pin == "0000" ? "1111" : "0000")
+        tap("approve-allow")
+        wait(text("数字不对"))
+        fill("approve-pin", pin)
+        shot("approve-ask")
+        tap("approve-allow")
+        wait(text("已允许"))
+        shot("approve-done")
+        XCTAssertEqual(try api("POST", "/auth/requests/\(id)/claim", ["secret": secret]).json["status"] as? String, "approved")
+    }
 }
 
 private extension Optional {

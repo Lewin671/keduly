@@ -24,6 +24,8 @@ struct SettingsView: View {
                     LabeledContent(L("account.email"), value: user.email)
                     LabeledContent(L("account.timezone"), value: user.timezone)
                     LabeledContent(L("account.server"), value: model.server?.host() ?? "")
+                    NavigationLink(L("approve.title"), value: Route.approve)
+                        .accessibilityIdentifier("approve-device")
                 } header: {
                     Text(L("account.title"))
                 } footer: {

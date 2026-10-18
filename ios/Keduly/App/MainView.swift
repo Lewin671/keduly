@@ -58,6 +58,7 @@ private struct RouteView: View {
         case .stats: StatsView()
         case .activity: ActivityView()
         case .settings: SettingsView()
+        case .approve: ApproveView()
         }
     }
 }

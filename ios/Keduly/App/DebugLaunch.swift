@@ -7,7 +7,7 @@ import Foundation
 ///     KEDULY_SERVER, KEDULY_EMAIL, KEDULY_PASSWORD   sign in with these instead of the kept session
 ///     KEDULY_SCREEN                                  lists, matrix, today, upcoming, all, inbox, done, project, item,
 ///                                                    new-item, month, day, new-event, focus, timer, picker, stats,
-///                                                    activity, settings
+///                                                    activity, settings, approve
 @MainActor
 enum DebugLaunch {
     /// Returns true when it took over starting the app.
@@ -44,6 +44,7 @@ enum DebugLaunch {
         case "done": router.itemsPath = [.done]
         case "activity": router.itemsPath = [.activity]
         case "settings": router.itemsPath = [.settings]
+        case "approve": router.itemsPath = [.settings, .approve]
         case "project":
             if let project = model.projects.first { router.itemsPath = [.project(project.id)] }
         case "item":
