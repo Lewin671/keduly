@@ -1,3 +1,4 @@
+import { HabitRows } from './Habits';
 // A project: notes, what is coming up on the calendar, then items under their headings.
 import { signal } from '@preact/signals';
 import type { JSX } from 'preact';
@@ -161,6 +162,7 @@ export function ProjectPage({ id }: { id: string }): JSX.Element {
           {detail.data && detail.data.focus_week_minutes > 0 ? t('project.focusWeek', { dur: span(detail.data.focus_week_minutes) }) : ''}
         </p>
       )}
+      <HabitRows occurrences={detail.data?.habits ?? []}/>
       <EventsStrip events={detail.data?.upcoming_events ?? []} label={event => `${dayLabel(event.all_day ? event.start_date! : ymd(wall(event.start!)), day)} ${eventTime(event)}`} />
       {d && !d.context.heading_id && <DraftRow />}
       {empty && !d ? <Blank title={t('project.empty')} tip={t('project.emptyTip')} /> : <Rows items={loose} opts={{ star: true }} />}

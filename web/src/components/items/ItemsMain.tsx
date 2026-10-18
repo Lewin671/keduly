@@ -1,3 +1,4 @@
+import { Habits,newHabit } from './Habits';
 // The list on screen in items mode, and the ways to add an item to it.
 import type { JSX } from 'preact';
 import { useEffect } from 'preact/hooks';
@@ -12,6 +13,7 @@ import { ProjectPage } from './ProjectPage';
 /** A new item starts where the user is: in the open project, planned for today in Today, else in the inbox. */
 function newItem(): void {
   const list = route.value.list;
+  if(list==='habits'){newHabit.value=true;return;}
   startDraft({
     project_id: list.startsWith('p:') ? list.slice(2) : null,
     heading_id: null,
@@ -45,6 +47,7 @@ export function ItemsMain(): JSX.Element {
         : list === 'upcoming' ? <Upcoming />
         : list === 'matrix' ? <Matrix />
         : list === 'all' ? <All />
+        : list === 'habits' ? <Habits />
         : list === 'done' ? <Done />
         : <Today />}
     </div>
@@ -52,5 +55,5 @@ export function ItemsMain(): JSX.Element {
 }
 
 export function NewItemButton(): JSX.Element {
-  return <button class="fab" aria-label={t('item.new')} onClick={newItem}><Icon name="plus" /></button>;
+  return <button class="fab" aria-label={t(route.value.list==='habits'?'habit.new':'item.new')} onClick={newItem}><Icon name="plus" /></button>;
 }

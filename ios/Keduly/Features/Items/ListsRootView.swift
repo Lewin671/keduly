@@ -103,6 +103,7 @@ struct ListsRootView: View {
             smart(.upcoming, "calendar", L("nav.upcoming"), Palette.red, nil)
             smart(.all, "square.stack.3d.up", L("nav.all"), Palette.teal, nil)
             smart(.inbox, "tray", L("nav.inbox"), Palette.blue, model.counts.inbox)
+            smart(.habits, "repeat", L("habit.heading"), Palette.teal, nil)
             smart(.done, "checkmark.square", L("nav.done"), Palette.green, nil, last: true)
         }
     }

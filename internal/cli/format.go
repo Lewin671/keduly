@@ -110,6 +110,9 @@ func (a *app) eventLine(e api.Event, projects map[string]string) string {
 		when = s.Format("15:04") + "-" + en.Format("15:04")
 	}
 	var tags []string
+	if e.HabitID != nil {
+		tags = append(tags, "习惯（只读；使用 keduly habit）")
+	}
 	switch e.Status {
 	case "tentative":
 		tags = append(tags, "待定")

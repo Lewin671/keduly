@@ -223,6 +223,10 @@ class ApiClient(
 
     /* ---------- views ---------- */
 
+    suspend fun habits(): List<Habit> = get("habits", "habits")
+    suspend fun habitOccurrences(from: String,to: String,plan:Boolean=false): List<HabitOccurrence> = get("habit-occurrences","occurrences","from" to from,"to" to to,"basis" to if(plan)"plan" else "logical")
+    suspend fun saveHabit(id: String?,body: JsonObject): Habit = send(if(id==null) "POST" else "PATCH", if(id==null) "habits" else "habits/$id", "habit",body)
+    suspend fun recordHabit(id: String,date: String,body: JsonObject): HabitOccurrence = send("PATCH","habits/$id/occurrences/$date","occurrence",body)
     suspend fun today(): TodayView = get("today", null)
     suspend fun upcoming(from: String, to: String): List<UpcomingDay> = get("upcoming", "days", "from" to from, "to" to to)
     suspend fun overview(): List<OverviewProject> = get("overview", "projects")

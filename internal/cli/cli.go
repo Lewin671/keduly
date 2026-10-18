@@ -43,6 +43,15 @@ Setup:
   keduly skill install --dir DIR                          install it into another skills directory
   keduly version | help
 
+Habits:
+  keduly habit list
+  keduly habit log [HABIT_ID] --from YYYY-MM-DD --to YYYY-MM-DD
+  keduly habit add TITLE --time HH:MM --weekdays 1,2,3,4,5 --duration 20 --reminder 0
+  keduly habit edit ID [--title T] [--time HH:MM] [--weekdays 1,3,5] [--day-offset 1]
+  keduly habit pause ID | resume ID
+  keduly habit done ID | skip ID | undo ID [--date YYYY-MM-DD] [--at RFC3339]
+  keduly habit move ID --date YYYY-MM-DD --to RFC3339
+
 Reading:
   keduly agenda [--date D] [--days N]       events, time blocks and planned items per day
   keduly free --date D --duration 60m       free slots within working hours
@@ -221,6 +230,14 @@ func (a *app) dispatch(args []string) error {
 			"schedule": a.suggestSchedule, "add-item": a.suggestAddItem, "add-event": a.suggestAddEvent,
 			"move": a.suggestMove, "delete-item": a.suggestDelete("item"), "delete-event": a.suggestDelete("event"),
 			"withdraw": a.suggestWithdraw, "list": a.suggestList,
+		})
+	case "habit":
+		return a.sub(rest, "habit", map[string]func([]string) error{
+			"list": func(x []string) error { return a.habitRead(x, false) }, "log": func(x []string) error { return a.habitRead(x, true) },
+			"add": func(x []string) error { return a.habitWrite(x, "add") }, "edit": func(x []string) error { return a.habitWrite(x, "edit") },
+			"pause": func(x []string) error { return a.habitWrite(x, "pause") }, "resume": func(x []string) error { return a.habitWrite(x, "resume") },
+			"done": func(x []string) error { return a.habitWrite(x, "done") }, "skip": func(x []string) error { return a.habitWrite(x, "skip") },
+			"undo": func(x []string) error { return a.habitWrite(x, "undo") }, "move": func(x []string) error { return a.habitWrite(x, "move") },
 		})
 	case "focus":
 		return a.sub(rest, "focus", map[string]func([]string) error{

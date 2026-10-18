@@ -349,11 +349,20 @@ func (op *Op) ProjectDetail(id string) (*api.ProjectDetail, error) {
 	if err != nil {
 		return nil, err
 	}
-	out := &api.ProjectDetail{Project: *project, UpcomingEvents: []api.Event{}}
+	out := &api.ProjectDetail{Project: *project, UpcomingEvents: []api.Event{}, Habits: []api.HabitOccurrence{}}
+	habits, err := op.todayHabits()
+	if err != nil {
+		return nil, err
+	}
+	for _, h := range habits {
+		if h.ProjectID != nil && *h.ProjectID == id {
+			out.Habits = append(out.Habits, h)
+		}
+	}
 	if out.Headings, err = op.headings(id); err != nil {
 		return nil, err
 	}
-	entries, err := op.entries(op.Now, op.Now.Add(366*24*time.Hour), true)
+	entries, err := op.calendarEntries(op.Now, op.Now.Add(366*24*time.Hour), true, false)
 	if err != nil {
 		return nil, err
 	}

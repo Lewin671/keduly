@@ -64,6 +64,9 @@ func (a *app) itemID(prefix string) (string, error) {
 
 // eventID resolves a prefix among events within 200 days of now.
 func (a *app) eventID(prefix string) (string, error) {
+	if strings.HasPrefix(prefix, "habit:") {
+		return "", usagef("habit projection is read-only here; use keduly habit move or habit edit")
+	}
 	if len(prefix) == idLength {
 		return prefix, nil
 	}

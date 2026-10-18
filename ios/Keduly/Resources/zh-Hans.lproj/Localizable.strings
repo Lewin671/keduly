@@ -301,3 +301,54 @@
 "auth.authorizationExpired" = "授权已过期或取消";
 "auth.authorizationRetry" = "重新请求授权";
 "auth.authorizationCancel" = "取消";
+
+"habit.heading" = "习惯";
+"habit.new" = "新建习惯";
+"habit.title" = "名称";
+"habit.repeat" = "重复星期";
+"habit.time" = "计划时间 HH:MM（留空不定时）";
+"habit.nextDay" = "安排在次日（归入今晚）";
+"habit.duration" = "预计分钟";
+"habit.reminder" = "提醒";
+"habit.noReminder" = "不提醒";
+"habit.minutesBefore" = "分钟前";
+"habit.notes" = "备注";
+"habit.tomorrow" = "规则修改仅影响后续日期；今天请单独改期。";
+"habit.startsToday" = "从今天开始，未完成不会滚入逾期。";
+"habit.saveFailed" = "保存失败，请检查输入后重试。";
+"habit.loadFailed" = "加载失败，请稍后重试。";
+"habit.paused" = "已暂停";
+"habit.active" = "进行中";
+"habit.pause" = "暂停";
+"habit.resume" = "恢复";
+"habit.history" = "完成记录";
+"habit.weekFrom" = "起始日期";
+"habit.completed" = "已完成";
+"habit.open" = "待完成";
+"habit.future" = "尚未到期";
+"habit.missed" = "未完成";
+"habit.done" = "已完成";
+"habit.skipped" = "已跳过";
+"habit.undo" = "撤销记录";
+"habit.skip" = "跳过本次";
+"habit.rules" = "修改习惯规则";
+"habit.actual" = "实际完成时间";
+"habit.move" = "仅这次改期";
+"habit.enableReminders" = "开启本机提醒";
+"habit.notificationLimit" = "需允许通知。同步后安排未来 14 天内最多 60 条提醒；请定期打开应用补齐。其他离线设备可能仍会响。";
+"habit.permissionDenied" = "通知未获允许，请在系统设置中开启。";
+"habit.day1" = "星期一";
+"habit.day2" = "星期二";
+"habit.day3" = "星期三";
+"habit.day4" = "星期四";
+"habit.day5" = "星期五";
+"habit.day6" = "星期六";
+"habit.day7" = "星期日";
+
+"habit.toggleReminders" = "开启／关闭本机提醒";
+
+"habit.disableReminders" = "关闭本机提醒";
+
+"habit.permissionInvite" = "点击开启本机提醒后，系统会询问通知权限。";
+
+"error.habit_records_depend" = "请先在动态中撤销该习惯后续的改期或记录，再修改重复规则。";

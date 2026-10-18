@@ -1,4 +1,5 @@
 import XCTest
+import UserNotifications
 @testable import Keduly
 
 /// Every object of docs/api.md decodes from JSON as the server sends it.
@@ -249,5 +250,39 @@ final class DecodingTests: XCTestCase {
         XCTAssertThrowsError(try decode(Fixtures.failure, key: "item", as: Item.self)) { error in
             XCTAssertEqual(error as? APIError, .badResponse)
         }
+    }
+}
+
+extension DecodingTests {
+    func testHabitOccurrenceKeepsMidnightDateAndActualInstant() throws {
+        let json = #"{"habit_id":"h","plan_date":"2026-10-13","date":"2026-10-13","title":"Bed","notes":"","project_id":null,"timezone":"Asia/Shanghai","time":"00:00","day_offset":1,"duration_minutes":0,"scheduled_at":"2026-10-13T16:00:00Z","end_at":"2026-10-13T16:00:00Z","remind_at":null,"status":"done","completed_at":"2026-10-13T16:12:00Z","skip_reason":""}"#
+        let value: HabitOccurrence = try APIClient.decodeBody(Data(json.utf8))
+        XCTAssertEqual(value.date,"2026-10-13")
+        XCTAssertEqual(value.dayOffset,1)
+        XCTAssertEqual(value.completedAt?.timeIntervalSince(value.scheduledAt!),720)
+    }
+}
+
+extension DecodingTests {
+    @MainActor func testHabitNotificationBoundIncludesRecentlyDueRecords() throws {
+        let json = #"{"habit_id":"h","plan_date":"2026-10-13","date":"2026-10-13","title":"Walk","notes":"","project_id":null,"timezone":"UTC","time":"00:00","day_offset":0,"duration_minutes":0,"scheduled_at":"2026-10-13T16:00:00Z","end_at":"2026-10-13T16:00:00Z","remind_at":"2026-10-13T16:00:00Z","status":"open","completed_at":null,"skip_reason":""}"#
+        let rows: [HabitOccurrence] = try (0..<100).map { n in try APIClient.decodeBody(Data(json.replacingOccurrences(of:"\"h\"",with:"\"h\(n)\"").utf8)) }
+        let selected=HabitNotifications.select(rows,now:ISO8601DateFormatter().date(from:"2026-10-13T16:00:30Z")!)
+        XCTAssertEqual(selected.count,60)
+        XCTAssertTrue(HabitNotifications.select(rows,now:ISO8601DateFormatter().date(from:"2026-09-28T16:00:00Z")!).isEmpty)
+        XCTAssertTrue(HabitNotifications.select(rows,now:ISO8601DateFormatter().date(from:"2026-10-13T16:02:00Z")!).isEmpty)
+    }
+}
+
+extension DecodingTests {
+    @MainActor func testRevokedAndUnrequestedPermissionDisableLocalOptIn() {
+        let before=UserDefaults.standard.bool(forKey:"habitReminders")
+        defer { UserDefaults.standard.set(before,forKey:"habitReminders") }
+        UserDefaults.standard.set(true,forKey:"habitReminders")
+        XCTAssertEqual(HabitNotifications.applyPermission(.denied),L("habit.permissionDenied"))
+        XCTAssertFalse(HabitNotifications.enabled)
+        UserDefaults.standard.set(true,forKey:"habitReminders")
+        XCTAssertEqual(HabitNotifications.applyPermission(.notDetermined),L("habit.permissionInvite"))
+        XCTAssertFalse(HabitNotifications.enabled)
     }
 }

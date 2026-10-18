@@ -175,3 +175,33 @@ keduly item add "Fix sync bug" --project Keduly --heading Bugs --reason "User me
 
 When no project clearly fits, leave the item in the inbox rather than inventing one. Set `--due`
 only for real deadlines and `--important` only when the user says so.
+
+## Habits
+
+Habits have a repeat rule and independent records for each planned date. They appear in Today,
+Upcoming and calendar without becoming overdue ordinary items or changing project task counts.
+Use `keduly habit list`, `habit log [FULL_ID] --from YYYY-MM-DD --to YYYY-MM-DD` and agenda to inspect.
+Create only when explicitly asked: `habit add TITLE --time HH:MM --weekdays 1,2,3,4,5 --duration 20
+--reminder 0 --reason "..."`. `--day-offset 1` places a midnight habit on the following physical
+calendar date while keeping the logical habit date. Untimed habits have no duration/reminder.
+`habit edit ID` accepts title/time/weekdays/duration/day-offset/reminder/project; edits, pause and
+resume take effect tomorrow and keep history. `habit move ID --date YYYY-MM-DD --to RFC3339`
+changes only that occurrence (within seven days), without moving other commitments.
+
+`habit done ID --date YYYY-MM-DD [--at RFC3339]`, `skip`, and `undo` record an occurrence.
+Only write completion when the user explicitly reports/requests it. A notification, a focus
+timer, and a wearable score are never evidence of completion. Future completion is rejected.
+Use --reason on every write and --dry-run when checking a plan. Permanent deletion is not offered;
+pause preserves history. Read-only analysis never grants permission to alter the user's routine.
+Web reminders need an open page; native reminders are device-local, permission-dependent and
+scheduled after sync. Another offline device may still alert until it reconnects. Never claim
+that a reminder was delivered just because it was scheduled.
+`habit edit ID --project none` unfiles a habit; `--notes TEXT` replaces notes (empty clears).
+Today and Upcoming item-list commands include habits as well. A moved occurrence keeps its
+logical history key, but its actual plan date controls where it appears and whether it can
+be completed. Native reminder opt-in is reset when the account signs out.
+
+Habit history queries use actual plan dates; moved text rows also show the immutable record date.
+Pass that record date to done/skip/undo/move. A repeat change that would hide future records is
+refused with habit_records_depend; first undo those recorded moves in Activity, do not retry the
+same edit in a loop. Submitting the rule's existing schedule is a no-op move.

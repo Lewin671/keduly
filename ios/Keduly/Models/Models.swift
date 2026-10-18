@@ -105,6 +105,8 @@ struct Item: Codable, Hashable, Identifiable, Sendable {
 enum EventStatus: String, Codable, Sendable { case confirmed, tentative, leaving }
 
 struct Event: Codable, Hashable, Sendable {
+    var habitId: String? = nil
+    var habitDate: String? = nil
     let id: String
     let projectId: String?
     let itemId: String?
@@ -265,6 +267,7 @@ struct ItemPage: Codable, Sendable {
 }
 
 struct ProjectDetail: Codable, Sendable {
+    var habits: [HabitOccurrence] = []
     let project: Project
     let headings: [Heading]
     let upcomingEvents: [Event]
@@ -273,6 +276,7 @@ struct ProjectDetail: Codable, Sendable {
 }
 
 struct TodayResponse: Codable, Sendable {
+    var habits: [HabitOccurrence] = []
     let date: Day
     let items: [Item]
     let overdue: [Item]
@@ -282,6 +286,7 @@ struct TodayResponse: Codable, Sendable {
 }
 
 struct UpcomingDay: Codable, Hashable, Sendable {
+ var habits: [HabitOccurrence] = []
     let date: Day
     let events: [Event]
     let items: [Item]

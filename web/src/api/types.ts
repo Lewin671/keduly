@@ -1,3 +1,4 @@
+import type { Occurrence } from './habits';
 // Objects of the HTTP API, as documented in docs/api.md.
 
 export type ProjectColor = 'blue' | 'indigo' | 'orange' | 'teal' | 'green' | 'pink' | 'purple' | 'brown';
@@ -96,6 +97,8 @@ export interface Item {
 export type EventStatus = 'confirmed' | 'tentative' | 'leaving';
 
 export interface CalEvent {
+ habit_id?: string;
+ habit_date?: string;
   id: string;
   project_id: string | null;
   item_id: string | null;
@@ -198,6 +201,7 @@ export interface ItemPage {
 }
 
 export interface ProjectDetail {
+ habits: Occurrence[];
   project: Project;
   headings: Heading[];
   upcoming_events: CalEvent[];
@@ -207,6 +211,7 @@ export interface ProjectDetail {
 }
 
 export interface TodayView {
+ habits: Occurrence[];
   date: string;
   items: Item[];
   overdue: Item[];
@@ -216,6 +221,7 @@ export interface TodayView {
 }
 
 export interface UpcomingDay {
+ habits: Occurrence[];
   date: string;
   events: CalEvent[];
   items: Item[];

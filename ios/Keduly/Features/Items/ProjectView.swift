@@ -68,6 +68,7 @@ struct ProjectView: View {
         if let summary = summary(content) {
             Text(summary).font(.app(15)).foregroundStyle(Palette.label2).padding(.bottom, 6)
         }
+        HabitOccurrenceRows(records:content.detail.habits)
         if !content.detail.upcomingEvents.isEmpty {
             VStack(spacing: 0) {
                 ForEach(content.detail.upcomingEvents.prefix(2), id: \.entryKey) { EventLine(event: $0, showDay: true) }

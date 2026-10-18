@@ -1,3 +1,6 @@
+import { getOccurrences } from '../../api/habits';
+import { HabitRows } from '../items/Habits';
+import { useResource } from '../../state/resource';
 // The popovers of the calendar: a suggestion to decide, the event editor, a time block's actions.
 import type { JSX } from 'preact';
 import { useState } from 'preact/hooks';
@@ -205,9 +208,17 @@ export function CalPopover({ day, place }: { day: string | null; place: string }
       {pop.kind === 'new' ? <EventEditor initial={pop.draft} />
         : !event ? null
         : event.status !== 'confirmed' ? <SuggestionPop event={event} />
+        : event.habit_id ? <CalendarHabit event={event}/>
         : event.item_id ? <BlockPop event={event} />
         : event.readonly ? <DetailsPop event={event} />
         : <EventEditor event={event} initial={draftFor(event)} />}
     </Popover>
   );
+}
+
+function CalendarHabit({event}:{event:CalEvent}):JSX.Element {
+ const res=useResource(`habit:${event.habit_id}:${event.habit_date}`,()=>getOccurrences(event.habit_date!,event.habit_date!));
+ if(res.failed)return <p>{t('habit.loadFailed')}</p>;
+ if(!res.data)return <p>{t('habit.loading')}</p>;
+ return <HabitRows occurrences={res.data.filter(o=>o.habit_id===event.habit_id)} expanded/>;
 }

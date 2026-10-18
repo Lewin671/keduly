@@ -144,6 +144,8 @@ type Item struct {
 }
 
 type Event struct {
+	HabitID      *string `json:"habit_id,omitempty"`
+	HabitDate    *string `json:"habit_date,omitempty"`
 	ID           string  `json:"id"`
 	ProjectID    *string `json:"project_id"`
 	ItemID       *string `json:"item_id"`
@@ -225,9 +227,10 @@ type Slot struct {
 }
 
 type Day struct {
-	Date   string  `json:"date"`
-	Events []Event `json:"events"`
-	Items  []Item  `json:"items"`
+	Habits []HabitOccurrence `json:"habits"`
+	Date   string            `json:"date"`
+	Events []Event           `json:"events"`
+	Items  []Item            `json:"items"`
 }
 
 type Quadrant struct {
@@ -243,19 +246,21 @@ type OverviewProject struct {
 }
 
 type Today struct {
-	Date             string  `json:"date"`
-	Items            []Item  `json:"items"`
-	Overdue          []Item  `json:"overdue"`
-	Events           []Event `json:"events"`
-	FreeMinutes      int     `json:"free_minutes"`
-	UnplannedMinutes int     `json:"unplanned_minutes"`
+	Habits           []HabitOccurrence `json:"habits"`
+	Date             string            `json:"date"`
+	Items            []Item            `json:"items"`
+	Overdue          []Item            `json:"overdue"`
+	Events           []Event           `json:"events"`
+	FreeMinutes      int               `json:"free_minutes"`
+	UnplannedMinutes int               `json:"unplanned_minutes"`
 }
 
 type ProjectDetail struct {
-	Project        Project   `json:"project"`
-	Headings       []Heading `json:"headings"`
-	UpcomingEvents []Event   `json:"upcoming_events"`
-	UnplannedCount int       `json:"unplanned_count"`
+	Habits         []HabitOccurrence `json:"habits"`
+	Project        Project           `json:"project"`
+	Headings       []Heading         `json:"headings"`
+	UpcomingEvents []Event           `json:"upcoming_events"`
+	UnplannedCount int               `json:"unplanned_count"`
 	// FocusWeekMinutes is the focus time on the project's items since Monday.
 	FocusWeekMinutes int `json:"focus_week_minutes"`
 }

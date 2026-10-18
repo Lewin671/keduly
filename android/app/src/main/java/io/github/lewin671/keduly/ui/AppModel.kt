@@ -50,6 +50,7 @@ sealed interface Sheet {
     data class Filing(val session: FocusSession) : Sheet
     data class ProjectForm(val project: Project?) : Sheet
     data object FocusPick : Sheet
+    data object NewHabit : Sheet
 }
 
 /** How a write ended. Only a rejected form ([Refused]) is left for the caller to show. */
@@ -128,7 +129,7 @@ class AppModel(application: Application) : AndroidViewModel(application) {
         e.status == 401 -> text(R.string.error_unauthenticated)
         e.status == 403 -> text(if (e.code == "registration_closed") R.string.error_registration_closed else R.string.error_forbidden)
         e.status == 404 -> text(R.string.error_not_found)
-        e.status == 409 -> text(R.string.error_conflict)
+        e.status == 409 -> text(if(e.code=="habit_records_depend") R.string.error_habit_records_depend else R.string.error_conflict)
         e.status == 429 -> text(R.string.error_rate_limited)
         e.code == "bad_response" -> text(R.string.error_bad_response)
         else -> text(R.string.error_http)
@@ -168,6 +169,7 @@ class AppModel(application: Application) : AndroidViewModel(application) {
         bootError.value = null
         offline.value = false
         generation.update { it + 1 }
+        HabitNotifications.setEnabled(getApplication(),false)
         phase.value = Phase.SignedOut
     }
 
@@ -238,9 +240,22 @@ class AppModel(application: Application) : AndroidViewModel(application) {
         setFocus(timer.await())
         revision = b.revision
         boot.value = b
+        syncHabitNotifications()
     }
 
     /** Reloads the lists and counts, then tells the screens to reload. Failures leave what is shown. */
+    fun syncHabitNotifications() {
+        if(!HabitNotifications.reconcile(getApplication())) return
+        val account=boot.value?.user?.id ?: return
+        val sessionGeneration=generation.value
+        viewModelScope.launch {
+            try {
+                val day=LocalDate.now(zone())
+                val records=api.habitOccurrences(day.minusDays(9).toString(),day.plusDays(17).toString())
+                if(boot.value?.user?.id==account && generation.value==sessionGeneration) HabitNotifications.sync(getApplication(),records)
+            } catch (_: Exception) { /* Preserve the last schedule while offline. */ }
+        }
+    }
     fun refresh() {
         viewModelScope.launch {
             try {
@@ -254,6 +269,7 @@ class AppModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun setForeground(on: Boolean) {
+        if(on) HabitNotifications.reconcile(getApplication())
         foreground = on
         if (!on) {
             poll?.cancel()
@@ -305,7 +321,7 @@ class AppModel(application: Application) : AndroidViewModel(application) {
             when {
                 e.status == 400 -> return@run Outcome.Refused(describe(e))
                 e.status == 409 -> {
-                    messages.tryEmit(text(R.string.error_conflict))
+                    messages.tryEmit(describe(e))
                     refresh()
                 }
                 e.timedOut -> {

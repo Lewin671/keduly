@@ -120,22 +120,24 @@ func (a *app) agenda(args []string) error {
 		return err
 	}
 	type dayView struct {
-		Date   string      `json:"date"`
-		Events []api.Event `json:"events"`
-		Items  []api.Item  `json:"items"`
+		Habits []api.HabitOccurrence `json:"habits"`
+		Date   string                `json:"date"`
+		Events []api.Event           `json:"events"`
+		Items  []api.Item            `json:"items"`
 	}
 	var view []dayView
 	for d := start; d.Before(end); d = d.AddDate(0, 0, 1) {
-		day := dayView{Date: d.Format(dateLayout), Events: []api.Event{}, Items: []api.Item{}}
+		day := dayView{Habits: []api.HabitOccurrence{}, Date: d.Format(dateLayout), Events: []api.Event{}, Items: []api.Item{}}
 		next := d.AddDate(0, 0, 1)
 		for _, e := range events {
-			if a.touches(e, d, next) {
+			if e.HabitID == nil && a.touches(e, d, next) {
 				day.Events = append(day.Events, e)
 			}
 		}
 		for _, u := range upcoming.Days {
 			if u.Date == day.Date {
 				day.Items = u.Items
+				day.Habits = u.Habits
 			}
 		}
 		view = append(view, day)
@@ -146,11 +148,14 @@ func (a *app) agenda(args []string) error {
 	projects := a.projectNames()
 	for _, day := range view {
 		a.printf("%s\n", dateLabel(day.Date))
-		if len(day.Events) == 0 && len(day.Items) == 0 {
+		if len(day.Habits) == 0 && len(day.Events) == 0 && len(day.Items) == 0 {
 			a.printf("  （无安排）\n")
 		}
 		for _, e := range day.Events {
 			a.printf("  %s\n", a.eventLine(e, projects))
+		}
+		for _, h := range day.Habits {
+			a.printHabit(h)
 		}
 		for _, it := range day.Items {
 			a.printf("  %s\n", a.itemLine(it, projects))

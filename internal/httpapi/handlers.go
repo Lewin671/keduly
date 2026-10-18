@@ -9,6 +9,11 @@ import (
 )
 
 func (s *Server) routes() {
+	s.handle("GET /habits", member, s.listHabits)
+	s.handle("POST /habits", member, s.createHabit)
+	s.handle("PATCH /habits/{id}", member, s.updateHabit)
+	s.handle("GET /habit-occurrences", member, s.habitOccurrences)
+	s.handle("PATCH /habits/{id}/occurrences/{date}", member, s.updateHabitOccurrence)
 	s.handle("GET /config", public, s.config)
 
 	s.handle("POST /auth/register", public, s.register)

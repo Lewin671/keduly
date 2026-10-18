@@ -1,0 +1,7 @@
+import { request } from './client';
+export interface Habit { id: string; title: string; notes: string; project_id: string | null; weekdays: number[]; time: string; duration_minutes: number; day_offset: number; reminder_minutes: number | null; paused: boolean; timezone: string; effective_date: string; version: number }
+export interface Occurrence { plan_date: string; habit_id: string; date: string; title: string; notes: string; project_id: string | null; timezone: string; time: string; day_offset: number; duration_minutes: number; scheduled_at: string | null; end_at: string | null; remind_at: string | null; status: 'open'|'future'|'missed'|'done'|'skipped'; completed_at: string | null; skip_reason: string; actor: {kind:string;name:string} }
+export const getHabits=()=>request<{habits:Habit[]}>('GET','/habits').then(r=>r.habits);
+export const getOccurrences=(from:string,to:string,plan=false)=>request<{occurrences:Occurrence[]}>('GET','/habit-occurrences',{query:{from,to,basis:plan?'plan':'logical'}}).then(r=>r.occurrences);
+export const saveHabit=(h:Partial<Habit>)=>{const {id,timezone,effective_date,...body}=h;void timezone;void effective_date;return request<{habit:Habit}>(id?'PATCH':'POST',id?`/habits/${encodeURIComponent(id)}`:'/habits',{body}).then(r=>r.habit)};
+export const recordHabit=(id:string,date:string,body:Record<string,unknown>)=>request<{occurrence:Occurrence}>('PATCH',`/habits/${encodeURIComponent(id)}/occurrences/${encodeURIComponent(date)}`,{body}).then(r=>r.occurrence);

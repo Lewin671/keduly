@@ -272,6 +272,11 @@ func (op *Op) UpdateMe(f Fields) (*api.User, error) {
 	case u.WorkStart >= u.WorkEnd:
 		return nil, Invalid("work_end must be after work_start")
 	}
+	if u.Timezone != op.User.Timezone {
+		if err := op.moveHabitTimezone(u.Timezone); err != nil {
+			return nil, err
+		}
+	}
 	if err := store.UpdateUser(op.ctx, op.q, &u); err != nil {
 		return nil, err
 	}

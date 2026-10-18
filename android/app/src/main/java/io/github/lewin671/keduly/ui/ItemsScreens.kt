@@ -72,6 +72,7 @@ fun ListsScreen() {
                 GroupRow(stringResource(R.string.nav_upcoming), leading = { RowIcon(KIcons.Calendar, K.red) }) { nav.go("upcoming") }
                 GroupRow(stringResource(R.string.nav_all), leading = { RowIcon(KIcons.Layers, K.teal) }) { nav.go("all") }
                 GroupRow(stringResource(R.string.nav_inbox), if (b.counts.inbox > 0) f.count(b.counts.inbox) else "", leading = { RowIcon(KIcons.Tray, K.blue) }) { nav.go("inbox") }
+                GroupRow(stringResource(R.string.habit_heading), leading = { RowIcon(KIcons.Calendar, K.teal) }) { nav.go("habits") }
                 GroupRow(stringResource(R.string.nav_done), last = true, leading = { RowIcon(KIcons.Book, K.green) }) { nav.go("done") }
             }
             val projects = b.projects.filter { !it.archived }.sortedBy { it.position }
@@ -197,12 +198,13 @@ fun TodayScreen() {
     }
     Screen(stringResource(R.string.nav_today), small = "${f.md(f.today)} ${f.weekdayLong(f.today)}", bell = true) {
         PageBody(page) { view ->
-            if (view.items.isEmpty() && view.overdue.isEmpty() && view.events.isEmpty()) {
+            if (view.habits.isEmpty() && view.items.isEmpty() && view.overdue.isEmpty() && view.events.isEmpty()) {
                 Blank(stringResource(R.string.today_empty), stringResource(R.string.today_empty_tip))
                 return@PageBody
             }
             Scroll {
                 TodaySummary(view)
+                HabitOccurrenceRows(view.habits)
                 view.events.take(5).forEach { event -> EventLine(event) { nav.calendarDay(null) } }
                 if (view.events.size > 5) MoreLink(stringResource(R.string.list_more_events, view.events.size - 5), onClick = { nav.calendarDay(null) })
                 val day = view.items.filter { !it.evening }
@@ -254,6 +256,7 @@ fun UpcomingScreen() {
                         day.events.forEach { event -> EventLine(event) { nav.calendarDay(date) } }
                     }
                     ItemRows(day.items, showPlan = false)
+                    HabitOccurrenceRows(day.habits)
                 }
                 val next = YearMonth.from(first).plusMonths(months.toLong())
                 if (months < 12) MoreLink(stringResource(R.string.upcoming_load, stringResource(R.string.date_m, next.monthValue)), inset = false) { months++ }
@@ -438,6 +441,7 @@ fun ProjectScreen(id: String) {
                     )
                 }
                 // The next events show whether or not the project has items yet.
+                HabitOccurrenceRows(data.detail.habits)
                 data.detail.upcomingEvents.take(2).forEach { event ->
                     EventLine(event) { nav.calendarDay(event.startDate?.let(Times::date) ?: event.start?.let(f::day)) }
                 }

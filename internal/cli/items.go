@@ -350,7 +350,10 @@ func (a *app) listToday() error {
 	projects := a.projectNames()
 	a.printf("%s · 空闲 %s · 未安排 %s\n", dateLabel(today.Date), minutesLabel(today.FreeMinutes), minutesLabel(today.UnplannedMinutes))
 	a.printItems(today.Items, projects)
-	if len(today.Items) == 0 {
+	for _, h := range today.Habits {
+		a.printHabit(h)
+	}
+	if len(today.Items) == 0 && len(today.Habits) == 0 {
 		a.printf("（今天没有事项）\n")
 	}
 	if len(today.Overdue) > 0 {
@@ -376,11 +379,14 @@ func (a *app) listUpcoming() error {
 	projects := a.projectNames()
 	shown := false
 	for _, day := range resp.Days {
-		if len(day.Items) == 0 {
+		if len(day.Items) == 0 && len(day.Habits) == 0 {
 			continue
 		}
 		shown = true
 		a.printf("%s\n", dateLabel(day.Date))
+		for _, h := range day.Habits {
+			a.printHabit(h)
+		}
 		for _, it := range day.Items {
 			a.printf("  %s\n", a.itemLine(it, projects))
 		}

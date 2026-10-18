@@ -517,6 +517,11 @@ fun EventInfoSheet(event: Event, close: () -> Unit) {
     val f = LocalFmt.current
     val busy by app.busy.collectAsStateWithLifecycle()
     val project = projectOf(event.projectId)
+    if(event.habitId!=null && event.habitDate!=null){
+        val occurrence=usePage("habit-calendar",event.id){api->api.habitOccurrences(event.habitDate,event.habitDate).firstOrNull{it.habitId==event.habitId}}
+        occurrence.data?.let{HabitOccurrenceRows(listOf(it))}
+        return
+    }
     val pending = event.suggestionId != null
     val suggestions = usePage("suggestions", event.suggestionId) { api -> if (pending) api.suggestions() else emptyList() }
     val suggestion = suggestions.data?.firstOrNull { it.id == event.suggestionId }

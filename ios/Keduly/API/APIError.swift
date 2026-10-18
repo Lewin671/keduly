@@ -28,7 +28,7 @@ enum APIError: Error, Equatable, Sendable {
             case 400: return message.isEmpty ? L("error.invalid_request") : message
             case 403: return code == "registration_closed" ? L("error.registration_closed") : L("error.forbidden")
             case 404: return L("error.not_found")
-            case 409: return L("error.conflict")
+            case 409: return L(code == "habit_records_depend" ? "error.habit_records_depend":"error.conflict")
             case 429: return L("error.rate_limited")
             default: return L("error.internal")
             }

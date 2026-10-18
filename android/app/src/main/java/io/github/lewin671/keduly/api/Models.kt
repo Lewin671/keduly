@@ -94,6 +94,8 @@ data class Item(
 /** Something on the calendar. Instances of a recurring series share one `id`; see [key]. */
 @Serializable
 data class Event(
+    @SerialName("habit_id") val habitId: String? = null,
+    @SerialName("habit_date") val habitDate: String? = null,
     val id: String,
     val projectId: String?,
     val itemId: String?,
@@ -224,6 +226,7 @@ data class ItemPage(val items: List<Item>, val nextCursor: String?, val total: I
 
 @Serializable
 data class ProjectDetail(
+    val habits: List<HabitOccurrence> = emptyList(),
     val project: Project,
     val headings: List<Heading>,
     val upcomingEvents: List<Event>,
@@ -233,6 +236,7 @@ data class ProjectDetail(
 
 @Serializable
 data class TodayView(
+    val habits: List<HabitOccurrence> = emptyList(),
     val date: String,
     val items: List<Item>,
     val overdue: List<Item>,
@@ -242,7 +246,8 @@ data class TodayView(
 )
 
 @Serializable
-data class UpcomingDay(val date: String, val events: List<Event>, val items: List<Item>)
+data class UpcomingDay(
+    val habits: List<HabitOccurrence> = emptyList(),val date: String, val events: List<Event>, val items: List<Item>)
 
 @Serializable
 data class OverviewProject(val projectId: String, val total: Int, val items: List<Item>)

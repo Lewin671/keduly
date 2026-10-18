@@ -90,12 +90,12 @@ function routes(): Record<string, unknown> {
     'GET /suggestions': { suggestions: [suggestion, deletion] },
     'GET /events': { events },
     'GET /calendar/heat': { days: { [DAY]: 7, '2026-10-14': 3, '2026-03-02': 1 } },
-    'GET /today': { date: DAY, items: [reply, caldav, weekly, checkup], overdue: [tax], events: [events[4], events[0]], free_minutes: 210, unplanned_minutes: 30 },
-    'GET /upcoming': { days: [{ date: '2026-10-14', events: [event('e5', '客户演示', { start: at('10:00', '2026-10-14'), end: at('11:30', '2026-10-14') })], items: [item('i7', '准备演示环境', { due_date: '2026-10-14' })] }] },
+    'GET /today': { date: DAY, items: [reply, caldav, weekly, checkup], habits: [], overdue: [tax], events: [events[4], events[0]], free_minutes: 210, unplanned_minutes: 30 },
+    'GET /upcoming': { days: [{ date: '2026-10-14', habits: [], events: [event('e5', '客户演示', { start: at('10:00', '2026-10-14'), end: at('11:30', '2026-10-14') })], items: [item('i7', '准备演示环境', { due_date: '2026-10-14' })] }] },
     'GET /overview': { projects: [{ project_id: 'p1', total: 6, items: [caldav, reply, item('o1', '甲'), item('o2', '乙'), item('o3', '丙')] }] },
     'GET /matrix': { quadrants: { do: quadrant([tax]), plan: quadrant([caldav]), quick: quadrant([reply]), later: quadrant([]) } },
     'GET /items': { items: [caldav, reply], next_cursor: null, total: 2 },
-    'GET /projects/p1': { project: bootstrap.projects[0], headings: bootstrap.headings, upcoming_events: [events[0]], unplanned_count: 1, focus_week_minutes: 187 },
+    'GET /projects/p1': { project: bootstrap.projects[0], headings: bootstrap.headings, habits: [], upcoming_events: [events[0]], unplanned_count: 1, focus_week_minutes: 187 },
     'GET /focus': { focus: idle },
     'GET /focus/stats': stats,
     'GET /focus/sessions': { sessions: log },
@@ -602,7 +602,7 @@ describe('items', () => {
     expect(document.querySelector('.pop .slots')!.textContent).toContain('13:00');
     const scheduled = { ...reply, block: { event_id: 'b2', start: at('10:45'), end: at('11:15') } };
     table['POST /items/i2/schedule'] = { item: scheduled };
-    table['GET /today'] = { date: DAY, items: [scheduled], overdue: [], events: [], free_minutes: 180, unplanned_minutes: 0 };
+    table['GET /today'] = { date: DAY, items: [scheduled], habits: [], overdue: [], events: [], free_minutes: 180, unplanned_minutes: 0 };
     document.querySelector<HTMLFormElement>('.pop form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     await settle();
     expect(callsTo('POST', '/items/i2/schedule')[0]!.body).toEqual({ start: '2026-10-13T14:45:00Z', end: '2026-10-13T15:15:00Z' });
@@ -715,7 +715,7 @@ describe('items', () => {
 
   it('shows empty states instead of blank screens', async () => {
     table['GET /items'] = { items: [], next_cursor: null, total: 0 };
-    table['GET /today'] = { date: DAY, items: [], overdue: [], events: [], free_minutes: 540, unplanned_minutes: 0 };
+    table['GET /today'] = { date: DAY, items: [], habits: [], overdue: [], events: [], free_minutes: 540, unplanned_minutes: 0 };
     await open('#/items/inbox');
     expect(document.querySelector('.blank b')!.textContent).toBe('收件箱是空的');
     await open('#/items/today');
@@ -1040,7 +1040,7 @@ describe('focus', () => {
   it('says so when there is nothing to count yet', async () => {
     table['GET /focus/stats'] = { days: stats.days.map(d => ({ ...d, tomatoes: 0, minutes: 0, projects: [] })), projects: [], tomatoes: 0, minutes: 0, streak: 0 };
     table['GET /focus/sessions'] = { sessions: [] };
-    table['GET /today'] = { date: DAY, items: [], overdue: [], events: [], free_minutes: 540, unplanned_minutes: 0 };
+    table['GET /today'] = { date: DAY, items: [], habits: [], overdue: [], events: [], free_minutes: 540, unplanned_minutes: 0 };
     table['GET /focus'] = { focus: { ...idle, tomatoes_today: 0, minutes_today: 0, round_done: 0 } };
     await open('#/focus/stats');
     expect(text()).toContain('还没有专注记录');
@@ -1193,5 +1193,31 @@ describe('time zone', () => {
     await mod.store.enter();
     await settle();
     expect(document.querySelector('.sheet.ask')).toBeNull();
+  });
+});
+
+describe('habit integration', () => {
+  const habit = { id: 'habit1', title: 'Daily walk', notes: '', project_id: null, weekdays: [1,2,3,4,5,6,7], time: '18:40', duration_minutes: 20, day_offset: 0, reminder_minutes: null, paused: false, timezone: 'America/New_York', effective_date: DAY, version: 1 };
+  it('queries history by plan date and disables future completion', async () => {
+    table['GET /habits'] = { habits: [habit] };
+    table['GET /habit-occurrences'] = { occurrences: [{ habit_id: habit.id, date: DAY, plan_date: '2026-10-14', title: habit.title, notes: '', project_id: null, timezone: habit.timezone, time: habit.time, day_offset: 0, duration_minutes: 20, scheduled_at: at('18:40','2026-10-14'), end_at: at('19:00','2026-10-14'), remind_at: null, status: 'future', completed_at: null, skip_reason: '', actor: {kind:'user',name:'Me'} }] };
+    await open('#/items/habits');
+    expect(callsTo('GET','/habit-occurrences').at(-1)?.query.get('basis')).toBe('plan');
+    expect(document.querySelector<HTMLButtonElement>('.habit-check')?.disabled).toBe(true);
+    expect(text()).toContain('已完成 0/0');
+  });
+  it('the global add button opens a fresh form while an existing rule is being edited', async () => {
+    table['GET /habits'] = {habits:[habit]};
+    table['GET /habit-occurrences'] = {occurrences:[]};
+    table['POST /habits'] = {habit:{...habit,id:'habit2',title:'New habit'}};
+    await open('#/items/habits');
+    find('.habit-title','Daily walk').click();await settle();
+    expect(document.querySelector<HTMLInputElement>('form.habit-detail input')?.value).toBe('Daily walk');
+    find('.fab','新建习惯').click();await settle();
+    const name=document.querySelector<HTMLInputElement>('form.habit-detail input')!;
+    expect(name.value).toBe('');await type(name,'New habit');
+    document.querySelector<HTMLFormElement>('form.habit-detail')!.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));await settle();
+    expect(callsTo('POST','/habits').at(-1)?.body).toMatchObject({title:'New habit'});
+    expect(callsTo('PATCH','/habits/habit1')).toHaveLength(0);
   });
 });

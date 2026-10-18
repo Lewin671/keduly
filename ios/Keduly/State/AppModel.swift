@@ -66,6 +66,8 @@ final class AppModel {
     // MARK: - Session
 
     func start() async {
+        // Optional notification services must not delay account loading.
+        Task { _=await HabitNotifications.reconcilePermission() }
         await api.setUnauthenticatedHandler { [weak self] in await self?.sessionEnded() }
         guard let server = await api.restore() else {
             phase = .signedOut
@@ -85,6 +87,7 @@ final class AppModel {
             setFocus(try await focus)
             day = today
             phase = .signedIn
+            Task { await syncHabitNotifications() }
             startPolling()
         } catch APIError.unauthenticated {
             sessionEnded()
@@ -118,6 +121,7 @@ final class AppModel {
 
     /// A `401`, or signing out: the session and everything loaded with it are dropped.
     func sessionEnded() {
+        HabitNotifications.signOut()
         pollTask?.cancel()
         focusTask?.cancel()
         user = nil
@@ -158,11 +162,13 @@ final class AppModel {
     func reloadAll() {
         itemOverrides = [:]
         dataVersion += 1
+        Task { await syncHabitNotifications() }
     }
 
     func setActive(_ active: Bool) {
         let returned = active && !self.active
         self.active = active
+        if returned { Task { _=await HabitNotifications.reconcilePermission() } }
         guard returned, phase == .signedIn else { return }
         Task {
             await refreshShared()

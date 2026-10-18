@@ -60,6 +60,7 @@ fun SheetHost() {
     val sheet by app.sheet.collectAsStateWithLifecycle()
     val current = sheet ?: return
     val close = { app.sheet.value = null }
+    if(current is Sheet.NewHabit){HabitEditor(null,close);return}
     key(current) {
         ModalBottomSheet(
             onDismissRequest = close,
@@ -74,6 +75,7 @@ fun SheetHost() {
                 when (current) {
                     is Sheet.ItemDetail -> ItemSheet(current.id, close)
                     is Sheet.NewItem -> NewItemSheet(current, close)
+                    is Sheet.NewHabit -> Unit
                     is Sheet.EventForm -> EventFormSheet(current, close)
                     is Sheet.EventInfo -> EventInfoSheet(current.event, close)
                     is Sheet.EventList -> EventListSheet(current.events)

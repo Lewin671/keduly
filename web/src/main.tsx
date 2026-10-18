@@ -1,3 +1,4 @@
+import './styles/habits.css';
 import { render } from 'preact';
 import { App } from './App';
 import { initLink } from './state/link';

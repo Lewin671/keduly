@@ -53,6 +53,7 @@ private struct RouteView: View {
         case .all: AllView()
         case .inbox: InboxView()
         case .done: DoneView()
+        case .habits: HabitsView()
         case .project(let id): ProjectView(id: id)
         case .stats: StatsView()
         case .activity: ActivityView()
@@ -78,6 +79,8 @@ private struct SheetView: View {
             case .editProject(let project): ProjectEditor(project: project)
             case .filing(let session): FilingSheet(session: session)
             case .focusPicker: FocusPickerSheet()
+            case .habitDefinition: HabitEditor(habit:nil)
+            case .habitOccurrence(let id,let date): HabitOccurrenceSheet(id:id,date:date)
             }
         }
         .tint(Palette.tint)
@@ -171,6 +174,7 @@ private struct BottomBar: View {
         case .calendar:
             router.sheet = .newEvent(router.calendarDay ?? model.today)
         case .items, .focus:
+            if router.top == .habits { router.sheet = .habitDefinition;return }
             var context = NewItemContext()
             if case .project(let id) = router.top { context.projectId = id }
             if router.top == .today { context.today = true }

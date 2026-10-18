@@ -7,7 +7,7 @@ enum AppTab: Hashable {
 
 /// A pushed page. The first page of each tab is not a route.
 enum Route: Hashable {
-    case matrix, today, upcoming, all, inbox, done
+    case matrix, today, upcoming, all, inbox, done, habits
     case project(String)
     case stats
     case activity
@@ -32,6 +32,8 @@ enum SheetRoute: Identifiable, Hashable {
     case editProject(Project)
     case filing(FocusSession)
     case focusPicker
+    case habitDefinition
+    case habitOccurrence(String,String)
 
     var id: String {
         switch self {
@@ -45,6 +47,8 @@ enum SheetRoute: Identifiable, Hashable {
         case .editProject(let project): return "project-\(project.id)"
         case .filing(let session): return "filing-\(session.id)"
         case .focusPicker: return "focus-picker"
+        case .habitDefinition: return "habit-definition"
+        case .habitOccurrence(let id,let date): return "habit-\(id)-\(date)"
         }
     }
 }
@@ -123,6 +127,7 @@ extension Router {
     /// What tapping an entry of the calendar opens: the suggestion behind a tentative or leaving
     /// entry, the item behind a time block, otherwise the event itself.
     func open(_ event: Event) {
+        if let id=event.habitId,let date=event.habitDate { sheet = .habitOccurrence(id,date);return }
         if event.status != .confirmed, let suggestion = event.suggestionId {
             sheet = .suggestion(suggestion)
         } else if let item = event.itemId {

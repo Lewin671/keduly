@@ -11,7 +11,7 @@ struct TodayView: View {
             let day = loader.value?.date ?? model.today
             LargeTitle(L("nav.today"), detail: "\(L("date.md", day.month, day.day)) \(Format.weekdayLong(day))")
             if let today = loader.value {
-                if today.items.isEmpty && today.overdue.isEmpty && today.events.isEmpty {
+                if today.habits.isEmpty && today.items.isEmpty && today.overdue.isEmpty && today.events.isEmpty {
                     Blank(title: L("today.empty"), text: L("today.emptyTip"))
                 } else {
                     content(today)
@@ -58,6 +58,8 @@ struct TodayView: View {
             }
             .buttonStyle(.plain)
         }
+
+        if !today.habits.isEmpty { SectionHeader(L("habit.heading")); HabitOccurrenceRows(records:today.habits) }
 
         // An item that is past its deadline stands under 逾期 even when it was planned for today.
         let late = today.overdue + today.items.filter { item in !item.isDone && (item.dueDate.map { $0 < today.date } ?? false) }

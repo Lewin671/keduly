@@ -1,3 +1,4 @@
+import { HabitRows } from './Habits';
 // The built-in lists: inbox, today, upcoming, the four quadrants, everything, and the log.
 import type { JSX } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
@@ -52,7 +53,7 @@ export function Today(): JSX.Element {
   // Important items lead the day.
   const day = items.filter(i => !i.evening).sort((a, b) => Number(b.important) - Number(a.important));
   const night = items.filter(i => i.evening);
-  if (!items.length && !data.overdue.length && !data.events.length && !draft.value) {
+  if (!data.habits.length && !items.length && !data.overdue.length && !data.events.length && !draft.value) {
     return <>{head}<Blank title={t('today.empty')} tip={t('today.emptyTip')} /></>;
   }
   // Overdue items are part of the day's work too, as in the server's unplanned_minutes.
@@ -69,6 +70,7 @@ export function Today(): JSX.Element {
       {head}
       <p class="summary">{summary}</p>
       <EventsStrip events={data.events} />
+ {data.habits.length>0&&<><div class="sec">{t('habit.heading')}</div><HabitRows occurrences={data.habits}/></>}
       <DraftRow />
       {data.overdue.length > 0 && (
         <>
@@ -97,7 +99,7 @@ function UpcomingRange({ from, to, first }: { from: string; to: string; first: b
   const day = today.value;
   if (res.failed) return <LoadFailed retry={res.reload} />;
   if (!res.data) return <Skeleton />;
-  const days = res.data.filter(d => d.items.length || (d.events.length && daysBetween(day, d.date) <= NEAR_DAYS));
+  const days = res.data.filter(d => d.habits.length || d.items.length || (d.events.length && daysBetween(day, d.date) <= NEAR_DAYS));
   if (!days.length) return first && !draft.value ? <Blank title={t('upcoming.empty')} tip={t('upcoming.emptyTip')} /> : <></>;
   return (
     <>
@@ -108,7 +110,7 @@ function UpcomingRange({ from, to, first }: { from: string; to: string; first: b
         return (
           <div key={d.date}>
             <div class="dh"><b>{date}</b><span>{sameMonth ? dayLabel(d.date, day) : `${month} · ${weekdayShort(d.date)}`}</span></div>
-            <EventsStrip events={d.events} max={4} />
+            <EventsStrip events={d.events} max={4} /><HabitRows occurrences={d.habits}/>
             <Rows items={d.items} opts={{ sub: true, timeOnly: true }} />
           </div>
         );

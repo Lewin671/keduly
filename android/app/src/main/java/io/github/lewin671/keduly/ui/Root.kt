@@ -182,6 +182,7 @@ private fun Shell(startRoute: String?) {
                                 tab === TABS[1] -> Sheet.EventForm(null, app.calendarDate.value ?: day)
                                 route == "project/{id}" -> Sheet.NewItem(projectId = entry?.arguments?.getString("id"))
                                 route == "today" -> Sheet.NewItem(today = true)
+                                route == "habits" -> Sheet.NewHabit
                                 else -> Sheet.NewItem()
                             }
                         },
@@ -194,6 +195,7 @@ private fun Shell(startRoute: String?) {
                         composable("lists") { ListsScreen() }
                         composable("matrix") { MatrixScreen() }
                         composable("today") { TodayScreen() }
+                        composable("habits") { HabitsScreen() }
                         composable("upcoming") { UpcomingScreen() }
                         composable("all") { AllScreen() }
                         composable("inbox") { InboxScreen() }

@@ -99,6 +99,10 @@ func (op *Op) Today() (*api.Today, error) {
 		return nil, err
 	}
 	out := &api.Today{Date: today}
+	out.Habits, err = op.todayHabits()
+	if err != nil {
+		return nil, err
+	}
 	if out.Items, err = op.renderItems(rows); err != nil {
 		return nil, err
 	}
@@ -149,7 +153,7 @@ func (op *Op) gaps(date string, entries []entry) [][2]time.Time {
 	start, end := op.workWindow(date)
 	var busy [][2]time.Time
 	for _, e := range entries {
-		if e.ev.AllDay || !e.start.Before(end) || !e.end.After(start) {
+		if e.ev.AllDay || !e.end.After(e.start) || !e.start.Before(end) || !e.end.After(start) {
 			continue
 		}
 		busy = append(busy, [2]time.Time{e.start, e.end})
@@ -215,7 +219,7 @@ func (op *Op) Upcoming(fromDate, toDate string) ([]api.Day, error) {
 	days := map[string]*api.Day{}
 	day := func(date string) *api.Day {
 		if days[date] == nil {
-			days[date] = &api.Day{Date: date, Events: []api.Event{}, Items: []api.Item{}}
+			days[date] = &api.Day{Habits: []api.HabitOccurrence{}, Date: date, Events: []api.Event{}, Items: []api.Item{}}
 		}
 		return days[date]
 	}
@@ -246,6 +250,15 @@ func (op *Op) Upcoming(fromDate, toDate string) ([]api.Day, error) {
 		}
 		for _, date := range op.daysOf(e, from, to) {
 			day(date).Events = append(day(date).Events, e.ev)
+		}
+	}
+	habits, err := op.habitOccurrences(dayStart(fromDate, time.UTC).AddDate(0, 0, -7).Format(dateLayout), toDate, 100)
+	if err != nil {
+		return nil, err
+	}
+	for _, h := range habits {
+		if h.PlanDate >= fromDate && h.PlanDate <= toDate {
+			day(h.PlanDate).Habits = append(day(h.PlanDate).Habits, h)
 		}
 	}
 	out := make([]api.Day, 0, len(days))

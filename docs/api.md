@@ -573,3 +573,104 @@ show and edit the same data.
 
 Events created by a CalDAV client keep their original iCalendar text, so properties this server
 does not understand survive a round trip.
+
+## Habits
+
+Habits have versioned repeat rules and independent per-date records. They do not become
+ordinary tasks, do not roll into overdue lists, and do not alter project task progress.
+The account owns at most 100 habits. Permanent deletion is not offered; pause preserves history.
+
+### Rules and writes
+
+A Habit returns `id`, `title`, `notes`, `project_id` (nullable), `weekdays` (unique ISO 1–7),
+`time` (HH:MM or empty), `duration_minutes` (0–720), `day_offset` (0 or 1),
+`reminder_minutes` (null disables, otherwise 0–1440 before start), `paused`, `timezone`,
+`effective_date`, and integer `version`. Untimed rules cannot have duration, offset or reminder.
+Zero duration is a timepoint and does not reserve free time. Projects may be removed without
+removing habit history; missing project references are exposed as unfiled.
+
+| Method | Path | Body / result |
+|---|---|---|
+| GET | `/habits` | `{habits: Habit[]}` |
+| POST | `/habits` | title required; optional rule fields → `{habit}` |
+| PATCH | `/habits/{id}` | partial writable rule fields plus expected `version` → `{habit}` |
+| GET | `/habit-occurrences?from=YYYY-MM-DD&to=YYYY-MM-DD` | inclusive logical dates, maximum 93 days → `{occurrences}` |
+| PATCH | `/habits/{id}/occurrences/{date}` | status/actual time/reason or a single-occurrence move → `{occurrence}` |
+
+Writable rule fields are title, notes, project_id, weekdays, time, duration_minutes, day_offset,
+reminder_minutes and paused. ID, timezone and effective date are server-owned. New rules start
+today, default to daily, and have no reminder. Edits (including pause/resume) apply no earlier
+than tomorrow and the latest existing version's effective date. Version boundaries never move
+backward, including after successive timezone changes. Stale version writes return conflict.
+Account timezone changes create future rule versions; prior dates retain their original zone.
+
+Occurrence writes accept `status` (`open`, `done`, `skipped`), optional `completed_at` (RFC3339),
+`skip_reason`, and `scheduled_at` (RFC3339, null restores the rule time). Moves stay within the
+logical date and following seven local calendar dates. Future plan dates in the retained habit
+zone cannot be completed or skipped. Done defaults actual completion to now; explicit actual
+completion must lie between the logical date and now. Undo to open clears completed_at.
+All writes support reason and dry_run and increment the account revision. Unknown fields fail.
+Write-token callers record completion only when the user explicitly reports/requests it.
+Notification delivery, focus completion and wearable scores never imply habit completion.
+
+### Dates, views and history
+
+An occurrence returns `habit_id`, immutable logical `date`, `plan_date`, title/notes/project_id,
+timezone/time/day_offset/duration_minutes, nullable UTC scheduled_at/end_at/remind_at,
+status (`open`, `future`, `missed`, `done`, `skipped`), completed_at, skip_reason, and actor.
+Normally plan_date equals logical date. A next-day bedtime stays with the prior evening's plan,
+while scheduled_at is on the real following date. An explicit move changes plan_date to the
+moved instant's local date, preserving the original history key. Past incomplete occurrences
+become missed, never overdue items. Rules produce no occurrence on off/paused dates.
+
+The default `basis=logical` query supports stable per-date lookup and reminder horizons.
+`basis=plan` selects by plan_date, including earlier records moved into the requested window
+and excluding records moved out; unknown basis values fail. Optional habit_id is an exact filter.
+History clients use basis=plan. Completion rate counts done versus non-future occurrences in
+that window, with skipped separate; they use the server status (retained rule timezone), not
+an account-zone date comparison that could turn past completions into future failures on travel.
+
+Today includes today's plan_date plus the prior evening's next-day occurrence on its physical
+day. Upcoming groups by plan_date; project details include today's matching habit rows. Display
+rows sort by plan date and actual scheduled instant, not the rule's old time. Calendar projections
+carry habit_id/habit_date and ID `habit:<id>:<date>`; they open the same occurrence controls.
+They are not persisted events, cannot be changed through event endpoints, and are not exported
+through CalDAV. CLI event listings label them read-only and reject event edit/remove clearly.
+Duration-bearing projections affect free slots within working hours; skipped/timepoint records
+do not. Matrix, All, Inbox, Done and task counts retain ordinary-task semantics.
+
+DST gaps advance to the first valid minute; repeated local times choose the earliest instant.
+Stored explicit move instants and completed instants remain UTC. Rule history retains its zone.
+
+### Activity and reminders
+
+Creation, rule edits and per-date writes appear in the existing activity log with actor/reason,
+and support its undo/redo endpoints. Restoration compares current snapshots; later edits or
+records that depend on a rule block its undo. Past rule dates cannot be rewritten. Undoing a
+new habit with no dependent records removes it; redo restores its stable ID within account limits.
+
+Reminders are device-local opt-in. Native opt-in resets on sign-out. Web needs an open page and notification
+permission. Native clients reconcile OS authorization before network work and on foreground;
+lost permission cancels old schedules and disables opt-in. Not-yet-requested authorization
+shows an enable invitation, not a denial. iOS presents foreground banners/sounds. Android
+allows the user to open exact-alarm settings and discloses approximate timing without permission.
+After sync native clients retain at most 60 reminders in the upcoming 14-day horizon, including
+recently due requests in that cap. Startup/foreground/writes refresh the window; users must open
+the app periodically. An offline device may retain stale reminders until sync; rebooted Android
+requires opening the app again. Scheduling never means delivery. No Web Push or automatic
+Garmin completion is implemented.
+
+An override equal to the rule's computed instant is normalized to no move; this preserves a
+next-day habit's evening plan_date when an editor submits its unchanged time. Clearing an
+open record with no move/skip reason removes the empty override, retaining its activity history.
+Rule changes that would hide an existing future record fail with 409 `habit_records_depend`;
+the UI instructs the user to undo the future move/record in Activity before changing repeat days
+or pausing. Pausing also rejects pending moves into the paused period, even from earlier keys.
+No recorded action becomes inaccessible after a successful rule edit.
+
+CLI habit log uses basis=plan and displays the plan date plus the original record date when
+moved; write commands still use the immutable record date. The native reminder horizon is a
+rolling 14×24 hours of physical reminder instants (plus the 60-second recently-due grace for
+retention). Logical fetch windows include timezone, move and reminder-offset buffers; only
+instants within that physical horizon enter the capped device schedule. Native opt-in resets
+on sign-out; web opt-in is stored separately per account in that browser.

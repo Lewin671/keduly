@@ -222,15 +222,15 @@ enum Fixtures {
         "position": 0, "archived": false, "open_count": 7, "done_count": 3,
         "created_at": "2026-10-01T00:00:00Z", "updated_at": "2026-10-02T00:00:00Z" },
       "headings": [ { "id": "dddddddddddddddd", "project_id": "cccccccccccccccc", "name": "同步", "position": 0 } ],
-      "upcoming_events": [ \(eventBody) ], "unplanned_count": 4, "focus_week_minutes": 300 }
+      "habits": [], "upcoming_events": [ \(eventBody) ], "unplanned_count": 4, "focus_week_minutes": 300 }
     """
 
     static let today = """
-    { "date": "2026-10-13", "items": [ \(itemBody) ], "overdue": [], "events": [ \(eventBody) ],
+    { "date": "2026-10-13", "items": [ \(itemBody) ], "habits": [], "overdue": [], "events": [ \(eventBody) ],
       "free_minutes": 255, "unplanned_minutes": 40 }
     """
 
-    static let upcoming = #"{ "days": [ { "date": "2026-10-14", "events": [ \#(eventBody) ], "items": [ \#(itemBody) ] } ] }"#
+    static let upcoming = #"{ "days": [ { "date": "2026-10-14", "habits": [], "events": [ \#(eventBody) ], "items": [ \#(itemBody) ] } ] }"#
 
     static let overview = #"{ "projects": [ { "project_id": "cccccccccccccccc", "total": 9, "items": [ \#(itemBody) ] } ] }"#
 

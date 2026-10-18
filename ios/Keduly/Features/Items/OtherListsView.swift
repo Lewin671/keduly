@@ -22,6 +22,7 @@ struct UpcomingView: View {
                     }
                     .padding(.top, day.events.isEmpty ? 0 : 6)
                     ItemRows(items: day.items, showPlan: false)
+                    HabitOccurrenceRows(records:day.habits)
                 }
                 let next = lastDay.adding(days: 1)
                 MoreLink(title: L("upcoming.load", L("date.m", next.month)), indent: 0) {

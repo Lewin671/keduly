@@ -75,6 +75,7 @@ const NAV: ReadonlyArray<{ id: string; name: MessageKey; icon: IconName; color: 
   { id: 'upcoming', name: 'nav.upcoming', icon: 'cal', color: 'var(--red)' },
   { id: 'all', name: 'nav.all', icon: 'layers', color: 'var(--teal)' },
   { id: 'inbox', name: 'nav.inbox', icon: 'tray', color: 'var(--blue)' },
+  { id: 'habits', name: 'habit.heading', icon: 'cal', color: 'var(--teal)' },
   { id: 'done', name: 'nav.done', icon: 'book', color: 'var(--green)' },
 ];
 

@@ -320,6 +320,9 @@ func overlaps(start, end, from, to time.Time) bool {
 // With overlays, pending suggestions add tentative entries and mark the
 // events they would move or delete as leaving.
 func (op *Op) entries(from, to time.Time, overlays bool) ([]entry, error) {
+	return op.calendarEntries(from, to, overlays, true)
+}
+func (op *Op) calendarEntries(from, to time.Time, overlays, includeHabits bool) ([]entry, error) {
 	fromDate := from.In(op.Loc).AddDate(0, 0, -1).Format(dateLayout)
 	toDate := to.In(op.Loc).AddDate(0, 0, 1).Format(dateLayout)
 	rows, err := store.Events.List(op.ctx, op.q, op.User.ID,
@@ -342,6 +345,13 @@ func (op *Op) entries(from, to time.Time, overlays bool) ([]entry, error) {
 		for _, occ := range expand(ev, from, to, op.Loc) {
 			out = append(out, op.instance(ev, occ))
 		}
+	}
+	if includeHabits {
+		habits, err := op.habitEntries(from, to)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, habits...)
 	}
 	if overlays {
 		if out, err = op.overlay(out, from, to); err != nil {

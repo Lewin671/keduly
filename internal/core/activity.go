@@ -265,6 +265,8 @@ func (op *Op) flip(id string, undo bool) (*api.Activity, error) {
 // when the row has changed since.
 func (op *Op) restore(kind, id string, expected, target json.RawMessage) error {
 	switch kind {
+	case "habit-rule", "habit-record":
+		return op.restoreHabit(kind, id, expected, target)
 	case kindArea:
 		return restoreRow(op, store.Areas, id, expected, target, nil)
 	case kindProject:

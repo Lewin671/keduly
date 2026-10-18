@@ -452,3 +452,22 @@ Light and dark are both supported, following the system by default.
 | 4 | Apple style, but five pages (today, week, tasks, activity, access) and sidebar tiles that each led to a different kind of page | Has the Apple character, but the pages combine oddly |
 | 5–6 | One screen: tasks (later with projects) on the left, calendar on the right | The two halves still sit oddly together; items and calendar should be separate |
 | 7, items mode | Copied Apple's Reminders: coloured tiles, round checkboxes, flat project lists | Reminders itself is not good; no need to copy it |
+
+## Habits
+
+Keep the three modes. Add Habits inside the Items navigation and native list root. The
+Habits page has the existing add affordance, definitions, pause/resume, and a date-range
+history. New/edit forms contain title, project, weekdays, time, next-day switch, duration
+and optional reminder. Rule edits apply tomorrow; the occurrence sheet edits only the
+selected date, including an explicit date/time for rescheduling. A missed habit does not
+become an overdue item. Ordinary task counts and project progress exclude habit records.
+Today and project pages show due habit rows with the existing checkbox and compact time
+label. Calendar projections open the same occurrence controls. Weekly records distinguish
+completed, skipped, missed, future and off days; never hard-code a denominator of seven.
+Details show planned versus actual completion. Backfill cannot record a future action.
+The native habit page offers local reminders and explains offline synchronization limits;
+the web control explicitly says the page must stay open. Notification scheduling is not
+delivery, and notifications/focus never complete a habit. Pause replaces destructive deletion.
+The linked `habits.html` preserves the original concept exploration; its sample statistics
+and shortcuts are not the implementation contract. The running web app contains the complete
+create/edit/history flows. Native clients use the existing grouped lists and sheets.

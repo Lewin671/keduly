@@ -17,7 +17,7 @@ export interface Route {
 }
 
 const VIEWS: readonly string[] = ['day', 'week', 'month', 'year'];
-const LISTS: readonly string[] = ['matrix', 'today', 'upcoming', 'all', 'inbox', 'done'];
+const LISTS: readonly string[] = ['habits', 'matrix', 'today', 'upcoming', 'all', 'inbox', 'done'];
 /** The list the app opens on, and falls back to. */
 export const HOME_LIST = 'matrix';
 
