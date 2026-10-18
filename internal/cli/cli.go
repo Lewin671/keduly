@@ -29,6 +29,8 @@ type Env struct {
 	Getenv  func(string) string
 	Now     func() time.Time
 	HTTP    *http.Client
+	// Executable finds the running binary for `keduly update`; os.Executable when nil.
+	Executable func() (string, error)
 }
 
 const usage = `keduly - calendar and task manager with a first-class interface for agents
@@ -41,6 +43,8 @@ Setup:
                                                           ~/.agents/skills, or ~/.claude/skills with --claude;
                                                           --project uses the current directory, not the home
   keduly skill install --dir DIR                          install it into another skills directory
+  keduly update [--check] [--version vX.Y.Z] [--force]    replace this binary with the latest release, or the
+                                                          one --version names; --check only compares versions
   keduly version | help
 
 Habits:
@@ -191,6 +195,8 @@ func (a *app) dispatch(args []string) error {
 		return a.login(rest)
 	case "skill":
 		return a.sub(rest, "skill", map[string]func([]string) error{"install": a.skillInstall})
+	case "update":
+		return a.update(rest)
 	}
 	if err := a.loadConfig(); err != nil {
 		return err

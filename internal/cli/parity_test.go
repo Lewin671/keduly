@@ -56,10 +56,10 @@ var commands = map[string][]string{
 func TestHelpCoversEveryCommand(t *testing.T) {
 	h := newHarness(t, true)
 	help := h.ok("help")
-	for _, single := range []string{"serve", "login", "whoami", "version", "agenda", "free", "activity", "undo", "redo"} {
+	for _, single := range []string{"serve", "login", "whoami", "version", "update", "agenda", "free", "activity", "undo", "redo"} {
 		wantIn(t, help, "keduly "+single)
 	}
-	for _, single := range []string{"whoami", "agenda", "free", "activity", "undo", "redo"} {
+	for _, single := range []string{"whoami", "update", "agenda", "free", "activity", "undo", "redo"} {
 		wantIn(t, h.ok(single, "--help"), "usage: keduly "+single, "--json")
 	}
 	for group, subs := range commands {

@@ -30,9 +30,12 @@ curl -fsSL https://raw.githubusercontent.com/Lewin671/keduly/main/install.sh | s
 
 This downloads the `keduly` binary for macOS or Linux from the
 [latest release](https://github.com/Lewin671/keduly/releases/latest), verifies its checksum and
-puts it in `~/.local/bin`. The one binary is both the server and the command line. Run the line
-again to upgrade. The variables at the top of [install.sh](install.sh) choose another version or
-directory.
+puts it in `~/.local/bin`. The one binary is both the server and the command line. The variables
+at the top of [install.sh](install.sh) choose another version or directory.
+
+To upgrade, run `keduly update`: it replaces the binary with the latest release the same way,
+checksum included. `keduly update --check` only compares versions, and `--version v0.2.0` installs
+a given release.
 
 To build from source instead you need Go 1.25 or later, and Node with `pnpm` for the web app:
 `scripts/build.sh` writes `bin/keduly`.
@@ -72,7 +75,7 @@ keduly skill install --project    # add to either: the current project instead o
 keduly skill install --dir DIR    # any other skills directory
 ```
 
-Run it again after upgrading the CLI.
+Run it again, with the same flags, after `keduly update`.
 
 ## Use it from a calendar app
 
